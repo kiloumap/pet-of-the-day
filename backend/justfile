@@ -4,6 +4,11 @@ MIGRATIONS_PATH := "./database/migrations"
 start:
     go run server.go
 
+graphql-init:
+    go get github.com/99designs/gqlgen/codegen/config@v0.17.62 && \
+    go get github.com/99designs/gqlgen/internal/imports@v0.17.62 && \
+    go get github.com/99designs/gqlgen/internal/imports@v0.17.62 && \
+    go get github.com/99designs/gqlgen@v0.17.62
 graphql-generate:
     go run github.com/99designs/gqlgen generate
 
