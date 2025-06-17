@@ -5062,6 +5062,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"expo-haptics@npm:~14.1.4":
+  version: 14.1.4
+  resolution: "expo-haptics@npm:14.1.4"
+  peerDependencies:
+    expo: "*"
+  checksum: 10c0/c8d4dd80fec8949b39af27b718383526b268b56cae4465af57ea7c5d470b34933c03574dc9c0baca06cf81018cc1eb63671a84a273abca685efb02cfd1604e3e
+  languageName: node
+  linkType: hard
+
 "expo-keep-awake@npm:~14.1.4":
   version: 14.1.4
   resolution: "expo-keep-awake@npm:14.1.4"
@@ -7500,6 +7509,7 @@ __metadata:
     eslint-config-prettier: "npm:^10.1.5"
     eslint-plugin-prettier: "npm:^5.4.1"
     expo: "npm:~53.0.10"
+    expo-haptics: "npm:~14.1.4"
     expo-linear-gradient: "npm:^14.1.5"
     expo-status-bar: "npm:~2.2.3"
     lucide-react: "npm:^0.513.0"

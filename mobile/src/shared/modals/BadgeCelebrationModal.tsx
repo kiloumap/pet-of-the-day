@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { X } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
 
 import BadgeComponent from '../badges/BadgeComponent';
 import { BADGES } from '@/constants/badges';
@@ -19,7 +20,94 @@ import {
     dismissBadgeModal
 } from '@/store/petsSlice';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
+
+// Composant Confetti
+const ConfettiPiece: React.FC<{
+    animationValue: Animated.Value;
+    index: number;
+    rarity: string;
+}> = ({ animationValue, index, rarity }) => {
+    const colors = {
+        common: ['#6b7280', '#9ca3af', '#d1d5db'],
+        rare: ['#3b82f6', '#60a5fa', '#93c5fd'],
+        epic: ['#8b5cf6', '#a78bfa', '#c4b5fd'],
+        legendary: ['#f59e0b', '#fbbf24', '#fcd34d', '#ef4444', '#f87171']
+    };
+
+    const confettiColors = colors[rarity as keyof typeof colors] || colors.common;
+    const color = confettiColors[index % confettiColors.length];
+
+    const translateY = animationValue.interpolate({
+        inputRange: [0, 1],
+        outputRange: [-50, height + 100],
+    });
+
+    const translateX = animationValue.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, (Math.random() - 0.5) * 200],
+    });
+
+    const rotate = animationValue.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['0deg', `${720 + Math.random() * 360}deg`],
+    });
+
+    const opacity = animationValue.interpolate({
+        inputRange: [0, 0.8, 1],
+        outputRange: [1, 1, 0],
+    });
+
+    return (
+        <Animated.View
+            style={[
+                styles.confettiPiece,
+                {
+                    backgroundColor: color,
+                    left: Math.random() * width,
+                    transform: [
+                        { translateY },
+                        { translateX },
+                        { rotate },
+                    ],
+                    opacity,
+                }
+            ]}
+        />
+    );
+};
+
+// Composant Firework pour legendary
+const Firework: React.FC<{
+    animationValue: Animated.Value;
+    index: number;
+}> = ({ animationValue, index }) => {
+    const scale = animationValue.interpolate({
+        inputRange: [0, 0.3, 0.6, 1],
+        outputRange: [0, 2, 1.5, 0],
+    });
+
+    const opacity = animationValue.interpolate({
+        inputRange: [0, 0.2, 0.4, 1],
+        outputRange: [0, 1, 0.8, 0],
+    });
+
+    return (
+        <Animated.View
+            style={[
+                styles.firework,
+                {
+                    left: Math.random() * (width - 60),
+                    top: Math.random() * (height * 0.3) + 100,
+                    transform: [{ scale }],
+                    opacity,
+                }
+            ]}
+        >
+            <Text style={styles.fireworkEmoji}>✨</Text>
+        </Animated.View>
+    );
+};
 
 const BadgeCelebrationModal: React.FC = () => {
     const dispatch = useDispatch();
@@ -27,10 +115,33 @@ const BadgeCelebrationModal: React.FC = () => {
     const newBadges = useSelector(selectNewlyEarnedBadges);
 
     const [animationValue] = useState(new Animated.Value(0));
+    const [confettiAnimation] = useState(new Animated.Value(0));
     const [currentBadgeIndex, setCurrentBadgeIndex] = useState(0);
 
     useEffect(() => {
         if (isVisible && newBadges.length > 0) {
+            const currentBadge = BADGES.find(b => b.id === newBadges[currentBadgeIndex]?.badgeId);
+
+            // Haptic feedback selon la rareté
+            if (currentBadge) {
+                switch (currentBadge.rarity) {
+                    case 'common':
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        break;
+                    case 'rare':
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                        break;
+                    case 'epic':
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                        break;
+                    case 'legendary':
+                        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                        setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 100);
+                        setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 200);
+                        break;
+                }
+            }
+
             // Animation d'entrée
             Animated.sequence([
                 Animated.timing(animationValue, {
@@ -52,8 +163,18 @@ const BadgeCelebrationModal: React.FC = () => {
                     useNativeDriver: true,
                 }),
             ]).start();
+
+            // Animation des confettis
+            Animated.loop(
+                Animated.timing(confettiAnimation, {
+                    toValue: 1,
+                    duration: 3000,
+                    useNativeDriver: true,
+                }),
+                { iterations: 3 }
+            ).start();
         }
-    }, [isVisible, newBadges]);
+    }, [isVisible, newBadges, currentBadgeIndex]);
 
     const handleClose = () => {
         Animated.timing(animationValue, {
@@ -63,12 +184,16 @@ const BadgeCelebrationModal: React.FC = () => {
         }).start(() => {
             dispatch(dismissBadgeModal());
             setCurrentBadgeIndex(0);
+            confettiAnimation.setValue(0);
         });
     };
 
     const handleNextBadge = () => {
         if (currentBadgeIndex < newBadges.length - 1) {
             setCurrentBadgeIndex(currentBadgeIndex + 1);
+            // Reset animations pour le nouveau badge
+            animationValue.setValue(0);
+            confettiAnimation.setValue(0);
         } else {
             handleClose();
         }
@@ -91,6 +216,14 @@ const BadgeCelebrationModal: React.FC = () => {
         outputRange: [0, 1],
     });
 
+    // Nombre de confettis selon la rareté
+    const confettiCount = {
+        common: 15,
+        rare: 25,
+        epic: 40,
+        legendary: 60
+    }[currentBadge.rarity];
+
     return (
         <Modal
             visible={isVisible}
@@ -99,13 +232,34 @@ const BadgeCelebrationModal: React.FC = () => {
             onRequestClose={handleClose}
         >
             <View style={styles.overlay}>
+                {/* Confettis */}
+                {Array.from({ length: confettiCount }).map((_, index) => (
+                    <ConfettiPiece
+                        key={`confetti-${index}`}
+                        animationValue={confettiAnimation}
+                        index={index}
+                        rarity={currentBadge.rarity}
+                    />
+                ))}
+
+                {/* Feux d'artifice pour legendary */}
+                {currentBadge.rarity === 'legendary' && Array.from({ length: 8 }).map((_, index) => (
+                    <Firework
+                        key={`firework-${index}`}
+                        animationValue={confettiAnimation}
+                        index={index}
+                    />
+                ))}
+
                 <Animated.View style={[
                     styles.container,
                     { transform: [{ scale }], opacity }
                 ]}>
                     {/* Header */}
                     <View style={styles.header}>
-                        <Text style={styles.congratsText}>🎉 Félicitations ! 🎉</Text>
+                        <Text style={styles.congratsText}>
+                            {currentBadge.rarity === 'legendary' ? '🎆 LÉGENDAIRE ! 🎆' : '🎉 Félicitations ! 🎉'}
+                        </Text>
                         <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
                             <X size={24} color="#6b7280" />
                         </TouchableOpacity>
@@ -121,7 +275,12 @@ const BadgeCelebrationModal: React.FC = () => {
                             />
                         </View>
 
-                        <Text style={styles.newBadgeText}>Nouveau badge débloqué !</Text>
+                        <Text style={[
+                            styles.newBadgeText,
+                            currentBadge.rarity === 'legendary' && styles.legendaryText
+                        ]}>
+                            {currentBadge.rarity === 'legendary' ? 'BADGE LÉGENDAIRE DÉBLOQUÉ !' : 'Nouveau badge débloqué !'}
+                        </Text>
                         <Text style={styles.badgeTitle}>{currentBadge.name}</Text>
                         <Text style={styles.badgeDesc}>{currentBadge.description}</Text>
 
@@ -129,6 +288,7 @@ const BadgeCelebrationModal: React.FC = () => {
                         <View style={[styles.rarityBadge, { backgroundColor: currentBadge.color }]}>
                             <Text style={styles.rarityText}>
                                 {currentBadge.rarity.toUpperCase()}
+                                {currentBadge.rarity === 'legendary' && ' ⭐'}
                             </Text>
                         </View>
 
@@ -155,7 +315,10 @@ const BadgeCelebrationModal: React.FC = () => {
                         )}
 
                         <TouchableOpacity
-                            style={styles.continueButton}
+                            style={[
+                                styles.continueButton,
+                                currentBadge.rarity === 'legendary' && styles.legendaryButton
+                            ]}
                             onPress={handleNextBadge}
                         >
                             <Text style={styles.continueText}>
@@ -184,6 +347,24 @@ const styles = StyleSheet.create({
         maxWidth: 400,
         overflow: 'hidden',
         position: 'relative',
+    },
+    confettiPiece: {
+        position: 'absolute',
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        zIndex: 1000,
+    },
+    firework: {
+        position: 'absolute',
+        width: 30,
+        height: 30,
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000,
+    },
+    fireworkEmoji: {
+        fontSize: 24,
     },
     header: {
         flexDirection: 'row',
@@ -218,6 +399,13 @@ const styles = StyleSheet.create({
         marginBottom: 8,
         textTransform: 'uppercase',
         letterSpacing: 1,
+    },
+    legendaryText: {
+        color: '#f59e0b',
+        fontSize: 18,
+        textShadowColor: '#fbbf24',
+        textShadowOffset: { width: 1, height: 1 },
+        textShadowRadius: 2,
     },
     badgeTitle: {
         fontSize: 24,
@@ -279,6 +467,14 @@ const styles = StyleSheet.create({
         borderRadius: 25,
         width: '100%',
         alignItems: 'center',
+    },
+    legendaryButton: {
+        backgroundColor: '#f59e0b',
+        shadowColor: '#fbbf24',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 8,
     },
     continueText: {
         color: 'white',

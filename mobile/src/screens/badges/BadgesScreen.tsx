@@ -11,6 +11,7 @@ import { useSelector } from 'react-redux';
 
 import BadgeComponent from '../../shared/badges/BadgeComponent';
 import PetSelector from '../../shared/PetSelector';
+import BadgeDetailModal from '../../shared/modals/BadgeDetailModal';
 import { BADGES, getBadgesByCategory, RARITY_ORDER } from '@/constants/badges';
 import {
     selectPets,
@@ -34,6 +35,15 @@ const BadgesScreen: React.FC = () => {
     const [filterType, setFilterType] = useState<FilterType>('all');
     const [categoryFilter, setCategoryFilter] = useState<CategoryType>('all');
     const [rarityFilter, setRarityFilter] = useState<RarityType>('all');
+
+    // État pour la modal détaillée
+    const [showDetailModal, setShowDetailModal] = useState(false);
+    const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
+
+    const handleBadgePress = (badge: Badge) => {
+        setSelectedBadge(badge);
+        setShowDetailModal(true);
+    };
 
     if (!selectedPet || pets.length === 0) {
         return (
@@ -208,7 +218,12 @@ const BadgesScreen: React.FC = () => {
                                 const progress = petBadgeProgress.find(p => p.badgeId === badge.id);
 
                                 return (
-                                    <View key={badge.id} style={styles.badgeItem}>
+                                    <TouchableOpacity
+                                        key={badge.id}
+                                        style={styles.badgeItem}
+                                        onPress={() => handleBadgePress(badge)}
+                                        activeOpacity={0.7}
+                                    >
                                         <BadgeComponent
                                             badge={badge}
                                             isEarned={isEarned}
@@ -216,13 +231,28 @@ const BadgesScreen: React.FC = () => {
                                             size="medium"
                                             showProgress={!isEarned}
                                         />
-                                    </View>
+                                    </TouchableOpacity>
                                 );
                             })}
                         </View>
                     )}
                 </View>
             </ScrollView>
+
+            {/* Modal détaillée */}
+            {selectedBadge && (
+                <BadgeDetailModal
+                    visible={showDetailModal}
+                    badge={selectedBadge}
+                    isEarned={petEarnedBadges.some(eb => eb.badgeId === selectedBadge.id)}
+                    progress={petBadgeProgress.find(p => p.badgeId === selectedBadge.id)}
+                    earnedBadge={earnedBadges.find(eb => eb.badgeId === selectedBadge.id)}
+                    onClose={() => {
+                        setShowDetailModal(false);
+                        setSelectedBadge(null);
+                    }}
+                />
+            )}
         </SafeAreaView>
     );
 };
