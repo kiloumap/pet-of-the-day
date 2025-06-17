@@ -2,12 +2,13 @@ import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useDispatch } from 'react-redux';
-import { Home, Users, BarChart3, User } from 'lucide-react-native';
+import { Home, Users, BarChart3, User, Award } from 'lucide-react-native';
 
-import HomeScreen from '@screens/home/HomeScreen';
-import GroupsScreen from '@screens/groups/GroupsScreen';
-import LeaderboardScreen from '@screens/leaderboard/LeaderboardScreen';
-import ProfileScreen from '@screens/profile/ProfileScreen';
+import HomeScreen from '../screens/home/HomeScreen';
+import GroupsScreen from '../screens/groups/GroupsScreen';
+import LeaderboardScreen from '../screens/leaderboard/LeaderboardScreen';
+import ProfileScreen from '../screens/profile/ProfileScreen';
+import BadgesScreen from '../screens/badges/BadgesScreen';
 import { setPets, setGroups } from '@store/petsSlice';
 import { pets, groups } from '../../data/mockData';
 
@@ -28,6 +29,8 @@ const AppNavigator: React.FC = () => {
                 return <Home size={size} color={color} />;
             case 'Groups':
                 return <Users size={size} color={color} />;
+            case 'Badges':
+                return <Award size={size} color={color} />;
             case 'Leaderboard':
                 return <BarChart3 size={size} color={color} />;
             case 'Profile':
@@ -69,6 +72,11 @@ const AppNavigator: React.FC = () => {
                     name="Groups"
                     component={GroupsScreen}
                     options={{ tabBarLabel: 'Groupes' }}
+                />
+                <Tab.Screen
+                    name="Badges"
+                    component={BadgesScreen}
+                    options={{ tabBarLabel: 'Badges' }}
                 />
                 <Tab.Screen
                     name="Leaderboard"

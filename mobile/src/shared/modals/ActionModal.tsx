@@ -9,13 +9,21 @@ import {
     Alert,
 } from 'react-native';
 import { X } from 'lucide-react-native';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 import PetSelector from '../PetSelector';
 import ActionButton from '../ActionButton';
 import { Pet, Action, Multiplier } from '../../../types';
-import { getActionsByAge, calculatePoints, getAgeGroup, multipliers } from '../../constants/dogRewardsSystem';
-import { addAction } from '../../store/petsSlice';
+import { getActionsByAge, calculatePoints, getAgeGroup, multipliers } from '@/constants/dogRewardsSystem';
+import { addAction, addMultipleBadges, selectDailyActions, selectEarnedBadges } from '@/store/petsSlice';
+import { BadgeEngine } from '@/utils/badgeEngine';
+
+interface ActionModalProps {
+    visible: boolean;
+    pets: Pet[];
+    onClose: () => void;
+    onSelectAction: (actionId: number, petId: number, finalPoints: number) => void;
+}
 
 interface ActionModalProps {
     visible: boolean;
@@ -31,6 +39,8 @@ const ActionModal: React.FC<ActionModalProps> = ({
                                                      onSelectAction,
                                                  }) => {
     const dispatch = useDispatch();
+    const dailyActions = useSelector(selectDailyActions);
+    const earnedBadges = useSelector(selectEarnedBadges);
     const [selectedPet, setSelectedPet] = useState<number | null>(null);
     const [selectedMultipliers, setSelectedMultipliers] = useState<string[]>([]);
 
@@ -50,16 +60,29 @@ const ActionModal: React.FC<ActionModalProps> = ({
             return;
         }
 
+        const pet = pets.find(p => p.id === selectedPet);
+        if (!pet) return;
+
         const finalPoints = calculatePoints(action.points, selectedMultipliers);
 
-        // Ajouter l'action au store Redux
-        dispatch(addAction({
+        const newAction = {
             petId: selectedPet,
             actionId: action.id,
             points: finalPoints,
             timestamp: new Date().toISOString(),
             actionText: action.text,
-        }));
+        };
+
+        // Ajouter l'action au store Redux
+        dispatch(addAction(newAction));
+
+        // Vérifier les nouveaux badges
+        const badgeEngine = new BadgeEngine(earnedBadges, [...dailyActions, newAction]);
+        const newBadges = badgeEngine.detectNewBadges(pet, newAction);
+
+        if (newBadges.length > 0) {
+            dispatch(addMultipleBadges(newBadges));
+        }
 
         // Callback pour le parent (optionnel, pour compatibilité)
         onSelectAction(action.id, selectedPet, finalPoints);

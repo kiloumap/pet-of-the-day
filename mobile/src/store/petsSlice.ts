@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Pet, Group } from '../../types';
+import { EarnedBadge, BadgeProgress } from '../../types/badges';
 
 interface PetAction {
     petId: number;
@@ -14,6 +15,10 @@ interface PetsState {
     groups: Group[];
     dailyActions: PetAction[];
     selectedDate: string;
+    earnedBadges: EarnedBadge[];
+    badgeProgress: BadgeProgress[];
+    showBadgeModal: boolean;
+    newlyEarnedBadges: EarnedBadge[];
 }
 
 const initialState: PetsState = {
@@ -21,6 +26,10 @@ const initialState: PetsState = {
     groups: [],
     dailyActions: [],
     selectedDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD
+    earnedBadges: [],
+    badgeProgress: [],
+    showBadgeModal: false,
+    newlyEarnedBadges: [],
 };
 
 const petsSlice = createSlice({
@@ -69,6 +78,24 @@ const petsSlice = createSlice({
         removeGroup: (state, action: PayloadAction<number>) => {
             state.groups = state.groups.filter(g => g.id !== action.payload);
         },
+        // Actions pour les badges
+        addEarnedBadge: (state, action: PayloadAction<EarnedBadge>) => {
+            state.earnedBadges.push(action.payload);
+        },
+        addMultipleBadges: (state, action: PayloadAction<EarnedBadge[]>) => {
+            state.earnedBadges.push(...action.payload);
+            state.newlyEarnedBadges = action.payload;
+            if (action.payload.length > 0) {
+                state.showBadgeModal = true;
+            }
+        },
+        updateBadgeProgress: (state, action: PayloadAction<BadgeProgress[]>) => {
+            state.badgeProgress = action.payload;
+        },
+        dismissBadgeModal: (state) => {
+            state.showBadgeModal = false;
+            state.newlyEarnedBadges = [];
+        },
     },
 });
 
@@ -82,16 +109,31 @@ export const {
     addGroup,
     updateGroup,
     removeGroup,
+    addEarnedBadge,
+    addMultipleBadges,
+    updateBadgeProgress,
+    dismissBadgeModal,
 } = petsSlice.actions;
 
 // Selectors
 export const selectPets = (state: { pets: PetsState }) => state.pets.pets;
 export const selectGroups = (state: { pets: PetsState }) => state.pets.groups;
 export const selectDailyActions = (state: { pets: PetsState }) => state.pets.dailyActions;
+export const selectEarnedBadges = (state: { pets: PetsState }) => state.pets.earnedBadges;
+export const selectBadgeProgress = (state: { pets: PetsState }) => state.pets.badgeProgress;
+export const selectShowBadgeModal = (state: { pets: PetsState }) => state.pets.showBadgeModal;
+export const selectNewlyEarnedBadges = (state: { pets: PetsState }) => state.pets.newlyEarnedBadges;
 export const selectTodaysWinner = (state: { pets: PetsState }) => {
     const pets = state.pets.pets;
     if (pets.length === 0) return undefined;
     return pets.reduce((winner, pet) => pet.points > winner.points ? pet : winner);
 };
+
+// Sélecteurs de badges pour un pet spécifique
+export const selectPetBadges = (state: { pets: PetsState }, petId: number) =>
+    state.pets.earnedBadges.filter(badge => badge.petId === petId);
+
+export const selectPetBadgeProgress = (state: { pets: PetsState }, petId: number) =>
+    state.pets.badgeProgress.filter(progress => progress.petId === petId);
 
 export default petsSlice.reducer;

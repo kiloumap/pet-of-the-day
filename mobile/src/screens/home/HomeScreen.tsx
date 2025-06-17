@@ -7,6 +7,7 @@ import PetOfTheDayCard from '../../shared/cards/PetOfTheDayCard';
 import QuickActions from '../../shared/QuickActions';
 import MyPetsSection from './components/MyPetsSection';
 import ActionModal from '../../shared/modals/ActionModal';
+import BadgeCelebrationModal from '../../shared/modals/BadgeCelebrationModal';
 import { selectPets, selectTodaysWinner } from '@store/petsSlice';
 
 const HomeScreen: React.FC = () => {
@@ -53,6 +54,8 @@ const HomeScreen: React.FC = () => {
                 onClose={handleCloseModal}
                 onSelectAction={handleSelectAction}
             />
+
+            <BadgeCelebrationModal />
         </SafeAreaView>
     );
 };
