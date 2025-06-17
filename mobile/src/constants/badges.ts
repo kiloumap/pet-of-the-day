@@ -1,4 +1,4 @@
-import { Badge } from '../../types/badges';
+import { Badge } from '../types/badges';
 
 export const BADGES: Badge[] = [
     // 🚽 PROPRETÉ
@@ -42,7 +42,7 @@ export const BADGES: Badge[] = [
         requirements: {
             type: 'streak',
             consecutiveDays: 7,
-            streakActionIds: [101, 1] // Pas d'accidents
+            streakActionIds: [1, 101, 102, 103] // Actions de propreté positives
         }
     },
 
@@ -234,7 +234,7 @@ export const getBadgesByRarity = (rarity: Badge['rarity']) =>
     BADGES.filter(badge => badge.rarity === rarity);
 
 // Couleurs par rareté
-export const RARITY_COLORS = {
+export const RARITY_COLORS: Record<Badge['rarity'], string> = {
     common: '#6b7280',
     rare: '#3b82f6',
     epic: '#8b5cf6',
@@ -242,7 +242,7 @@ export const RARITY_COLORS = {
 };
 
 // Ordre de rareté (pour le tri)
-export const RARITY_ORDER = {
+export const RARITY_ORDER: Record<Badge['rarity'], number> = {
     common: 1,
     rare: 2,
     epic: 3,

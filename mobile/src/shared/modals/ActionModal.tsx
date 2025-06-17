@@ -125,7 +125,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
                 <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
                     {/* Sélection du pet */}
                     <PetSelector
-                        pets={pets}
+                        pets={pets.filter(p => p.isOwn)}
                         selectedPet={selectedPet}
                         onPetSelect={setSelectedPet}
                     />
@@ -180,7 +180,7 @@ const ActionModal: React.FC<ActionModalProps> = ({
                     {!selectedPet && (
                         <View style={styles.placeholder}>
                             <Text style={styles.placeholderText}>
-                                Sélectionnez d'abord un chien pour voir les actions disponibles
+                                Sélectionnez d'abord un de vos chiens pour voir les actions disponibles
                             </Text>
                         </View>
                     )}
