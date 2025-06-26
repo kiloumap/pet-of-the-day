@@ -2,19 +2,30 @@ services:
   api:
     build:
       context: .
+      dockerfile: Dockerfile
     ports:
       - "8080:8080"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       - DB_HOST=db
       - DB_PORT=5432
       - DB_USER=postgres
       - DB_PASSWORD=secret
       - DB_NAME=pet_of_the_day
+      - JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+      - PORT=8080
+    restart: unless-stopped
+    volumes:
+      # Pour le développement, tu peux décommenter cette ligne pour un rechargement à chaud
+      # - .:/app
+      - /app/tmp
+    networks:
+      - pet-network
 
   db:
-    image: postgres:15
+    image: postgres:15-alpine
     container_name: postgres_pet_of_the_day
     environment:
       POSTGRES_USER: postgres
@@ -24,17 +35,36 @@ services:
       - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d pet_of_the_day"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - pet-network
 
-  migrate:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: golang-migrate
+  # Service optionnel pour adminer (interface web PostgreSQL)
+  adminer:
+    image: adminer:latest
+    ports:
+      - "8081:8080"
     depends_on:
       - db
-    volumes:
-      - ./database/migrations:/app/database/migrations
-    entrypoint: ["/bin/bash"]
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+    restart: unless-stopped
+    networks:
+      - pet-network
+    profiles:
+      - admin
+
 volumes:
   db_data:
+    driver: local
 
+networks:
+  pet-network:
+    driver: bridge

@@ -1,35 +1,326 @@
-DB_URL := "postgres://postgres:secret@db:5432/pet_of_the_day?sslmode=disable"
-MIGRATIONS_PATH := "./database/migrations"
+# Justfile for Pet of the Day
+# Install Just: https://github.com/casey/just
 
-start:
-    go run server.go
+# Variables
+compose_file := "docker-compose.yml"
+migrate_path := "database/migrations"
 
-graphql-init:
-    go get github.com/99designs/gqlgen/codegen/config@v0.17.62 && \
-    go get github.com/99designs/gqlgen/internal/imports@v0.17.62 && \
-    go get github.com/99designs/gqlgen/internal/imports@v0.17.62 && \
-    go get github.com/99designs/gqlgen@v0.17.62
-graphql-generate:
-    go run github.com/99designs/gqlgen generate
+# Colors
+yellow := '\033[1;33m'
+green := '\033[0;32m'
+red := '\033[0;31m'
+blue := '\033[0;34m'
+nc := '\033[0m'
 
-bash:
-    docker run -it pet-of-the-day-api bash
+# Show available commands by default
+default:
+    @just --list
 
-migrate-create name:
-    docker run --rm -v $(pwd)/database/migrations:/app/database/migrations \
-    pet-of-the-day-api migrate create -ext sql -dir /app/database/migrations -seq {{name}}
+# Show all available commands
+help:
+    @echo "{{yellow}}Pet of the Day - Available commands:{{nc}}"
+    @echo ""
+    @just --list
 
-migrate-up:
-    docker-compose run --rm -v $(pwd)/database/migrations:/app/database/migrations \
-    api migrate -path {{ MIGRATIONS_PATH }} -database "{{ DB_URL }}" up
+# Generate Ent code
+generate:
+    @echo "{{yellow}}Generating Ent code...{{nc}}"
+    chmod +x scripts/ent-setup.sh
+    ./scripts/ent-setup.sh
+    @echo "{{green}}Ent code generated!{{nc}}"
 
-migrate-down:
-    docker-compose run --rm -v $(pwd)/database/migrations:/app/database/migrations \
-    api migrate -path {{ MIGRATIONS_PATH }} -database "{{ DB_URL }}" down
-
-test-init:
+# Initialize Go module and download dependencies
+go-init:
+    @echo "{{yellow}}Initializing Go module...{{nc}}"
     go mod tidy
     go mod download
+    just generate
+    @echo "{{green}}Go module initialized!{{nc}}"
 
+# Start all services
+start:
+    @echo "{{yellow}}Starting services...{{nc}}"
+    chmod +x scripts/dev.sh scripts/migrate.sh
+    ./scripts/dev.sh start
+
+# Stop all services
+stop:
+    @echo "{{yellow}}Stopping services...{{nc}}"
+    ./scripts/dev.sh stop
+
+# Restart all services
+restart:
+    @echo "{{yellow}}Restarting services...{{nc}}"
+    ./scripts/dev.sh restart
+
+# Build Docker images
+build:
+    @echo "{{yellow}}Building images...{{nc}}"
+    ./scripts/dev.sh build
+
+# Clean containers and volumes
+clean:
+    @echo "{{red}}Cleaning containers and volumes...{{nc}}"
+    ./scripts/dev.sh clean
+
+# Run all tests
 test:
-    go test ./internal/users -v
+    @echo "{{yellow}}Running tests...{{nc}}"
+    go test ./... -v
+
+# Run tests with coverage
+test-coverage:
+    @echo "{{yellow}}Running tests with coverage...{{nc}}"
+    go test ./... -cover -coverprofile=coverage.out
+    go tool cover -html=coverage.out -o coverage.html
+    @echo "{{green}}Coverage report generated: coverage.html{{nc}}"
+
+# Run unit tests only (no integration)
+test-unit:
+    @echo "{{yellow}}Running unit tests...{{nc}}"
+    go test ./internal/user/domain -v
+    go test ./internal/shared/types -v
+
+# Run integration tests only
+test-integration:
+    @echo "{{yellow}}Running integration tests...{{nc}}"
+    go test ./internal/*/interfaces/... -v
+
+# Apply all migrations
+migrate-up:
+    @echo "{{yellow}}Applying migrations...{{nc}}"
+    ./scripts/migrate.sh up
+
+# Rollback one migration
+migrate-down:
+    @echo "{{yellow}}Rolling back one migration...{{nc}}"
+    ./scripts/migrate.sh down 1
+
+# Show migration status
+migrate-status:
+    @echo "{{yellow}}Migration status:{{nc}}"
+    ./scripts/migrate.sh version
+
+# Create new migration
+migrate-create name:
+    @echo "{{yellow}}Creating migration {{name}}...{{nc}}"
+    ./scripts/migrate.sh create {{name}}
+
+# Force migration version
+migrate-force version:
+    @echo "{{yellow}}Forcing migration version {{version}}...{{nc}}"
+    ./scripts/migrate.sh force {{version}}
+
+# Drop entire database
+migrate-drop:
+    @echo "{{red}}⚠️  Dropping entire database...{{nc}}"
+    ./scripts/migrate.sh drop
+
+# Insert test data
+seed:
+    @echo "{{yellow}}Inserting test data...{{nc}}"
+    ./scripts/dev.sh seed
+
+# Show logs for all services
+logs:
+    ./scripts/dev.sh logs
+
+# Show logs for specific service
+logs-service service:
+    ./scripts/dev.sh logs {{service}}
+
+# Open shell in API container
+shell:
+    @echo "{{yellow}}Opening API shell...{{nc}}"
+    ./scripts/dev.sh shell
+
+# Open PostgreSQL shell
+db:
+    @echo "{{yellow}}Opening PostgreSQL shell...{{nc}}"
+    ./scripts/dev.sh db
+
+# Show service status
+status:
+    ./scripts/dev.sh status
+
+# Start complete development environment
+dev:
+    @echo "{{yellow}}Starting development environment...{{nc}}"
+    just build
+    just start
+    @echo "{{green}}Environment ready!{{nc}}"
+    @echo "{{green}}API: http://localhost:8080{{nc}}"
+    @echo "{{green}}Adminer: http://localhost:8081{{nc}}"
+
+# Install development tools
+install-tools:
+    @echo "{{yellow}}Installing development tools...{{nc}}"
+    go install github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+    go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+    go install github.com/air-verse/air@latest
+    go install entgo.io/ent/cmd/ent@latest
+    @echo "{{green}}Tools installed!{{nc}}"
+
+# Run linter
+lint:
+    @echo "{{yellow}}Running linter...{{nc}}"
+    golangci-lint run
+
+# Format code
+fmt:
+    @echo "{{yellow}}Formatting code...{{nc}}"
+    go fmt ./...
+    goimports -w . || echo "goimports not installed, run: go install golang.org/x/tools/cmd/goimports@latest"
+
+# Run benchmarks
+bench:
+    @echo "{{yellow}}Running benchmarks...{{nc}}"
+    docker-compose exec api go test -bench=. ./...
+
+# Generate Go documentation
+docs:
+    @echo "{{yellow}}Generating documentation...{{nc}}"
+    godoc -http=:6060
+    @echo "{{green}}Documentation available at http://localhost:6060{{nc}}"
+
+# Check dependencies
+deps-check:
+    @echo "{{yellow}}Checking dependencies...{{nc}}"
+    go mod verify
+    go mod tidy
+
+# Update dependencies
+deps-update:
+    @echo "{{yellow}}Updating dependencies...{{nc}}"
+    go get -u ./...
+    go mod tidy
+
+# Security vulnerability scan
+security-scan:
+    @echo "{{yellow}}Running security scan...{{nc}}"
+    go install golang.org/x/vuln/cmd/govulncheck@latest
+    govulncheck ./...
+
+# Start with hot reload (requires air)
+dev-watch:
+    @echo "{{yellow}}Starting with hot reload...{{nc}}"
+    air
+
+# Build for production
+prod-build:
+    @echo "{{yellow}}Building for production...{{nc}}"
+    docker build -t pet-of-the-day:latest .
+
+# Deploy to production (adapt to your infrastructure)
+prod-deploy:
+    @echo "{{yellow}}Deploying to production...{{nc}}"
+    @echo "{{red}}⚠️  Command to adapt according to your infrastructure{{nc}}"
+
+# Export database
+db-export:
+    @echo "{{yellow}}Exporting database...{{nc}}"
+    docker-compose exec db pg_dump -U postgres pet_of_the_day > backup.sql
+    @echo "{{green}}Database exported to backup.sql{{nc}}"
+
+# Import database
+db-import file:
+    @echo "{{yellow}}Importing {{file}}...{{nc}}"
+    docker-compose exec -T db psql -U postgres pet_of_the_day < {{file}}
+    @echo "{{green}}Import completed{{nc}}"
+
+# Reset database completely
+db-reset:
+    @echo "{{red}}⚠️  Completely resetting database...{{nc}}"
+    just migrate-drop
+    just migrate-up
+    just seed
+
+# Check all dependencies are installed
+check-deps:
+    #!/usr/bin/env bash
+    echo -e "{{yellow}}Checking dependencies...{{nc}}"
+
+    # Check Docker
+    if ! command -v docker &> /dev/null; then
+        echo -e "{{red}}❌ Docker not found{{nc}}"
+        exit 1
+    else
+        echo -e "{{green}}✅ Docker$(docker --version){{nc}}"
+    fi
+
+    # Check Docker Compose
+    if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
+        echo -e "{{red}}❌ Docker Compose not found{{nc}}"
+        exit 1
+    else
+        echo -e "{{green}}✅ Docker Compose available{{nc}}"
+    fi
+
+    # Check Go
+    if ! command -v go &> /dev/null; then
+        echo -e "{{yellow}}⚠️  Go not found (optional for Docker){{nc}}"
+    else
+        echo -e "{{green}}✅ Go $(go version){{nc}}"
+    fi
+
+    # Check Just
+    echo -e "{{green}}✅ Just $(just --version){{nc}}"
+
+    echo -e "{{green}}All main dependencies are installed!{{nc}}"
+
+# Clean Go build files
+clean-go:
+    @echo "{{yellow}}Cleaning Go files...{{nc}}"
+    go clean -cache
+    go clean -modcache
+    go clean -testcache
+
+# Show project information
+info:
+    @echo "{{blue}}=== Pet of the Day - Project Information ==={{nc}}"
+    @echo ""
+    @echo "{{yellow}}Services:{{nc}}"
+    @echo "  • API: http://localhost:8080"
+    @echo "  • Adminer: http://localhost:8081"
+    @echo "  • PostgreSQL: localhost:5432"
+    @echo ""
+    @echo "{{yellow}}Main commands:{{nc}}"
+    @echo "  • just dev          - Start complete environment"
+    @echo "  • just start        - Start services"
+    @echo "  • just stop         - Stop services"
+    @echo "  • just logs         - Show logs"
+    @echo "  • just shell        - API shell"
+    @echo "  • just db           - PostgreSQL shell"
+    @echo "  • just migrate-up   - Apply migrations"
+    @echo "  • just test         - Run tests"
+    @echo ""
+    @echo "{{yellow}}Documentation:{{nc}}"
+    @echo "  • README.md - Complete guide"
+    @echo "  • just help - Command list"
+
+# Initial project setup
+setup:
+    @echo "{{yellow}}Initial project setup...{{nc}}"
+    just check-deps
+    chmod +x scripts/*.sh
+    just go-init
+    just build
+    just migrate-up
+    just seed
+    @echo "{{green}}Setup completed! Use 'just start' to begin.{{nc}}"
+
+# Complete project diagnostic
+diagnose:
+    @echo "{{blue}}=== Pet of the Day Diagnostic ==={{nc}}"
+    @echo ""
+    just check-deps
+    @echo ""
+    just status
+    @echo ""
+    just migrate-status
+    @echo ""
+    @echo "{{yellow}}Recent API logs:{{nc}}"
+    docker-compose logs --tail=10 api || echo "API not started"
+    @echo ""
+    @echo "{{yellow}}Recent DB logs:{{nc}}"
+    docker-compose logs --tail=10 db || echo "DB not started"

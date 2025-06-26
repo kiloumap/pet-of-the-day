@@ -1,1 +1,94 @@
-.idea
+# Binaires Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+main
+pet-of-the-day
+
+# Fichiers de test
+*.test
+*.out
+coverage.txt
+coverage.html
+
+# Dépendances Go
+vendor/
+go.work
+go.work.sum
+
+# Code généré
+ent/*/*.go
+ent/*.go
+ent/migrate/
+ent/runtime/
+ent/predicate/
+!ent/schema/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Variables d'environnement
+.env
+.env.local
+.env.production
+
+# Docker
+.docker/
+
+# Fichiers temporaires
+tmp/
+temp/
+.tmp/
+
+# Base de données locale
+*.db
+*.sqlite
+*.sqlite3
+
+# Fichiers de sauvegarde
+*.bak
+*.backup
+
+# Certificats
+*.pem
+*.key
+*.crt
+
+# Archives
+*.tar.gz
+*.zip
+*.rar
+
+# Cache
+.cache/
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Fichiers de build
+dist/
+build/
+
+# Documentation générée
+docs/generated/
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Fichiers de build
+dist/
+build/
+
+# Documentation générée
+docs/generated/
