@@ -7,8 +7,12 @@ import (
 	"os"
 
 	"pet-of-the-day/ent"
-	"pet-of-the-day/internal/user/domain"
-	"pet-of-the-day/internal/user/infrastructure"
+	petDomain "pet-of-the-day/internal/pet/domain"
+	petInfra "pet-of-the-day/internal/pet/infrastructure"
+	petInfraEnt "pet-of-the-day/internal/pet/infrastructure/ent"
+	userDomain "pet-of-the-day/internal/user/domain"
+	userInfra "pet-of-the-day/internal/user/infrastructure"
+	userInfraEnt "pet-of-the-day/internal/user/infrastructure/ent"
 
 	_ "github.com/lib/pq"
 )
@@ -44,11 +48,18 @@ func NewRepositoryFactory() (*RepositoryFactory, error) {
 	return &RepositoryFactory{entClient: client}, nil
 }
 
-func (f *RepositoryFactory) CreateUserRepository() domain.Repository {
+func (f *RepositoryFactory) CreateUserRepository() userDomain.Repository {
 	if f.entClient != nil {
-		return infrastructure.NewEntUserRepository(f.entClient)
+		return userInfraEnt.NewEntUserRepository(f.entClient)
 	}
-	return infrastructure.NewMockUserRepository()
+	return userInfra.NewMockUserRepository()
+}
+
+func (f *RepositoryFactory) CreatePetRepository() petDomain.Repository {
+	if f.entClient != nil {
+		return petInfraEnt.NewEntPetRepository(f.entClient)
+	}
+	return petInfra.NewMockPetRepository()
 }
 
 func (f *RepositoryFactory) Close() error {

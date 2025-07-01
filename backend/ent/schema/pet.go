@@ -28,8 +28,6 @@ func (Pet) Fields() []ent.Field {
 			Optional(),
 		field.String("photo_url").
 			Optional(),
-		field.Strings("personality").
-			Optional(),
 		field.Time("created_at").
 			Default(time.Now).
 			Immutable(),
@@ -42,9 +40,11 @@ func (Pet) Fields() []ent.Field {
 func (Pet) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("owner", User.Type).
-			Ref("pets").
+			Ref("owned_pets").
 			Unique().
 			Required(),
+		edge.From("co_owners", User.Type).
+			Ref("co_owned_pets"),
 		edge.From("groups", Group.Type).
 			Ref("members"),
 		edge.To("score_events", ScoreEvent.Type),

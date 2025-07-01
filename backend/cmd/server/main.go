@@ -5,11 +5,14 @@ import (
 	"net/http"
 	"os"
 
+	petsCommands "pet-of-the-day/internal/pet/application/commands"
+	petQueries "pet-of-the-day/internal/pet/application/queries"
+	pethttp "pet-of-the-day/internal/pet/interfaces/http"
 	"pet-of-the-day/internal/shared/auth"
 	"pet-of-the-day/internal/shared/database"
 	"pet-of-the-day/internal/shared/events"
-	"pet-of-the-day/internal/user/application/commands"
-	"pet-of-the-day/internal/user/application/queries"
+	usersCommands "pet-of-the-day/internal/user/application/commands"
+	userQueries "pet-of-the-day/internal/user/application/queries"
 	userhttp "pet-of-the-day/internal/user/interfaces/http"
 
 	"github.com/gorilla/mux"
@@ -34,9 +37,9 @@ func main() {
 
 	// User bounded context (auto Mock/Ent)
 	userRepo := repoFactory.CreateUserRepository()
-	registerHandler := commands.NewRegisterUserHandler(userRepo, eventBus)
-	loginHandler := commands.NewLoginUserHandler(userRepo, eventBus)
-	getUserHandler := queries.NewGetUserByIDHandler(userRepo)
+	registerHandler := usersCommands.NewRegisterUserHandler(userRepo, eventBus)
+	loginHandler := usersCommands.NewLoginUserHandler(userRepo, eventBus)
+	getUserHandler := userQueries.NewGetUserByIDHandler(userRepo)
 
 	userController := userhttp.NewController(
 		registerHandler,
@@ -45,12 +48,25 @@ func main() {
 		jwtService,
 	)
 
+	// Pet bounded context
+	petRepo := repoFactory.CreatePetRepository()
+	addPetHandler := petsCommands.NewAddPetHandler(petRepo, eventBus)
+	getUserPetsHandler := petQueries.NewGetUserPetsHandler(petRepo)
+	getPetByIdHandler := petQueries.NewGetPetByIDHandler(petRepo)
+
+	petController := pethttp.NewPetController(
+		addPetHandler,
+		getUserPetsHandler,
+		getPetByIdHandler,
+	)
+
 	// HTTP router setup
 	router := mux.NewRouter()
 	api := router.PathPrefix("/api").Subrouter()
 
 	// Register user routes
 	userController.RegisterRoutes(api, authMiddleware)
+	petController.RegisterRoutes(api, authMiddleware)
 
 	// Health check
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {

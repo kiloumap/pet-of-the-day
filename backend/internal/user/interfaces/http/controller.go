@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"pet-of-the-day/internal/shared/auth"
+	sharederrors "pet-of-the-day/internal/shared/errors"
 	"pet-of-the-day/internal/user/application/commands"
 	"pet-of-the-day/internal/user/application/queries"
 	"pet-of-the-day/internal/user/domain"
@@ -35,19 +36,19 @@ func NewController(
 
 func (c *Controller) RegisterRoutes(router *mux.Router, authMiddleware func(http.Handler) http.Handler) {
 	// Public routes
-	router.HandleFunc("/auth/register", c.Register).Methods("POST")
-	router.HandleFunc("/auth/login", c.Login).Methods("POST")
+	router.HandleFunc("/auth/register", c.Register).Methods(http.MethodPost)
+	router.HandleFunc("/auth/login", c.Login).Methods(http.MethodPost)
 
 	// Protected routes
 	protected := router.NewRoute().Subrouter()
 	protected.Use(authMiddleware)
-	protected.HandleFunc("/users/me", c.GetCurrentUser).Methods("GET")
+	protected.HandleFunc("/users/me", c.GetCurrentUser).Methods(http.MethodGet)
 }
 
 func (c *Controller) Register(w http.ResponseWriter, r *http.Request) {
 	var cmd commands.RegisterUser
 	if err := json.NewDecoder(r.Body).Decode(&cmd); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.Error(w, sharederrors.ErrInvalidRequestBody.Error(), http.StatusBadRequest)
 		return
 	}
 

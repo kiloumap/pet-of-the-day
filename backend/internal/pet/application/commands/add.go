@@ -1,0 +1,68 @@
+package commands
+
+import (
+	"context"
+	"time"
+
+	"pet-of-the-day/internal/pet/domain"
+	"pet-of-the-day/internal/shared/events"
+
+	"github.com/google/uuid"
+)
+
+type AddPet struct {
+	OwnerID   uuid.UUID
+	Name      string
+	Species   domain.Species
+	Breed     string
+	BirthDate time.Time
+	PhotoURL  string
+}
+
+type AddPetResult struct {
+	PetId uuid.UUID   `json:"pet_id"`
+	Pet   *domain.Pet `json:"pet"`
+}
+
+type AddPetHandler struct {
+	petRepo  domain.Repository
+	eventBus events.Bus
+}
+
+func NewAddPetHandler(petRepo domain.Repository, eventBus events.Bus) *AddPetHandler {
+	return &AddPetHandler{
+		petRepo:  petRepo,
+		eventBus: eventBus,
+	}
+}
+
+func (ph *AddPetHandler) Handle(ctx context.Context, cmd AddPet) (*AddPetResult, error) {
+	exists, err := ph.petRepo.ExistsByOwnerId(ctx, cmd.OwnerID, cmd.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	if exists {
+		return nil, domain.ErrAlreadyExist
+	}
+
+	pet, err := domain.NewPet(cmd.OwnerID, cmd.Name, cmd.Species, cmd.Breed, cmd.BirthDate, cmd.PhotoURL)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := ph.petRepo.Save(ctx, pet); err != nil {
+		return nil, err
+	}
+
+	for _, event := range pet.DomainEvents() {
+		if err := ph.eventBus.Publish(ctx, event); err != nil {
+			// Log error but don't fail the command
+		}
+	}
+
+	return &AddPetResult{
+		PetId: pet.ID(),
+		Pet:   pet,
+	}, nil
+}

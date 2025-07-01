@@ -1,0 +1,116 @@
+package http
+
+import (
+	"encoding/json"
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
+	"net/http"
+	"pet-of-the-day/internal/pet/application/commands"
+	"pet-of-the-day/internal/pet/application/queries"
+	"pet-of-the-day/internal/pet/domain"
+	sharederrors "pet-of-the-day/internal/shared/errors"
+)
+
+type Controller struct {
+	addHandler    *commands.AddPetHandler
+	getUserPets   *queries.GetUserPetsHandler
+	getPetHandler *queries.GetPetByIDHandler
+}
+
+func NewPetController(
+	addHandler *commands.AddPetHandler,
+	getUserPets *queries.GetUserPetsHandler,
+	getPetHandler *queries.GetPetByIDHandler,
+) *Controller {
+	return &Controller{
+		addHandler:    addHandler,
+		getUserPets:   getUserPets,
+		getPetHandler: getPetHandler,
+	}
+}
+
+func (c *Controller) RegisterRoutes(router *mux.Router, authMiddleware func(http.Handler) http.Handler) {
+	// Protected routes
+	protected := router.NewRoute().Subrouter()
+	protected.Use(authMiddleware)
+	protected.HandleFunc("/pet/add", c.Add).Methods(http.MethodPost)
+	protected.HandleFunc("/pet/{id}", c.GetPetById).Methods("GET")
+}
+
+func (c *Controller) Add(w http.ResponseWriter, r *http.Request) {
+	var cmd commands.AddPet
+	if err := json.NewDecoder(r.Body).Decode(&cmd); err != nil {
+		http.Error(w, sharederrors.ErrInvalidRequestBody.Error(), http.StatusBadRequest)
+		return
+	}
+
+	result, err := c.addHandler.Handle(r.Context(), cmd)
+	if err != nil {
+		c.handleError(w, err)
+		return
+	}
+
+	response := map[string]interface{}{
+		"pet_id": result.PetId,
+		"pet": map[string]interface{}{
+			"name":      result.Pet.Name(),
+			"species":   result.Pet.Species(),
+			"breed":     result.Pet.Breed(),
+			"birthDate": result.Pet.BirthDate(),
+			"photoUrl":  result.Pet.PhotoUrl(),
+		},
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+}
+
+func (c *Controller) GetPetById(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	petID, err := uuid.Parse(vars["id"])
+
+	if err != nil {
+		http.Error(w, domain.ErrPetNotFound.Error(), http.StatusBadRequest)
+		return
+	}
+
+	query := queries.GetPetById{PetID: petID}
+
+	result, err := c.getPetHandler.Handle(r.Context(), query)
+	if err != nil {
+		c.handleError(w, err)
+		return
+	}
+
+	response := map[string]interface{}{
+		"id":           result.ID,
+		"name":         result.Name,
+		"species":      result.Species,
+		"breed":        result.Breed,
+		"birth_date":   result.BirthDate,
+		"photo_url":    result.PhotoURL,
+		"created_at":   result.CreatedAt,
+		"owner_id":     result.OwnerID,
+		"co_owner_ids": result.CoOwnerIDs,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+}
+
+func (c *Controller) handleError(w http.ResponseWriter, err error) {
+	switch err {
+	case domain.ErrPetNotFound:
+		http.Error(w, "Pet not found", http.StatusNotFound) // ← Corriger
+	case domain.ErrInvalidName:
+		http.Error(w, "Invalid pet name", http.StatusBadRequest) // ← Corriger
+	case domain.ErrInvalidSpecies:
+		http.Error(w, "Invalid species", http.StatusBadRequest) // ← Corriger
+	case domain.ErrAlreadyExist:
+		http.Error(w, "Pet already exists", http.StatusConflict) // ← Corriger
+	default:
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
+}
