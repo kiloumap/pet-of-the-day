@@ -11,18 +11,18 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     defaults:
       run:
         working-directory: ./backend
-    
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.21'  # Ajuste selon ta version
+          go-version: '1.24'
 
       - name: Cache Go modules
         uses: actions/cache@v3
