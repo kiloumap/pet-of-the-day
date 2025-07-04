@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -96,25 +97,15 @@ func TestRegisterEndpoint_Success(t *testing.T) {
 
 	jsonPayload, _ := json.Marshal(payload)
 	resp, err := http.Post(server.URL+"/api/auth/register", "application/json", bytes.NewBuffer(jsonPayload))
-	if err != nil {
-		t.Fatalf("Expected no error, got %v", err)
-	}
+	assert.NoError(t, err)
 	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusCreated {
-		t.Errorf("Expected status 201, got %d", resp.StatusCode)
-	}
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
 
 	var response map[string]interface{}
 	json.NewDecoder(resp.Body).Decode(&response)
 
-	if response["user_id"] == nil {
-		t.Error("Expected user_id in response")
-	}
-
-	if response["token"] == nil {
-		t.Error("Expected token in response")
-	}
+	assert.Contains(t, response, "user_id")
+	assert.Contains(t, response, "token")
 }
 
 func TestRegisterEndpoint_InvalidEmail(t *testing.T) {
