@@ -24,22 +24,25 @@ type Pet struct {
 
 func NewPet(ownerId uuid.UUID, name string, species Species, breed string, birthDate time.Time, photoUrl string) (*Pet, error) {
 	if name == "" {
-		return nil, ErrInvalidName
+		return nil, ErrPetInvalidName
 	}
 
 	if !species.IsValid() {
-		return nil, ErrInvalidSpecies
+		return nil, ErrPetInvalidSpecies
 	}
+
+	now := time.Now()
+
 	pet := &Pet{
-		id:        uuid.UUID{},
+		id:        uuid.New(),
 		ownerID:   ownerId,
 		name:      name,
 		species:   species,
 		breed:     breed,
 		birthDate: birthDate,
 		photoUrl:  photoUrl,
-		createdAt: time.Time{},
-		updatedAt: time.Time{},
+		createdAt: now,
+		updatedAt: now,
 	}
 
 	// @fixme maybe delay the event after the persistance
@@ -72,25 +75,25 @@ func ReconstructPet(
 	}
 }
 
-func (pet *Pet) recordEvent(event events.Event) {
-	pet.events = append(pet.events, event)
+func (p *Pet) recordEvent(event events.Event) {
+	p.events = append(p.events, event)
 }
 
-func (pet *Pet) DomainEvents() []events.Event {
-	return pet.events
+func (p *Pet) DomainEvents() []events.Event {
+	return p.events
 }
 
-func (pet *Pet) ClearEvents() {
-	pet.events = nil
+func (p *Pet) ClearEvents() {
+	p.events = nil
 }
 
 // Getters
-func (pet *Pet) ID() uuid.UUID        { return pet.id }
-func (pet *Pet) OwnerID() uuid.UUID   { return pet.ownerID }
-func (pet *Pet) Name() string         { return pet.name }
-func (pet *Pet) Species() Species     { return pet.species }
-func (pet *Pet) Breed() string        { return pet.breed }
-func (pet *Pet) PhotoUrl() string     { return pet.photoUrl }
-func (pet *Pet) BirthDate() time.Time { return pet.birthDate }
-func (pet *Pet) CreatedAt() time.Time { return pet.createdAt }
-func (pet *Pet) UpdatedAt() time.Time { return pet.updatedAt }
+func (p *Pet) ID() uuid.UUID        { return p.id }
+func (p *Pet) OwnerID() uuid.UUID   { return p.ownerID }
+func (p *Pet) Name() string         { return p.name }
+func (p *Pet) Species() Species     { return p.species }
+func (p *Pet) Breed() string        { return p.breed }
+func (p *Pet) PhotoUrl() string     { return p.photoUrl }
+func (p *Pet) BirthDate() time.Time { return p.birthDate }
+func (p *Pet) CreatedAt() time.Time { return p.createdAt }
+func (p *Pet) UpdatedAt() time.Time { return p.updatedAt }

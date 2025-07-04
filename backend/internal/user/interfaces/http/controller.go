@@ -131,13 +131,13 @@ func (c *Controller) handleError(w http.ResponseWriter, err error) {
 	switch err {
 	case domain.ErrUserNotFound:
 		http.Error(w, "User not found", http.StatusNotFound)
-	case domain.ErrEmailAlreadyUsed:
+	case domain.ErrUserEmailAlreadyUsed:
 		http.Error(w, "Email already in use", http.StatusConflict)
-	case domain.ErrInvalidPassword:
+	case domain.ErrUserInvalidPassword:
 		http.Error(w, "Invalid password", http.StatusUnauthorized)
-	case domain.ErrInvalidEmail:
+	case domain.ErrUserInvalidEmail:
 		http.Error(w, "Invalid email format", http.StatusBadRequest)
-	case domain.ErrInvalidName:
+	case domain.ErrUserInvalidName:
 		http.Error(w, "Invalid name", http.StatusBadRequest)
 	default:
 		http.Error(w, "Internal server error", http.StatusInternalServerError)

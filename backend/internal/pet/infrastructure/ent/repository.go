@@ -14,11 +14,6 @@ type EntPetRepository struct {
 	client *ent.Client
 }
 
-func (r *EntPetRepository) FindOneByOwnerId(ctx context.Context, ownerId uuid.UUID, name string) (*domain.Pet, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func NewEntPetRepository(client *ent.Client) *EntPetRepository {
 	return &EntPetRepository{
 		client: client,

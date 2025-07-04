@@ -39,8 +39,8 @@ func TestNewUser_InvalidPassword(t *testing.T) {
 
 	_, err := domain.NewUser(email, "", "John", "Doe")
 
-	if err != domain.ErrInvalidPassword {
-		t.Errorf("Expected ErrInvalidPassword, got %v", err)
+	if err != domain.ErrUserInvalidPassword {
+		t.Errorf("Expected ErrUserInvalidPassword, got %v", err)
 	}
 }
 
@@ -49,8 +49,8 @@ func TestNewUser_InvalidName(t *testing.T) {
 
 	_, err := domain.NewUser(email, "password123", "", "Doe")
 
-	if err != domain.ErrInvalidName {
-		t.Errorf("Expected ErrInvalidName, got %v", err)
+	if err != domain.ErrUserInvalidName {
+		t.Errorf("Expected ErrUserInvalidName, got %v", err)
 	}
 }
 

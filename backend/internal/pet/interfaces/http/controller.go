@@ -33,11 +33,11 @@ func (c *Controller) RegisterRoutes(router *mux.Router, authMiddleware func(http
 	// Protected routes
 	protected := router.NewRoute().Subrouter()
 	protected.Use(authMiddleware)
-	protected.HandleFunc("/pet/add", c.Add).Methods(http.MethodPost)
-	protected.HandleFunc("/pet/{id}", c.GetPetById).Methods("GET")
+	protected.HandleFunc("/pet/add", c.AddPet).Methods(http.MethodPost)
+	protected.HandleFunc("/pet/{id}", c.GetPetById).Methods(http.MethodGet)
 }
 
-func (c *Controller) Add(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) AddPet(w http.ResponseWriter, r *http.Request) {
 	var cmd commands.AddPet
 	if err := json.NewDecoder(r.Body).Decode(&cmd); err != nil {
 		http.Error(w, sharederrors.ErrInvalidRequestBody.Error(), http.StatusBadRequest)
@@ -62,7 +62,7 @@ func (c *Controller) Add(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(response)
 }
 
@@ -104,11 +104,11 @@ func (c *Controller) handleError(w http.ResponseWriter, err error) {
 	switch err {
 	case domain.ErrPetNotFound:
 		http.Error(w, "Pet not found", http.StatusNotFound) // ← Corriger
-	case domain.ErrInvalidName:
+	case domain.ErrPetInvalidName:
 		http.Error(w, "Invalid pet name", http.StatusBadRequest) // ← Corriger
-	case domain.ErrInvalidSpecies:
+	case domain.ErrPetInvalidSpecies:
 		http.Error(w, "Invalid species", http.StatusBadRequest) // ← Corriger
-	case domain.ErrAlreadyExist:
+	case domain.ErrPetAlreadyExist:
 		http.Error(w, "Pet already exists", http.StatusConflict) // ← Corriger
 	default:
 		http.Error(w, "Internal server error", http.StatusInternalServerError)

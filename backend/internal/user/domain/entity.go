@@ -24,11 +24,11 @@ type User struct {
 
 func NewUser(email types.Email, plainPassword, firstName, lastName string) (*User, error) {
 	if plainPassword == "" {
-		return nil, ErrInvalidPassword
+		return nil, ErrUserInvalidPassword
 	}
 
 	if firstName == "" || lastName == "" {
-		return nil, ErrInvalidName
+		return nil, ErrUserInvalidName
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(plainPassword), bcrypt.DefaultCost)
@@ -78,7 +78,7 @@ func (u *User) VerifyPassword(plainPassword string) error {
 
 func (u *User) ChangePassword(oldPassword, newPassword string) error {
 	if err := u.VerifyPassword(oldPassword); err != nil {
-		return ErrInvalidPassword
+		return ErrUserInvalidPassword
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)

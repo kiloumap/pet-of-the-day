@@ -43,7 +43,7 @@ func (ph *AddPetHandler) Handle(ctx context.Context, cmd AddPet) (*AddPetResult,
 	}
 
 	if exists {
-		return nil, domain.ErrAlreadyExist
+		return nil, domain.ErrPetAlreadyExist
 	}
 
 	pet, err := domain.NewPet(cmd.OwnerID, cmd.Name, cmd.Species, cmd.Breed, cmd.BirthDate, cmd.PhotoURL)

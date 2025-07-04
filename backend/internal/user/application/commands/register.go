@@ -37,7 +37,7 @@ func NewRegisterUserHandler(userRepo domain.Repository, eventBus events.Bus) *Re
 func (h *RegisterUserHandler) Handle(ctx context.Context, cmd RegisterUser) (*RegisterUserResult, error) {
 	email, err := types.NewEmail(cmd.Email)
 	if err != nil {
-		return nil, domain.ErrInvalidEmail
+		return nil, domain.ErrUserInvalidEmail
 	}
 
 	exists, err := h.userRepo.ExistsByEmail(ctx, email)
@@ -46,7 +46,7 @@ func (h *RegisterUserHandler) Handle(ctx context.Context, cmd RegisterUser) (*Re
 	}
 
 	if exists {
-		return nil, domain.ErrEmailAlreadyUsed
+		return nil, domain.ErrUserEmailAlreadyUsed
 	}
 
 	user, err := domain.NewUser(email, cmd.Password, cmd.FirstName, cmd.LastName)

@@ -2,6 +2,7 @@ package commands_test
 
 import (
 	"context"
+	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
 
@@ -19,6 +20,7 @@ func init() {
 }
 
 // Mock repository for testing
+// @todo change local repo with in memory repo
 type mockUserRepository struct {
 	users       map[string]*domain.User
 	emailExists map[string]bool
@@ -27,7 +29,7 @@ type mockUserRepository struct {
 func newMockUserRepository() *mockUserRepository {
 	return &mockUserRepository{
 		users:       make(map[string]*domain.User),
-		emailExists: make(map[string]bool),
+		emailExists: make(map[string]bool), // #todo flag mock should be replaced by infrastructure mock @see add_test.go
 	}
 }
 
@@ -105,11 +107,11 @@ func TestRegisterUserHandler_EmailAlreadyExists(t *testing.T) {
 		LastName:  "Doe",
 	}
 
-	_, err := handler.Handle(context.Background(), cmd)
+	result, err := handler.Handle(context.Background(), cmd)
 
-	if err != domain.ErrEmailAlreadyUsed {
-		t.Errorf("Expected ErrEmailAlreadyUsed, got %v", err)
-	}
+	assert.ErrorIs(t, err, domain.ErrUserEmailAlreadyUsed)
+	assert.Nil(t, result)
+	assert.Equal(t, domain.ErrUserEmailAlreadyUsed, err)
 }
 
 func TestRegisterUserHandler_InvalidEmail(t *testing.T) {
@@ -124,9 +126,9 @@ func TestRegisterUserHandler_InvalidEmail(t *testing.T) {
 		LastName:  "Doe",
 	}
 
-	_, err := handler.Handle(context.Background(), cmd)
+	result, err := handler.Handle(context.Background(), cmd)
 
-	if err != domain.ErrInvalidEmail {
-		t.Errorf("Expected ErrInvalidEmail, got %v", err)
-	}
+	assert.ErrorIs(t, err, domain.ErrUserInvalidEmail)
+	assert.Nil(t, result)
+	assert.Equal(t, domain.ErrUserInvalidEmail, err)
 }

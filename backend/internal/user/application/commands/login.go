@@ -35,7 +35,7 @@ func NewLoginUserHandler(userRepo domain.Repository, eventBus events.Bus) *Login
 func (h *LoginUserHandler) Handle(ctx context.Context, cmd LoginUser) (*LoginUserResult, error) {
 	email, err := types.NewEmail(cmd.Email)
 	if err != nil {
-		return nil, domain.ErrInvalidEmail
+		return nil, domain.ErrUserInvalidEmail
 	}
 
 	user, err := h.userRepo.FindByEmail(ctx, email)
@@ -44,7 +44,7 @@ func (h *LoginUserHandler) Handle(ctx context.Context, cmd LoginUser) (*LoginUse
 	}
 
 	if err := user.VerifyPassword(cmd.Password); err != nil {
-		return nil, domain.ErrInvalidPassword
+		return nil, domain.ErrUserInvalidPassword
 	}
 
 	loginEvent := domain.NewUserLoggedInEvent(user.ID())
