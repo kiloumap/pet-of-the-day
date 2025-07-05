@@ -16,13 +16,13 @@ func init() {
 	os.Setenv("GO_ENV", "test")
 }
 
-func TestGetOwnedPets_Handle_Success(t *testing.T) {
+func TestGetCoOwnedPets_Handle_Success(t *testing.T) {
 	repo := infrastructure.NewMockPetRepository()
-	handler := queries.NewGetOwnedPetsHandler(repo)
+	handler := queries.NewGetCoOwnedPetsHandler(repo)
 
-	ownerID := uuid.New()
+	userID := uuid.New()
 	arthas, _ := domain.NewPet(
-		ownerID,
+		userID,
 		"Arthas",
 		domain.SpeciesDog,
 		"Mini Aussie",
@@ -33,8 +33,9 @@ func TestGetOwnedPets_Handle_Success(t *testing.T) {
 	err := repo.Save(context.Background(), arthas)
 	assert.NoError(t, err)
 
+	otherUserID := uuid.New()
 	archie, _ := domain.NewPet(
-		ownerID,
+		otherUserID,
 		"Archie",
 		domain.SpeciesDog,
 		"Corgi",
@@ -43,21 +44,21 @@ func TestGetOwnedPets_Handle_Success(t *testing.T) {
 	)
 
 	err = repo.Save(context.Background(), archie)
+	repo.AddCoOwner(context.Background(), archie.ID(), userID)
 	assert.NoError(t, err)
 
-	query := queries.GetOwnedPets{
-		UserID: ownerID,
+	query := queries.GetCoOwnedPets{
+		UserID: userID,
 	}
 	result, err := handler.Handle(context.Background(), query)
 
 	assert.NotNilf(t, result, "Should not be nil")
-	assert.Equalf(t, ownerID, result.Pets[0].OwnerID(), "pet owner id should be equal")
-	assert.Equalf(t, "Arthas", result.Pets[0].Name(), "Name should be Arthas")
-	assert.Equalf(t, "Archie", result.Pets[1].Name(), "Name should be Archie")
-	assert.Lenf(t, result.Pets, 2, "pet count should be equal")
+	assert.Equalf(t, otherUserID, result.Pets[0].OwnerID(), "pet owner id should be equal")
+	assert.Equalf(t, "Archie", result.Pets[0].Name(), "Name should be Archie")
+	assert.Lenf(t, result.Pets, 1, "pet count should be equal")
 }
 
-func TestGetOwnedPets_Handle_Empty(t *testing.T) {
+func TestGetCoOwnedPets_Handle_Empty(t *testing.T) {
 	repo := infrastructure.NewMockPetRepository()
 	handler := queries.NewGetOwnedPetsHandler(repo)
 
