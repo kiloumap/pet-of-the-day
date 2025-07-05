@@ -32,22 +32,12 @@ func TestAddPetHandler_Handle_Success(t *testing.T) {
 	}
 
 	result, err := handler.Handle(context.Background(), cmd)
-	if err != nil {
-		t.Fatalf("Expected no error, got %v", err)
-	}
+	assert.NoErrorf(t, err, "Expected no error, got %v", err)
 
-	if result == nil {
-		t.Fatal("Expected result, got nil")
-	}
-
+	assert.NotNilf(t, result, "Expected result, got nil")
 	pet, err := repo.FindByID(context.Background(), result.PetId)
-	if err != nil {
-		t.Fatalf("Expected no error, got %v", err)
-	}
-
-	if pet.Name() != cmd.Name {
-		t.Errorf("Expected pet name %s, got %s", cmd.Name, pet.Name())
-	}
+	assert.NoErrorf(t, err, "Expected no error, got %v", err)
+	assert.Equalf(t, "Arthas", pet.Name(), "Expected pet name %s, got %s", cmd.Name)
 }
 
 func TestAddPetHandler_Handle_PetAlreadyExists(t *testing.T) {

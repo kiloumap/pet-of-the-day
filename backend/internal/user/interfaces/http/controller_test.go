@@ -126,9 +126,7 @@ func TestRegisterEndpoint_InvalidEmail(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusBadRequest {
-		t.Errorf("Expected status 400, got %d", resp.StatusCode)
-	}
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 }
 
 func TestLoginEndpoint_Success(t *testing.T) {

@@ -1,6 +1,7 @@
 package domain_test
 
 import (
+	"github.com/stretchr/testify/assert"
 	"testing"
 
 	"pet-of-the-day/internal/shared/types"
@@ -9,92 +10,66 @@ import (
 
 func TestNewUser_Success(t *testing.T) {
 	email, _ := types.NewEmail("test@example.com")
-
 	user, err := domain.NewUser(email, "password123", "John", "Doe")
 
-	if err != nil {
-		t.Fatalf("Expected no error, got %v", err)
-	}
-
-	if user.Email().String() != "test@example.com" {
-		t.Errorf("Expected email test@example.com, got %s", user.Email().String())
-	}
-
-	if user.FirstName() != "John" {
-		t.Errorf("Expected first name John, got %s", user.FirstName())
-	}
+	assert.NoErrorf(t, err, "Expected no error, got %v", err)
+	assert.Equal(t, "test@example.com", user.Email().String())
+	assert.Equal(t, "Doe", user.LastName())
+	assert.Equal(t, "John", user.FirstName())
+	assert.NotEqualf(t, "password123", user.PasswordHash(), "Password should be hashed")
 
 	events := user.DomainEvents()
-	if len(events) != 1 {
-		t.Errorf("Expected 1 domain event, got %d", len(events))
-	}
 
-	if events[0].EventType() != domain.UserRegisteredEventType {
-		t.Errorf("Expected UserRegistered event, got %s", events[0].EventType())
-	}
+	assert.Lenf(t, events, 1, "Expected 1 event, got %d", len(events))
+	assert.Equal(t, domain.UserRegisteredEventType, events[0].EventType())
 }
 
 func TestNewUser_InvalidPassword(t *testing.T) {
 	email, _ := types.NewEmail("test@example.com")
-
 	_, err := domain.NewUser(email, "", "John", "Doe")
-
-	if err != domain.ErrUserInvalidPassword {
-		t.Errorf("Expected ErrUserInvalidPassword, got %v", err)
-	}
+	assert.ErrorIs(t, err, domain.ErrUserInvalidPassword)
 }
 
 func TestNewUser_InvalidName(t *testing.T) {
 	email, _ := types.NewEmail("test@example.com")
-
 	_, err := domain.NewUser(email, "password123", "", "Doe")
-
-	if err != domain.ErrUserInvalidName {
-		t.Errorf("Expected ErrUserInvalidName, got %v", err)
-	}
+	assert.ErrorIs(t, err, domain.ErrUserInvalidName)
 }
 
-func TestUser_VerifyPassword(t *testing.T) {
+func TestUser_VerifyPassword_Success(t *testing.T) {
 	email, _ := types.NewEmail("test@example.com")
 	user, _ := domain.NewUser(email, "password123", "John", "Doe")
 
-	// Valid password
 	err := user.VerifyPassword("password123")
-	if err != nil {
-		t.Errorf("Expected no error for valid password, got %v", err)
-	}
+	assert.NoErrorf(t, err, "Expected no error for valid password, got %v", err)
+}
 
-	// Invalid password
-	err = user.VerifyPassword("wrongpassword")
-	if err == nil {
-		t.Error("Expected error for invalid password")
-	}
+func TestUser_VerifyPassword_Failure(t *testing.T) {
+	email, _ := types.NewEmail("test@example.com")
+	user, _ := domain.NewUser(email, "password123", "John", "Doe")
+
+	err := user.VerifyPassword("qdwwqdqw")
+	assert.Errorf(t, err, "Expected error for invalid password, got %v", err)
 }
 
 func TestUser_ChangePassword(t *testing.T) {
+	oldPwd := "oldpassword"
+	newPwd := "newpassword"
+
 	email, _ := types.NewEmail("test@example.com")
-	user, _ := domain.NewUser(email, "oldpassword", "John", "Doe")
-	user.ClearEvents() // Clear registration event
+	user, _ := domain.NewUser(email, oldPwd, "John", "Doe")
 
-	err := user.ChangePassword("oldpassword", "newpassword")
+	user.ClearEvents()
+	err := user.ChangePassword(oldPwd, newPwd)
+	assert.NoErrorf(t, err, "Expected no error, got %v", err)
 
-	if err != nil {
-		t.Fatalf("Expected no error, got %v", err)
-	}
+	err = user.VerifyPassword(oldPwd)
+	assert.Errorf(t, err, "Expected error for invalid password, got %v", err)
 
-	// Verify old password doesn't work
-	if user.VerifyPassword("oldpassword") == nil {
-		t.Error("Old password should not work after change")
-	}
+	err = user.VerifyPassword(newPwd)
+	assert.NoErrorf(t, err, "Expected no error for valid password, got %v", err)
 
-	// Verify new password works
-	if err := user.VerifyPassword("newpassword"); err != nil {
-		t.Error("New password should work after change")
-	}
-
-	// Check event was recorded
 	events := user.DomainEvents()
-	if len(events) != 1 || events[0].EventType() != domain.PasswordChangedEventType {
-		t.Error("PasswordChanged event should be recorded")
-	}
+	assert.Lenf(t, events, 1, "Expected 1 event, got %d", len(events))
+	assert.Equal(t, domain.PasswordChangedEventType, events[0].EventType())
 }
