@@ -13,18 +13,18 @@ import (
 
 type Controller struct {
 	addHandler    *commands.AddPetHandler
-	getUserPets   *queries.GetUserPetsHandler
+	getOwnedPets  *queries.GetOwnedPetsHandler
 	getPetHandler *queries.GetPetByIDHandler
 }
 
 func NewPetController(
 	addHandler *commands.AddPetHandler,
-	getUserPets *queries.GetUserPetsHandler,
+	getOwnedPets *queries.GetOwnedPetsHandler,
 	getPetHandler *queries.GetPetByIDHandler,
 ) *Controller {
 	return &Controller{
 		addHandler:    addHandler,
-		getUserPets:   getUserPets,
+		getOwnedPets:  getOwnedPets,
 		getPetHandler: getPetHandler,
 	}
 }

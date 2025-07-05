@@ -35,6 +35,25 @@ func (r *EntPetRepository) Save(ctx context.Context, domainPet *domain.Pet) erro
 	return err
 }
 
+func (r *EntPetRepository) AddCoOwner(ctx context.Context, petID uuid.UUID, userID uuid.UUID) error {
+	user, err := r.client.User.Get(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	err = r.client.Pet.UpdateOneID(petID).
+		AddCoOwners(user).
+		Exec(ctx)
+
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return domain.ErrPetNotFound
+		}
+	}
+
+	return nil
+}
+
 func (r *EntPetRepository) FindByID(ctx context.Context, id uuid.UUID) (*domain.Pet, error) {
 	entPet, err := r.client.Pet.
 		Query().
@@ -87,14 +106,11 @@ func (r *EntPetRepository) FindAllPetsByOwnerId(ctx context.Context, ownerID uui
 	return r.entToDomains(entPets)
 }
 
-func (r *EntPetRepository) FindAllPetsByUserID(ctx context.Context, ownerID uuid.UUID) ([]*domain.Pet, error) {
+func (r *EntPetRepository) FindAllPetsByCoOwnerID(ctx context.Context, ownerID uuid.UUID) ([]*domain.Pet, error) {
 	entPets, err := r.client.Pet.
 		Query().
 		Where(
-			pet.Or(
-				pet.HasOwnerWith(user.ID(ownerID)),
-				pet.HasCoOwnersWith(user.ID(ownerID)),
-			),
+			pet.HasCoOwnersWith(user.ID(ownerID)),
 		).
 		WithOwner().
 		All(ctx)

@@ -28,7 +28,7 @@ func setupTestServer() (*httptest.Server, *infrastructure.MockPetRepository) {
 	}
 
 	addHandler := commands.NewAddPetHandler(repo, eventBus)
-	getUserPets := queries.NewGetUserPetsHandler(repo)
+	getUserPets := queries.NewGetOwnedPetsHandler(repo)
 	getPetHandler := queries.NewGetPetByIDHandler(repo)
 
 	controller := pethttp.NewPetController(

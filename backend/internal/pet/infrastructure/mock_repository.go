@@ -32,6 +32,24 @@ func (r *MockPetRepository) Save(ctx context.Context, pet *domain.Pet) error {
 	return nil
 }
 
+func (r *MockPetRepository) AddCoOwner(ctx context.Context, petID uuid.UUID, userID uuid.UUID) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if _, exists := r.pets[petID]; !exists {
+		return domain.ErrPetNotFound
+	}
+
+	for _, existingID := range r.coOwners[petID] {
+		if existingID == userID {
+			return nil
+		}
+	}
+
+	r.coOwners[petID] = append(r.coOwners[petID], userID)
+	return nil
+}
+
 func (r *MockPetRepository) FindByID(ctx context.Context, id uuid.UUID) (*domain.Pet, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -72,18 +90,23 @@ func (r *MockPetRepository) FindAllPetsByOwnerId(ctx context.Context, ownerId uu
 	return pets, nil
 }
 
-func (r *MockPetRepository) FindAllPetsByUserID(ctx context.Context, ownerId uuid.UUID) ([]*domain.Pet, error) {
+func (r *MockPetRepository) FindAllPetsByCoOwnerID(ctx context.Context, coOwnerID uuid.UUID) ([]*domain.Pet, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
 	var pets []*domain.Pet
 
-	for _, pet := range r.pets {
-		if pet.OwnerID() == ownerId {
-			pets = append(pets, pet)
+	for petID, coOwnerIDs := range r.coOwners {
+		for _, id := range coOwnerIDs {
+			if id == coOwnerID {
+				if pet, exists := r.pets[petID]; exists {
+					pets = append(pets, pet)
+				}
+				break
+			}
 		}
 	}
-
+	
 	return pets, nil
 }
 
