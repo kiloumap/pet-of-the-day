@@ -78,7 +78,7 @@ test-coverage:
     @echo "{{yellow}}Running tests with coverage...{{nc}}"
     go test -covermode=count -coverprofile=coverage.out ./internal/...
     @echo "📊 Generating HTML coverage report..."
-    go tool cover -html=coverage.out -o coverage.html
+    @go tool cover -html=coverage.out -o coverage.html
     @echo "{{green}}Coverage report generated: coverage.html{{nc}}"
     @echo "📈 Coverage summary:"
     @go tool cover -func=coverage.out | tail -1
