@@ -54,8 +54,8 @@ func TestRegisterUserHandler_EmailAlreadyExists(t *testing.T) {
 		LastName:  "Doe",
 	}
 
-	_, err := handler.Handle(context.Background(), cmd)
-	result, _ := handler.Handle(context.Background(), cmd)
+	_, _ = handler.Handle(context.Background(), cmd)
+	result, err := handler.Handle(context.Background(), cmd)
 
 	assert.ErrorIs(t, err, domain.ErrUserEmailAlreadyUsed)
 	assert.Nil(t, result)
@@ -76,7 +76,7 @@ func TestRegisterUserHandler_InvalidEmail(t *testing.T) {
 
 	result, err := handler.Handle(context.Background(), cmd)
 
-	assert.ErrorIs(t, err, domain.ErrUserInvalidEmail)
+	assert.ErrorIs(t, domain.ErrUserInvalidEmail, err)
 	assert.Nil(t, result)
 	assert.Equal(t, domain.ErrUserInvalidEmail, err)
 }

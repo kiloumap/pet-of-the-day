@@ -114,6 +114,7 @@ func TestRegisterEndpoint_Success(t *testing.T) {
 
 	assert.Contains(t, response, "user_id")
 	assert.Contains(t, response, "token")
+	assert.Contains(t, response, "user")
 }
 
 func TestRegisterEndpoint_InvalidEmail(t *testing.T) {
@@ -136,7 +137,7 @@ func TestRegisterEndpoint_InvalidEmail(t *testing.T) {
 		_ = Body.Close()
 	}(resp.Body)
 
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 }
 
 func TestLoginEndpoint_Success(t *testing.T) {

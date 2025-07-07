@@ -146,7 +146,7 @@ func (c *Controller) handleError(w http.ResponseWriter, err error) {
 	case domain.ErrUserInvalidPassword:
 		http.Error(w, "Invalid password", http.StatusUnauthorized)
 	case domain.ErrUserInvalidEmail:
-		http.Error(w, "Invalid email format", http.StatusBadRequest)
+		http.Error(w, "Invalid email format", http.StatusNotFound)
 	case domain.ErrUserInvalidName:
 		http.Error(w, "Invalid name", http.StatusBadRequest)
 	default:
