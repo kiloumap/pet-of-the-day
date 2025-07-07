@@ -60,6 +60,8 @@ jobs:
           go mod tidy
           chmod +x scripts/ent-setup.sh
           ./scripts/ent-setup.sh
+          go build ./...
+          
 
       - name: Install additional tools
         run: |
@@ -69,19 +71,11 @@ jobs:
       - name: Format code
         run: just fmt
 
-      - name: Clean and lint code
-        run: |
-          go clean -modcache || true
-          go mod download
-        working-directory: ./backend
-
       - name: Lint code
         uses: golangci/golangci-lint-action@v8
         with:
           version: latest
           working-directory: backend
-          args: --timeout=5m --verbose
-          skip-cache: true
 
       - name: Set environment variables for tests
         run: echo "GO_ENV=test" >> $GITHUB_ENV
