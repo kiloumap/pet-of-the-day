@@ -1,11 +1,24 @@
+# backend/.golangci.yml
+run:
+  timeout: 5m
+
 issues:
   exclude-dirs:
     - ent
+  exclude-files:
+    - ".*_gen.go$"
 
 linters:
+  disable-all: true
   enable:
-    - gofmt
-    - govet
     - errcheck
-    - unused
     - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+
+linters-settings:
+  govet:
+    enable:
+      - shadow

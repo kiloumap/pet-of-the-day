@@ -45,7 +45,7 @@ func NewPet(ownerId uuid.UUID, name string, species Species, breed string, birth
 		updatedAt: now,
 	}
 
-	// @fixme maybe delay the event after the persistance
+	// @fixme maybe delay the event after the persistence
 	pet.recordEvent(NewPetRegisteredEvent(pet.id, pet.name))
 	return pet, nil
 }
