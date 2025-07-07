@@ -53,8 +53,10 @@ func TestGetOwnedPets_Handle_Success(t *testing.T) {
 
 	assert.NotNilf(t, result, "Should not be nil")
 	assert.Equalf(t, ownerID, result.Pets[0].OwnerID(), "pet owner id should be equal")
-	assert.Equalf(t, "Arthas", result.Pets[0].Name(), "Name should be Arthas")
-	assert.Equalf(t, "Archie", result.Pets[1].Name(), "Name should be Archie")
+	gotNames := []string{result.Pets[0].Name(), result.Pets[1].Name()}
+	expectedNames := []string{"Arthas", "Archie"}
+
+	assert.ElementsMatchf(t, expectedNames, gotNames, "Pet names should match, ignoring the order")
 	assert.Lenf(t, result.Pets, 2, "pet count should be equal")
 }
 
