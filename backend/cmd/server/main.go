@@ -28,7 +28,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create repository factory: %v", err)
 	}
-	defer repoFactory.Close()
+	defer func(repoFactory *database.RepositoryFactory) {
+		_ = repoFactory.Close()
+	}(repoFactory)
 
 	// Shared services
 	eventBus := events.NewInMemoryBus()

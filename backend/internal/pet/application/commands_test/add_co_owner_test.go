@@ -15,7 +15,7 @@ import (
 )
 
 func init() {
-	os.Setenv("GO_ENV", "test")
+	_ = os.Setenv("GO_ENV", "test")
 }
 
 func TestAddCoOwnerHandler_Handle_Success(t *testing.T) {

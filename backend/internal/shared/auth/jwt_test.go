@@ -36,7 +36,7 @@ func TestJWTService_GenerateAndValidateToken(t *testing.T) {
 	}
 
 	// Check expiration is in the future
-	if claims.ExpiresAt.Time.Before(time.Now()) {
+	if claims.ExpiresAt.Before(time.Now()) {
 		t.Error("Token should not be expired immediately after generation")
 	}
 }

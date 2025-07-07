@@ -1,24 +1,44 @@
 # backend/.golangci.yml
+version: '2'
+
 run:
   timeout: 5m
-
-issues:
-  exclude-dirs:
-    - ent
-  exclude-files:
-    - ".*_gen.go$"
-
-linters:
-  disable-all: true
+formatters:
   enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+linters:
+  default: none
+  enable:
+    - asciicheck
+    - bodyclose
+    - copyloopvar
+    - dogsled
+    - durationcheck
     - errcheck
-    - gosimple
+    - errorlint
+    - ginkgolinter
+    - gochecknoinits
+    - gosec
     - govet
+    - importas
     - ineffassign
+    - misspell
+    - nakedret
+    - nolintlint
+    - revive
     - staticcheck
+    - testifylint
+    - unconvert
+    - unparam
     - unused
-
-linters-settings:
-  govet:
-    enable:
-      - shadow
+    - wastedassign
+  settings:
+    govet:
+      enable:
+        - shadow
+  exclusions:
+    paths:
+      - "ent/*"

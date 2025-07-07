@@ -3,6 +3,7 @@ package http_test
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"pet-of-the-day/internal/pet/application/commands"
@@ -61,7 +62,9 @@ func TestAddPetEndpoint_Success(t *testing.T) {
 	jsonPayload, _ := json.Marshal(payload)
 	resp, err := http.Post(server.URL+"/api/pet/add", "application/json", bytes.NewBuffer(jsonPayload))
 	assert.NoError(t, err)
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(resp.Body)
 
 	assert.Equal(t, http.StatusCreated, resp.StatusCode)
 

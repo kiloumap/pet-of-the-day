@@ -14,7 +14,7 @@ import (
 )
 
 func init() {
-	os.Setenv("GO_ENV", "test")
+	_ = os.Setenv("GO_ENV", "test")
 }
 
 func TestRegisterUserHandler_Success(t *testing.T) {

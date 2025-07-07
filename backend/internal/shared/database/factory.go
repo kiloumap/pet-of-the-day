@@ -40,7 +40,7 @@ func NewRepositoryFactory() (*RepositoryFactory, error) {
 	// Run migrations
 	if err := client.Schema.Create(context.Background()); err != nil {
 		log.Printf("⚠️  Migration failed: %v", err)
-		client.Close()
+		_ = client.Close()
 		return &RepositoryFactory{entClient: nil}, nil
 	}
 

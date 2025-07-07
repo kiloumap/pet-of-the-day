@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -100,7 +101,9 @@ func TestRegisterEndpoint_Success(t *testing.T) {
 	jsonPayload, _ := json.Marshal(payload)
 	resp, err := http.Post(server.URL+"/api/auth/register", "application/json", bytes.NewBuffer(jsonPayload))
 	assert.NoError(t, err)
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(resp.Body)
 	assert.Equal(t, http.StatusCreated, resp.StatusCode)
 
 	var response map[string]interface{}
@@ -129,7 +132,9 @@ func TestRegisterEndpoint_InvalidEmail(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(resp.Body)
 
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 }
@@ -154,7 +159,9 @@ func TestLoginEndpoint_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
 		t.Errorf("Expected status 200, got %d", resp.StatusCode)
