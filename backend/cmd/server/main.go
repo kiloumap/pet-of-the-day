@@ -28,7 +28,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create repository factory: %v", err)
 	}
-	defer repoFactory.Close()
+	defer func(repoFactory *database.RepositoryFactory) {
+		_ = repoFactory.Close()
+	}(repoFactory)
 
 	// Shared services
 	eventBus := events.NewInMemoryBus()
@@ -51,7 +53,7 @@ func main() {
 	// Pet bounded context
 	petRepo := repoFactory.CreatePetRepository()
 	addPetHandler := petsCommands.NewAddPetHandler(petRepo, eventBus)
-	getUserPetsHandler := petQueries.NewGetUserPetsHandler(petRepo)
+	getUserPetsHandler := petQueries.NewGetOwnedPetsHandler(petRepo)
 	getPetByIdHandler := petQueries.NewGetPetByIDHandler(petRepo)
 
 	petController := pethttp.NewPetController(
@@ -72,7 +74,9 @@ func main() {
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"healthy","service":"pet-of-the-day"}`))
+		if _, err := w.Write([]byte(`{"status":"healthy","service":"pet-of-the-day"}`)); err != nil {
+			log.Printf("Failed to write health check response: %v", err)
+		}
 	}).Methods("GET")
 
 	log.Printf("🚀 Server starting on port %s", port)

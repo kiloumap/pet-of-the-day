@@ -3,6 +3,7 @@ module pet-of-the-day
 go 1.24
 
 require (
+	ariga.io/atlas v0.35.0
 	entgo.io/ent v0.14.4
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/uuid v1.6.0
@@ -12,7 +13,6 @@ require (
 )
 
 require (
-	ariga.io/atlas v0.35.0 // indirect
 	github.com/agext/levenshtein v1.2.1 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect

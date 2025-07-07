@@ -1,179 +1,195 @@
 # Pet of the Day 🐕🐱
 
-Une application sociale et ludique pour les propriétaires d'animaux de compagnie qui transforme le quotidien avec leur animal en une expérience communautaire gamifiée.
+A social and gamified application for pet owners that transforms daily life with their pets into a community-driven experience.
 
-## 🚀 Démarrage rapide
+## 🚀 Quick Start
 
-### Prérequis
+### Prerequisites
 
-- Docker et Docker Compose
-- Make (optionnel, pour les commandes simplifiées)
+- Docker and Docker Compose
+- Just (recommended) - Install: https://github.com/casey/just
 
 ### Installation
 
-1. **Cloner le projet**
+1. **Clone the project**
 ```bash
-git clone https://github.com/votre-username/pet-of-the-day.git
+git clone https://github.com/your-username/pet-of-the-day.git
 cd pet-of-the-day/backend
 ```
 
-2. **Rendre les scripts exécutables**
+2. **Make scripts executable**
 ```bash
 chmod +x scripts/*.sh
 ```
 
-3. **Démarrer l'application**
+3. **Start the application**
 ```bash
-make dev
-# ou
-./scripts/dev.sh start
+just dev
+# or
+just start
 ```
 
-L'application sera disponible sur :
-- **API** : http://localhost:8080
-- **Adminer** (interface DB) : http://localhost:8081
-- **Base de données** : localhost:5432
+The application will be available at:
+- **API**: http://localhost:8080
+- **Adminer** (DB interface): http://localhost:8081
+- **Database**: localhost:5432
 
-## 📚 Commandes utiles
+## 📚 Useful Commands
 
-### Avec Make (recommandé)
+### With Just (recommended)
 ```bash
-make help              # Voir toutes les commandes
-make start             # Démarrer les services
-make stop              # Arrêter les services
-make logs              # Voir les logs
-make shell             # Shell dans le container API
-make db                # Shell PostgreSQL
-make migrate-up        # Appliquer les migrations
-make test              # Lancer les tests
+just help              # Show all commands
+just start             # Start services
+just stop              # Stop services
+just logs              # View logs
+just shell             # Shell into API container
+just db                # PostgreSQL shell
+just migrate-up        # Apply migrations
+just test              # Run tests
+just test user         # Run user context tests only
+just test pet          # Run pet context tests only
 ```
 
-### Avec les scripts
+### With scripts
 ```bash
-./scripts/dev.sh start        # Démarrer
-./scripts/dev.sh stop         # Arrêter
-./scripts/dev.sh logs api     # Logs de l'API
+./scripts/dev.sh start        # Start
+./scripts/dev.sh stop         # Stop
+./scripts/dev.sh logs api     # API logs
 ./scripts/migrate.sh up       # Migrations
-./scripts/migrate.sh create nom_migration  # Nouvelle migration
+./scripts/migrate.sh create migration_name  # New migration
 ```
 
 ## 🏗️ Architecture
 
-### Structure du projet
+### Project Structure
 ```
 backend/
-├── cmd/server/          # Point d'entrée de l'application
-├── internal/            # Code interne de l'application
-│   ├── config/         # Configuration
-│   ├── database/       # Connexion DB
-│   ├── handlers/       # Gestionnaires HTTP
-│   ├── models/         # Modèles de données
-│   └── middleware/     # Middlewares
-├── database/migrations/ # Migrations SQL
-├── scripts/            # Scripts d'automatisation
-├── Dockerfile          # Image Docker
-├── docker-compose.yml  # Orchestration
-└── Makefile           # Commandes simplifiées
+├── cmd/server/          # Application entry point
+├── internal/            # Internal application code
+│   ├── shared/         # Shared components
+│   │   ├── auth/       # JWT authentication
+│   │   ├── database/   # Database connection & factory
+│   │   ├── errors/     # Common errors
+│   │   ├── events/     # Event bus system
+│   │   └── types/      # Shared value objects
+│   ├── user/           # User bounded context
+│   │   ├── domain/     # Business logic & rules
+│   │   ├── application/# Use cases (commands/queries)
+│   │   ├── infrastructure/ # Data persistence
+│   │   └── interfaces/ # HTTP controllers
+│   └── pet/            # Pet bounded context
+│       ├── domain/     # Pet business logic
+│       ├── application/# Pet use cases
+│       ├── infrastructure/ # Pet persistence
+│       └── interfaces/ # Pet HTTP API
+├── ent/                # Ent ORM generated code
+├── scripts/            # Automation scripts
+├── Dockerfile          # Docker image
+├── docker-compose.yml  # Service orchestration
+└── justfile           # Command automation
 ```
 
-### Stack technique
-- **Backend** : Go 1.24 avec Gorilla Mux
-- **Base de données** : PostgreSQL 15
-- **Authentification** : JWT
-- **Migrations** : golang-migrate
-- **Containerisation** : Docker & Docker Compose
+### Architecture Patterns
+- **Domain-Driven Design (DDD)** with bounded contexts
+- **Clean Architecture** with dependency inversion
+- **CQRS** pattern with commands and queries
+- **Repository pattern** with mock implementations
+- **Event-driven architecture** with in-memory bus
 
-## 🗄️ Base de données
+### Tech Stack
+- **Backend**: Go 1.24 with Gorilla Mux
+- **ORM**: Ent (schema-first, type-safe)
+- **Database**: PostgreSQL 15
+- **Authentication**: JWT tokens
+- **Testing**: Testify with mock repositories
+- **Containerization**: Docker & Docker Compose
 
-### Schéma principal
+## 🗄️ Database Schema
 
-- **users** : Utilisateurs de l'application
-- **pets** : Animaux de compagnie
-- **groups** : Groupes (famille, quartier, amis)
-- **group_members** : Appartenance des animaux aux groupes
-- **behaviors** : Comportements configurables avec points
-- **score_events** : Événements de score quotidiens
-- **daily_scores** : Scores agrégés par jour et groupe
-- **badges** : Badges obtenus par les animaux
+### Core Entities
+
+- **users**: Application users
+- **pets**: Pet animals with owner/co-owner relationships
+- **groups**: Community groups (family, neighborhood, friends)
+- **behaviors**: Configurable behaviors with point values
+- **score_events**: Daily scoring events
+- **daily_scores**: Aggregated scores by day and group
 
 ### Migrations
 
 ```bash
-# Appliquer toutes les migrations
-make migrate-up
+# Apply all migrations
+just migrate-up
 
-# Créer une nouvelle migration
-make migrate-create NAME=add_new_feature
+# Create new migration
+just migrate-create add_new_feature
 
-# Voir le statut
-make migrate-status
+# Check status
+just migrate-status
 
 # Rollback
-make migrate-down
+just migrate-down
 ```
 
 ## 🔌 API Endpoints
 
-### Authentification
+### Authentication
 ```http
-POST /api/auth/register    # Inscription
-POST /api/auth/login       # Connexion
+POST /api/auth/register    # User registration
+POST /api/auth/login       # User login
 ```
 
-### Utilisateurs
+### Users
 ```http
-GET /api/users/me          # Profil utilisateur
+GET /api/users/me          # Current user profile
 ```
 
-### Animaux
+### Pets
 ```http
-GET    /api/pets           # Liste des animaux
-POST   /api/pets           # Créer un animal
-GET    /api/pets/{id}      # Détails d'un animal
-PUT    /api/pets/{id}      # Modifier un animal
-DELETE /api/pets/{id}      # Supprimer un animal
+GET    /api/pet/owned      # Get owned pets
+GET    /api/pet/co-owned   # Get co-owned pets
+POST   /api/pet/add        # Create a pet
+GET    /api/pet/{id}       # Get pet details
+POST   /api/pet/co-owner   # Add co-owner to pet
 ```
 
-### Groupes
+### Health Check
 ```http
-GET  /api/groups                    # Liste des groupes
-POST /api/groups                    # Créer un groupe
-GET  /api/groups/{id}               # Détails d'un groupe
-GET  /api/groups/{id}/members       # Membres du groupe
-POST /api/groups/{id}/join          # Rejoindre un groupe
+GET /health                # API health status
 ```
 
-### Comportements et Scores
-```http
-GET  /api/behaviors                 # Liste des comportements
-POST /api/behaviors                 # Créer un comportement
-POST /api/scores/events             # Enregistrer un événement
-GET  /api/groups/{id}/daily-scores  # Scores du jour
-```
+## 🧪 Testing
 
-### Santé
-```http
-GET /health                         # Statut de l'API
-```
-
-## 🧪 Tests
-
+### Run Tests
 ```bash
-# Lancer tous les tests
-make test
+# All tests
+just test
 
-# Tests avec coverage
-docker-compose exec api go test -cover ./...
+# Specific bounded context
+just test user
+just test pet
 
-# Tests d'une fonction spécifique
-docker-compose exec api go test -run TestFunctionName ./...
+# With coverage
+just test-coverage
+
+# Unit tests only
+just test-unit
+
+# Integration tests only
+just test-integration
 ```
 
-## 🔧 Développement
+### Test Structure
+- **Unit tests**: Domain logic and value objects
+- **Integration tests**: Repository implementations
+- **HTTP tests**: Controller endpoints
+- **Mock repositories**: For isolated testing
 
-### Variables d'environnement
+## 🔧 Development
 
-Créer un fichier `.env` (optionnel, les valeurs par défaut fonctionnent) :
+### Environment Variables
+
+Create a `.env` file (optional, defaults work out of the box):
 
 ```env
 DB_HOST=localhost
@@ -185,106 +201,110 @@ JWT_SECRET=your-super-secret-jwt-key
 PORT=8080
 ```
 
-### Workflow de développement
+### Development Workflow
 
-1. **Faire des changements** dans le code
-2. **Rebuilder** si nécessaire : `make build`
-3. **Redémarrer** : `make restart`
-4. **Voir les logs** : `make logs`
-5. **Tester** : `make test`
-
-### Créer une nouvelle migration
+1. **Make changes** to the code
+2. **Rebuild** if needed: `just build`
+3. **Restart**: `just restart`
+4. **View logs**: `just logs`
+5. **Test**: `just test`
+6. **Validate**; `just validate`
+### Hot Reload Development
 
 ```bash
-# Créer les fichiers de migration
-make migrate-create NAME=add_notifications
+# Install air for hot reload
+go install github.com/air-verse/air@latest
 
-# Éditer les fichiers générés
-# database/migrations/004_add_notifications.up.sql
-# database/migrations/004_add_notifications.down.sql
-
-# Appliquer la migration
-make migrate-up
+# Start with hot reload
+just dev-watch
 ```
 
-### Debug
+### Creating New Migration
 
 ```bash
-# Logs en temps réel
-make logs SERVICE=api
+# Create migration files
+just migrate-create add_notifications
 
-# Shell dans le container
-make shell
-
-# Accès direct à la DB
-make db
-
-# Statut des services
-make status
+# Edit generated files
+# Then apply
+just migrate-up
 ```
 
-## 📝 Exemples d'utilisation
-
-### Inscription et connexion
+### Debug Commands
 
 ```bash
-# Inscription
+# Real-time logs
+just logs-service api
+
+# Shell into container
+just shell
+
+# Direct DB access
+just db
+
+# Service status
+just status
+```
+
+## 📝 Usage Examples
+
+### User Registration & Login
+
+```bash
+# Register
 curl -X POST http://localhost:8080/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "julie@example.com",
+    "email": "john@example.com",
     "password": "password123",
-    "firstName": "Julie",
-    "lastName": "Martin"
+    "first_name": "John",
+    "last_name": "Doe"
   }'
 
-# Connexion
+# Login
 curl -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "julie@example.com",
+    "email": "john@example.com",
     "password": "password123"
   }'
 ```
 
-### Créer un animal
+### Pet Management
 
 ```bash
-# Avec le token d'authentification
-curl -X POST http://localhost:8080/api/pets \
+# Create a pet
+curl -X POST http://localhost:8080/api/pet/add \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
-    "name": "Nala",
-    "species": "chien",
+    "owner_id": "user-uuid",
+    "name": "Rex",
+    "species": "dog",
     "breed": "Golden Retriever",
-    "personality": ["joueur", "affectueux"]
+    "birth_date": "2023-01-15T00:00:00Z",
+    "photo_url": "https://example.com/photo.jpg"
   }'
-```
 
-### Enregistrer un comportement
-
-```bash
-curl -X POST http://localhost:8080/api/scores/events \
+# Add co-owner
+curl -X POST http://localhost:8080/api/pet/co-owner \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
-    "petId": "pet-uuid",
-    "behaviorId": "behavior-uuid",
-    "points": 5,
-    "comment": "Très bon pipi dehors!"
+    "pet_id": "pet-uuid",
+    "co_owner_id": "user-uuid"
   }'
 ```
 
-## 🚀 Déploiement
+## 🚀 Deployment
 
-### Production avec Docker
+### Production Build
 
 ```bash
-# Construire l'image de production
-make prod-build
+# Build production image
+just prod-build
 
-# Lancer en production (à adapter)
+# Run in production
 docker run -d \
   --name pet-of-the-day \
   -p 8080:8080 \
@@ -294,13 +314,7 @@ docker run -d \
   pet-of-the-day:latest
 ```
 
-### Avec Railway/Render
-
-1. **Connecter le repository**
-2. **Configurer les variables d'environnement**
-3. **Déployer automatiquement**
-
-### Variables d'environnement de production
+### Production Environment Variables
 
 ```env
 DB_HOST=your-production-db-host
@@ -312,65 +326,128 @@ JWT_SECRET=your-very-secure-jwt-secret-256-bits
 PORT=8080
 ```
 
-## 🤝 Contribution
+## 🧰 Developer Tools
 
-1. **Fork** le projet
-2. **Créer une branche** : `git checkout -b feature/nouvelle-fonctionnalite`
-3. **Commit** : `git commit -m 'Ajout nouvelle fonctionnalité'`
-4. **Push** : `git push origin feature/nouvelle-fonctionnalite`
+### Install Development Tools
+
+```bash
+just install-tools
+```
+
+This installs:
+- golang-migrate (database migrations)
+- golangci-lint (code linting)
+- air (hot reload)
+- ent (ORM code generation)
+
+### Code Quality
+
+```bash
+# Lint code
+just lint
+
+# Format code
+just fmt
+
+# Security scan
+just security-scan
+
+# Check dependencies
+just deps-check
+```
+
+## 🤝 Contributing
+
+1. **Fork** the project
+2. **Create branch**: `git checkout -b feature/new-feature`
+3. **Commit**: `git commit -m 'Add new feature'`
+4. **Push**: `git push origin feature/new-feature`
 5. **Pull Request**
 
-## 📋 TODO
+### Development Standards
 
-- [ ] Système de notifications push
-- [ ] Upload d'images pour les animaux
-- [ ] Intégration colliers connectés
-- [ ] Système de badges avancé
-- [ ] Tests d'intégration complets
-- [ ] API GraphQL (alternative REST)
-- [ ] Métriques et monitoring
-- [ ] Cache Redis
-- [ ] Websockets pour temps réel
+- **Domain-Driven Design** principles
+- **Clean Architecture** layers
+- **Test-driven development**
+- **Go idioms** and best practices
+- **Comprehensive testing** (unit + integration)
 
-## 🐛 Problèmes courants
+## 📋 Roadmap
 
-### La base de données ne démarre pas
+### Current Status
+- ✅ User management (register/login/auth)
+- ✅ Pet management (CRUD with owner/co-owner)
+- ✅ Clean Architecture with DDD
+- ✅ Repository pattern with mocks
+- ✅ Event system foundation
+- ✅ Comprehensive test suite
+
+### Next Features
+- [ ] Community groups management
+- [ ] Scoring system with daily events
+- [ ] "Pet of the Day" algorithm
+- [ ] Real-time notifications with goroutines
+- [ ] Image upload for pets
+- [ ] Badge system
+- [ ] GraphQL API (alternative to REST)
+- [ ] Redis caching
+- [ ] Monitoring and metrics
+
+## 🐛 Troubleshooting
+
+### Database Won't Start
 ```bash
-# Vérifier les logs
-just logs SERVICE=db
+# Check logs
+just logs-service db
 
-# Nettoyer et redémarrer
+# Clean and restart
 just clean
 just start
 ```
 
-### L'API ne répond pas
+### API Not Responding
 ```bash
-# Vérifier les logs
-just logs SERVICE=api
+# Check logs
+just logs-service api
 
-# Redémarrer l'API
-docker-compose restart api
+# Restart API
+just restart
 ```
 
-### Erreur de migration
+### Migration / Ent Error
 ```bash
-# Voir le statut
-./scripts/migrate.sh version
-
-# Forcer une version si nécessaire
-./scripts/migrate.sh force 001
+# Check status
+just ent-status
 ```
 
-## 📄 Licence
+### Tests Failing
+```bash
+# Run specific test
+just test pet
 
-MIT License - voir le fichier [LICENSE](LICENSE) pour plus de détails.
+# Check coverage
+just test-coverage
 
-## 👥 Équipe
+# Diagnose issues
+just diagnose
+```
 
-- **Développeur Principal** : [Votre nom]
-- **Concept** : Application Pet of the Day
+## 📊 Project Stats
+
+- **Architecture**: Domain-Driven Design + Clean Architecture
+- **Test Coverage**: Comprehensive unit and integration tests
+- **Code Organization**: Bounded contexts with clear separation
+- **Development Experience**: Hot reload, automated migrations, comprehensive tooling
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+## 👥 Team
+
+- **Developer**: [@kiloumap](https://github.com/kiloumap)
+- **Concept**: Pet of the Day Social App
 
 ---
 
-🐾 **Fait avec ❤️ pour nos amis à quatre pattes !**
+🐾 **Made with ❤️ for our four-legged friends!**

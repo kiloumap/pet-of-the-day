@@ -2,8 +2,6 @@ package commands_test
 
 import (
 	"context"
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"pet-of-the-day/internal/pet/application/commands"
 	"pet-of-the-day/internal/pet/domain"
@@ -11,10 +9,13 @@ import (
 	"pet-of-the-day/internal/shared/events"
 	"testing"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 )
 
 func init() {
-	os.Setenv("GO_ENV", "test")
+	_ = os.Setenv("GO_ENV", "test")
 }
 
 func TestAddPetHandler_Handle_Success(t *testing.T) {

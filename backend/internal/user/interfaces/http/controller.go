@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"pet-of-the-day/internal/shared/auth"
@@ -78,7 +79,10 @@ func (c *Controller) Register(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Failed to encode JSON response: %v", err)
+		return
+	}
 }
 
 func (c *Controller) Login(w http.ResponseWriter, r *http.Request) {
@@ -106,7 +110,10 @@ func (c *Controller) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Failed to encode JSON response: %v", err)
+		return
+	}
 }
 
 func (c *Controller) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
@@ -124,7 +131,10 @@ func (c *Controller) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(userView)
+	if err := json.NewEncoder(w).Encode(userView); err != nil {
+		log.Printf("Failed to encode JSON response: %v", err)
+		return
+	}
 }
 
 func (c *Controller) handleError(w http.ResponseWriter, err error) {
@@ -136,7 +146,7 @@ func (c *Controller) handleError(w http.ResponseWriter, err error) {
 	case domain.ErrUserInvalidPassword:
 		http.Error(w, "Invalid password", http.StatusUnauthorized)
 	case domain.ErrUserInvalidEmail:
-		http.Error(w, "Invalid email format", http.StatusBadRequest)
+		http.Error(w, "Invalid email format", http.StatusNotFound)
 	case domain.ErrUserInvalidName:
 		http.Error(w, "Invalid name", http.StatusBadRequest)
 	default:

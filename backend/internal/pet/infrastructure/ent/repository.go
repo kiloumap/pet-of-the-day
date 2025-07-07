@@ -4,10 +4,11 @@ import (
 	"context"
 	"pet-of-the-day/ent/user"
 
-	"github.com/google/uuid"
 	"pet-of-the-day/ent"
 	"pet-of-the-day/ent/pet"
 	"pet-of-the-day/internal/pet/domain"
+
+	"github.com/google/uuid"
 )
 
 type EntPetRepository struct {

@@ -2,18 +2,19 @@ package queries_test
 
 import (
 	"context"
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"pet-of-the-day/internal/pet/application/queries"
 	"pet-of-the-day/internal/pet/domain"
 	"pet-of-the-day/internal/pet/infrastructure"
 	"testing"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 )
 
 func init() {
-	os.Setenv("GO_ENV", "test")
+	_ = os.Setenv("GO_ENV", "test")
 }
 
 func TestGetPetByIDHandler_Handle_Success(t *testing.T) {

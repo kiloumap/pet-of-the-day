@@ -46,7 +46,7 @@ func NewUser(email types.Email, plainPassword, firstName, lastName string) (*Use
 		updatedAt: time.Now(),
 	}
 
-	// @fixme maybe delay the event after the persistance
+	// @fixme maybe delay the event after the persistence
 	user.recordEvent(NewUserRegisteredEvent(user.id, user.email))
 
 	return user, nil

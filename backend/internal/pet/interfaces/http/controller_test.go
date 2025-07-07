@@ -3,9 +3,7 @@ package http_test
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/google/uuid"
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"pet-of-the-day/internal/pet/application/commands"
@@ -14,6 +12,10 @@ import (
 	"pet-of-the-day/internal/pet/infrastructure"
 	pethttp "pet-of-the-day/internal/pet/interfaces/http"
 	"pet-of-the-day/internal/shared/events"
+
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/assert"
 
 	"testing"
 )
@@ -60,12 +62,15 @@ func TestAddPetEndpoint_Success(t *testing.T) {
 	jsonPayload, _ := json.Marshal(payload)
 	resp, err := http.Post(server.URL+"/api/pet/add", "application/json", bytes.NewBuffer(jsonPayload))
 	assert.NoError(t, err)
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(resp.Body)
 
 	assert.Equal(t, http.StatusCreated, resp.StatusCode)
 
 	var response map[string]interface{}
-	json.NewDecoder(resp.Body).Decode(&response)
+	err = json.NewDecoder(resp.Body).Decode(&response)
+	assert.NoError(t, err)
 
 	assert.Contains(t, response, "pet_id")
 	assert.Contains(t, response, "pet")

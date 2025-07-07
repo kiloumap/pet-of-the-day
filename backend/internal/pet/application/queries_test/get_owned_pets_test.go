@@ -2,18 +2,19 @@ package queries_test
 
 import (
 	"context"
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"pet-of-the-day/internal/pet/application/queries"
 	"pet-of-the-day/internal/pet/domain"
 	"pet-of-the-day/internal/pet/infrastructure"
 	"testing"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 )
 
 func init() {
-	os.Setenv("GO_ENV", "test")
+	_ = os.Setenv("GO_ENV", "test")
 }
 
 func TestGetOwnedPets_Handle_Success(t *testing.T) {
@@ -48,12 +49,14 @@ func TestGetOwnedPets_Handle_Success(t *testing.T) {
 	query := queries.GetOwnedPets{
 		UserID: ownerID,
 	}
-	result, err := handler.Handle(context.Background(), query)
+	result, _ := handler.Handle(context.Background(), query)
 
 	assert.NotNilf(t, result, "Should not be nil")
 	assert.Equalf(t, ownerID, result.Pets[0].OwnerID(), "pet owner id should be equal")
-	assert.Equalf(t, "Arthas", result.Pets[0].Name(), "Name should be Arthas")
-	assert.Equalf(t, "Archie", result.Pets[1].Name(), "Name should be Archie")
+	gotNames := []string{result.Pets[0].Name(), result.Pets[1].Name()}
+	expectedNames := []string{"Arthas", "Archie"}
+
+	assert.ElementsMatchf(t, expectedNames, gotNames, "Pet names should match, ignoring the order")
 	assert.Lenf(t, result.Pets, 2, "pet count should be equal")
 }
 

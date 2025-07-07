@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"pet-of-the-day/internal/pet/domain"
@@ -57,7 +58,7 @@ func (ph *AddPetHandler) Handle(ctx context.Context, cmd AddPet) (*AddPetResult,
 
 	for _, event := range pet.DomainEvents() {
 		if err := ph.eventBus.Publish(ctx, event); err != nil {
-			// Log error but don't fail the command
+			log.Printf("Failed to publish add new pet event: %v", err)
 		}
 	}
 

@@ -2,10 +2,11 @@ package commands_test
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"pet-of-the-day/internal/user/infrastructure"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"pet-of-the-day/internal/shared/events"
 	"pet-of-the-day/internal/user/application/commands"
@@ -13,7 +14,7 @@ import (
 )
 
 func init() {
-	os.Setenv("GO_ENV", "test")
+	_ = os.Setenv("GO_ENV", "test")
 }
 
 func TestRegisterUserHandler_Success(t *testing.T) {
@@ -53,7 +54,7 @@ func TestRegisterUserHandler_EmailAlreadyExists(t *testing.T) {
 		LastName:  "Doe",
 	}
 
-	handler.Handle(context.Background(), cmd)
+	_, _ = handler.Handle(context.Background(), cmd)
 	result, err := handler.Handle(context.Background(), cmd)
 
 	assert.ErrorIs(t, err, domain.ErrUserEmailAlreadyUsed)
@@ -75,7 +76,7 @@ func TestRegisterUserHandler_InvalidEmail(t *testing.T) {
 
 	result, err := handler.Handle(context.Background(), cmd)
 
-	assert.ErrorIs(t, err, domain.ErrUserInvalidEmail)
+	assert.ErrorIs(t, domain.ErrUserInvalidEmail, err)
 	assert.Nil(t, result)
 	assert.Equal(t, domain.ErrUserInvalidEmail, err)
 }

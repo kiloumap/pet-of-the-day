@@ -106,7 +106,7 @@ func (r *MockPetRepository) FindAllPetsByCoOwnerID(ctx context.Context, coOwnerI
 			}
 		}
 	}
-	
+
 	return pets, nil
 }
 
