@@ -2,13 +2,15 @@ package http
 
 import (
 	"encoding/json"
-	"github.com/google/uuid"
-	"github.com/gorilla/mux"
+	"log"
 	"net/http"
 	"pet-of-the-day/internal/pet/application/commands"
 	"pet-of-the-day/internal/pet/application/queries"
 	"pet-of-the-day/internal/pet/domain"
 	sharederrors "pet-of-the-day/internal/shared/errors"
+
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
 type Controller struct {
@@ -63,7 +65,10 @@ func (c *Controller) AddPet(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Failed to encode JSON response: %v", err)
+		return
+	}
 }
 
 func (c *Controller) GetPetById(w http.ResponseWriter, r *http.Request) {
@@ -97,7 +102,10 @@ func (c *Controller) GetPetById(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Failed to encode JSON response: %v", err)
+		return
+	}
 }
 
 func (c *Controller) handleError(w http.ResponseWriter, err error) {

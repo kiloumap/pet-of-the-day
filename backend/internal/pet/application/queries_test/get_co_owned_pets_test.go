@@ -2,14 +2,15 @@ package queries_test
 
 import (
 	"context"
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"pet-of-the-day/internal/pet/application/queries"
 	"pet-of-the-day/internal/pet/domain"
 	"pet-of-the-day/internal/pet/infrastructure"
 	"testing"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 )
 
 func init() {
@@ -44,13 +45,14 @@ func TestGetCoOwnedPets_Handle_Success(t *testing.T) {
 	)
 
 	err = repo.Save(context.Background(), archie)
-	repo.AddCoOwner(context.Background(), archie.ID(), userID)
+	assert.NoError(t, err)
+	err = repo.AddCoOwner(context.Background(), archie.ID(), userID)
 	assert.NoError(t, err)
 
 	query := queries.GetCoOwnedPets{
 		UserID: userID,
 	}
-	result, err := handler.Handle(context.Background(), query)
+	result, _ := handler.Handle(context.Background(), query)
 
 	assert.NotNilf(t, result, "Should not be nil")
 	assert.Equalf(t, otherUserID, result.Pets[0].OwnerID(), "pet owner id should be equal")

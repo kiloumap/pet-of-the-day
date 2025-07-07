@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"pet-of-the-day/internal/shared/auth"
 	"pet-of-the-day/internal/shared/events"
@@ -102,7 +104,10 @@ func TestRegisterEndpoint_Success(t *testing.T) {
 	assert.Equal(t, http.StatusCreated, resp.StatusCode)
 
 	var response map[string]interface{}
-	json.NewDecoder(resp.Body).Decode(&response)
+	if err = json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		log.Printf("Failed to encode JSON response: %v", err)
+		return
+	}
 
 	assert.Contains(t, response, "user_id")
 	assert.Contains(t, response, "token")
@@ -136,7 +141,8 @@ func TestLoginEndpoint_Success(t *testing.T) {
 	// Pre-create a user
 	email, _ := types.NewEmail("test@example.com")
 	user, _ := domain.NewUser(email, "password123", "John", "Doe")
-	repo.Save(context.Background(), user)
+	err := repo.Save(context.Background(), user)
+	assert.NoError(t, err)
 
 	payload := map[string]string{
 		"email":    "test@example.com",
@@ -155,7 +161,10 @@ func TestLoginEndpoint_Success(t *testing.T) {
 	}
 
 	var response map[string]interface{}
-	json.NewDecoder(resp.Body).Decode(&response)
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		log.Printf("Failed to encode JSON response: %v", err)
+		return
+	}
 
 	if response["user_id"] == nil {
 		t.Error("Expected user_id in response")

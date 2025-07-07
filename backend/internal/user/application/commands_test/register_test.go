@@ -2,10 +2,11 @@ package commands_test
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"pet-of-the-day/internal/user/infrastructure"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"pet-of-the-day/internal/shared/events"
 	"pet-of-the-day/internal/user/application/commands"
@@ -53,8 +54,8 @@ func TestRegisterUserHandler_EmailAlreadyExists(t *testing.T) {
 		LastName:  "Doe",
 	}
 
-	handler.Handle(context.Background(), cmd)
-	result, err := handler.Handle(context.Background(), cmd)
+	_, err := handler.Handle(context.Background(), cmd)
+	result, _ := handler.Handle(context.Background(), cmd)
 
 	assert.ErrorIs(t, err, domain.ErrUserEmailAlreadyUsed)
 	assert.Nil(t, result)

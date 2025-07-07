@@ -2,8 +2,9 @@ package queries
 
 import (
 	"context"
-	"github.com/google/uuid"
 	"pet-of-the-day/internal/pet/domain"
+
+	"github.com/google/uuid"
 )
 
 type GetOwnedPets struct {

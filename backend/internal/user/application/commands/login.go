@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"log"
 
 	"pet-of-the-day/internal/shared/events"
 	"pet-of-the-day/internal/shared/types"
@@ -49,7 +50,7 @@ func (h *LoginUserHandler) Handle(ctx context.Context, cmd LoginUser) (*LoginUse
 
 	loginEvent := domain.NewUserLoggedInEvent(user.ID())
 	if err := h.eventBus.Publish(ctx, loginEvent); err != nil {
-		// Log error but don't fail login
+		log.Printf("Failed to publish login event: %v", err)
 	}
 
 	return &LoginUserResult{

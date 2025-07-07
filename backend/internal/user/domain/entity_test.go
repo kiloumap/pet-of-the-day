@@ -1,8 +1,9 @@
 package domain_test
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"pet-of-the-day/internal/shared/types"
 	"pet-of-the-day/internal/user/domain"

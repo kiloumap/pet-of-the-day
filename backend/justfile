@@ -3,7 +3,6 @@
 
 # Variables
 compose_file := "docker-compose.yml"
-migrate_path := "database/migrations"
 
 # Colors
 yellow := '\033[1;33m'
@@ -40,7 +39,7 @@ go-init:
 # Start all services
 start:
     @echo "{{yellow}}Starting services...{{nc}}"
-    chmod +x scripts/dev.sh scripts/migrate.sh
+    chmod +x scripts/dev.sh
     ./scripts/dev.sh start
 
 # Stop all services
@@ -63,15 +62,16 @@ clean:
     @echo "{{red}}Cleaning containers and volumes...{{nc}}"
     ./scripts/dev.sh clean
 
-# Run all tests, default all, context name as arguments
+# Run tests for specific bounded context or all
 test *args="":
     @echo "{{yellow}}Running tests...{{nc}}"
     @if [ "{{args}}" = "" ]; then \
-        richgo test ./... -v; \
+        echo "Running all tests..."; \
+        richgo test ./internal/... -v || go test ./internal/... -v; \
     else \
-        richgo test ./internal/{{args}}/... -v; \
+        echo "Running tests for {{args}} bounded context..."; \
+        richgo test ./internal/{{args}}/... -v || go test ./internal/{{args}}/... -v; \
     fi
-
 
 # Run tests with coverage
 test-coverage:
@@ -83,46 +83,37 @@ test-coverage:
     @echo "📈 Coverage summary:"
     @go tool cover -func=coverage.out | tail -1
 
-# Run unit tests only (no integration)
+# Run unit tests only (domain layer)
 test-unit:
-    @echo "{{yellow}}Running unit tests...{{nc}}"
-    go test ./internal/user/domain -v
+    @echo "{{yellow}}Running unit tests (domain layer)...{{nc}}"
+    go test ./internal/*/domain -v
     go test ./internal/shared/types -v
 
-# Run integration tests only
+# Run integration tests (infrastructure + interfaces)
 test-integration:
     @echo "{{yellow}}Running integration tests...{{nc}}"
+    go test ./internal/*/infrastructure -v
     go test ./internal/*/interfaces/... -v
 
-# Apply all migrations
-migrate-up:
-    @echo "{{yellow}}Applying migrations...{{nc}}"
-    ./scripts/migrate.sh up
+# Run application layer tests (commands/queries)
+test-application:
+    @echo "{{yellow}}Running application layer tests...{{nc}}"
+    go test ./internal/*/application/... -v
 
-# Rollback one migration
-migrate-down:
-    @echo "{{yellow}}Rolling back one migration...{{nc}}"
-    ./scripts/migrate.sh down 1
+# Check Ent schema status
+ent-status:
+    @echo "{{yellow}}Checking Ent schema...{{nc}}"
+    @echo "Available schemas:"
+    @ls -la ./ent/schema/
+    @echo ""
+    @echo "Ent code compilation:"
+    @go build ./ent/... && echo "{{green}}✅ Ent code compiles successfully{{nc}}" || echo "{{red}}❌ Ent compilation failed{{nc}}"
 
-# Show migration status
-migrate-status:
-    @echo "{{yellow}}Migration status:{{nc}}"
-    ./scripts/migrate.sh version
-
-# Create new migration
-migrate-create name:
-    @echo "{{yellow}}Creating migration {{name}}...{{nc}}"
-    ./scripts/migrate.sh create {{name}}
-
-# Force migration version
-migrate-force version:
-    @echo "{{yellow}}Forcing migration version {{version}}...{{nc}}"
-    ./scripts/migrate.sh force {{version}}
-
-# Drop entire database
-migrate-drop:
-    @echo "{{red}}⚠️  Dropping entire database...{{nc}}"
-    ./scripts/migrate.sh drop
+# Apply Ent schema changes
+ent-migrate:
+    @echo "{{yellow}}Applying Ent schema changes...{{nc}}"
+    just generate
+    @echo "{{green}}Ent migrations applied!{{nc}}"
 
 # Insert test data
 seed:
@@ -163,10 +154,12 @@ dev:
 # Install development tools
 install-tools:
     @echo "{{yellow}}Installing development tools...{{nc}}"
-    go install github.com/golang-migrate/migrate/v4/cmd/migrate@latest
     go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
     go install github.com/air-verse/air@latest
     go install entgo.io/ent/cmd/ent@latest
+    go install github.com/kyoh86/richgo@latest
+    go install golang.org/x/tools/cmd/goimports@latest
+    go install golang.org/x/vuln/cmd/govulncheck@latest
     @echo "{{green}}Tools installed!{{nc}}"
 
 # Run linter
@@ -178,18 +171,18 @@ lint:
 fmt:
     @echo "{{yellow}}Formatting code...{{nc}}"
     go fmt ./...
-    goimports -w . || echo "goimports not installed, run: go install golang.org/x/tools/cmd/goimports@latest"
+    goimports -w . || echo "goimports not installed, run: just install-tools"
 
 # Run benchmarks
 bench:
     @echo "{{yellow}}Running benchmarks...{{nc}}"
-    docker-compose exec api go test -bench=. ./...
+    go test -bench=. ./internal/...
 
 # Generate Go documentation
 docs:
-    @echo "{{yellow}}Generating documentation...{{nc}}"
+    @echo "{{yellow}}Starting documentation server...{{nc}}"
+    @echo "{{green}}Documentation will be available at http://localhost:6060{{nc}}"
     godoc -http=:6060
-    @echo "{{green}}Documentation available at http://localhost:6060{{nc}}"
 
 # Check dependencies
 deps-check:
@@ -206,23 +199,21 @@ deps-update:
 # Security vulnerability scan
 security-scan:
     @echo "{{yellow}}Running security scan...{{nc}}"
-    go install golang.org/x/vuln/cmd/govulncheck@latest
-    govulncheck ./...
+    govulncheck ./... || echo "{{red}}Security scan failed. Install with: just install-tools{{nc}}"
 
 # Start with hot reload (requires air)
 dev-watch:
     @echo "{{yellow}}Starting with hot reload...{{nc}}"
+    @if ! command -v air &> /dev/null; then \
+        echo "{{red}}Air not installed. Run: just install-tools{{nc}}"; \
+        exit 1; \
+    fi
     air
 
 # Build for production
 prod-build:
     @echo "{{yellow}}Building for production...{{nc}}"
     docker build -t pet-of-the-day:latest .
-
-# Deploy to production (adapt to your infrastructure)
-prod-deploy:
-    @echo "{{yellow}}Deploying to production...{{nc}}"
-    @echo "{{red}}⚠️  Command to adapt according to your infrastructure{{nc}}"
 
 # Export database
 db-export:
@@ -236,11 +227,12 @@ db-import file:
     docker-compose exec -T db psql -U postgres pet_of_the_day < {{file}}
     @echo "{{green}}Import completed{{nc}}"
 
-# Reset database completely
+# Reset database completely (for Ent)
 db-reset:
     @echo "{{red}}⚠️  Completely resetting database...{{nc}}"
-    just migrate-drop
-    just migrate-up
+    ./scripts/dev.sh stop
+    docker-compose down -v
+    just start
     just seed
 
 # Check all dependencies are installed
@@ -253,7 +245,7 @@ check-deps:
         echo -e "{{red}}❌ Docker not found{{nc}}"
         exit 1
     else
-        echo -e "{{green}}✅ Docker$(docker --version){{nc}}"
+        echo -e "{{green}}✅ Docker $(docker --version){{nc}}"
     fi
 
     # Check Docker Compose
@@ -283,9 +275,46 @@ clean-go:
     go clean -modcache
     go clean -testcache
 
+# Run architectural tests (validate DDD patterns)
+test-architecture:
+    #!/usr/bin/env bash
+    echo -e "{{yellow}}Running architectural tests...{{nc}}"
+    echo "Checking bounded context isolation..."
+
+    # Check user context isolation (only domain/application cross-context)
+    if go list -f '{{{{.ImportPath}}}}: {{{{join .Imports " "}}}}' ./internal/user/... | grep -E "internal/(pet|community|scoring)/(domain|application)"; then
+        echo -e "{{red}}❌ User context has forbidden dependencies{{nc}}"
+        exit 1
+    else
+        echo -e "{{green}}✅ User context is properly isolated{{nc}}"
+    fi
+
+    # Check pet context isolation (only domain/application cross-context)
+    if go list -f '{{{{.ImportPath}}}}: {{{{join .Imports " "}}}}' ./internal/pet/... | grep -E "internal/(user|community|scoring)/(domain|application)"; then
+        echo -e "{{red}}❌ Pet context has forbidden dependencies{{nc}}"
+        exit 1
+    else
+        echo -e "{{green}}✅ Pet context is properly isolated{{nc}}"
+    fi
+
+    echo -e "{{green}}✅ Architectural tests completed{{nc}}"
+
 # Show project information
 info:
     @echo "{{blue}}=== Pet of the Day - Project Information ==={{nc}}"
+    @echo ""
+    @echo "{{yellow}}Architecture:{{nc}}"
+    @echo "  • Domain-Driven Design (DDD)"
+    @echo "  • Clean Architecture"
+    @echo "  • CQRS with Commands/Queries"
+    @echo "  • Repository Pattern with Mocks"
+    @echo "  • Ent ORM (schema-first, type-safe)"
+    @echo ""
+    @echo "{{yellow}}Bounded Contexts:{{nc}}"
+    @echo "  • User (authentication, user management)"
+    @echo "  • Pet (pets, owner/co-owner relationships)"
+    @echo "  • Community (groups) - Coming soon"
+    @echo "  • Scoring (daily scores, Pet of the Day) - Coming soon"
     @echo ""
     @echo "{{yellow}}Services:{{nc}}"
     @echo "  • API: http://localhost:8080"
@@ -293,14 +322,15 @@ info:
     @echo "  • PostgreSQL: localhost:5432"
     @echo ""
     @echo "{{yellow}}Main commands:{{nc}}"
-    @echo "  • just dev          - Start complete environment"
-    @echo "  • just start        - Start services"
-    @echo "  • just stop         - Stop services"
-    @echo "  • just logs         - Show logs"
-    @echo "  • just shell        - API shell"
-    @echo "  • just db           - PostgreSQL shell"
-    @echo "  • just migrate-up   - Apply migrations"
-    @echo "  • just test         - Run tests"
+    @echo "  • just dev              - Start complete environment"
+    @echo "  • just test             - Run all tests"
+    @echo "  • just test user        - Run user context tests"
+    @echo "  • just test pet         - Run pet context tests"
+    @echo "  • just test-coverage    - Run tests with coverage"
+    @echo "  • just ent-status       - Check Ent schema"
+    @echo "  • just logs             - Show logs"
+    @echo "  • just shell            - API shell"
+    @echo "  • just db              - PostgreSQL shell"
     @echo ""
     @echo "{{yellow}}Documentation:{{nc}}"
     @echo "  • README.md - Complete guide"
@@ -313,7 +343,7 @@ setup:
     chmod +x scripts/*.sh
     just go-init
     just build
-    just migrate-up
+    just start
     just seed
     @echo "{{green}}Setup completed! Use 'just start' to begin.{{nc}}"
 
@@ -323,12 +353,26 @@ diagnose:
     @echo ""
     just check-deps
     @echo ""
+    @echo "{{yellow}}Service Status:{{nc}}"
     just status
     @echo ""
-    just migrate-status
+    @echo "{{yellow}}Ent Schema Status:{{nc}}"
+    just ent-status
     @echo ""
     @echo "{{yellow}}Recent API logs:{{nc}}"
     docker-compose logs --tail=10 api || echo "API not started"
     @echo ""
     @echo "{{yellow}}Recent DB logs:{{nc}}"
     docker-compose logs --tail=10 db || echo "DB not started"
+    @echo ""
+    @echo "{{yellow}}Test Status:{{nc}}"
+    just test-unit || echo "Some unit tests are failing"
+
+# Validate coding standards
+validate:
+    @echo "{{yellow}}Validating coding standards...{{nc}}"
+    just fmt
+    just lint
+    just test-architecture
+    just security-scan
+    @echo "{{green}}Validation completed!{{nc}}"

@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"log"
 
 	"pet-of-the-day/internal/shared/events"
 	"pet-of-the-day/internal/shared/types"
@@ -60,7 +61,7 @@ func (h *RegisterUserHandler) Handle(ctx context.Context, cmd RegisterUser) (*Re
 
 	for _, event := range user.DomainEvents() {
 		if err := h.eventBus.Publish(ctx, event); err != nil {
-			// Log error but don't fail the command
+			log.Printf("Failed to publish register event: %v", err)
 		}
 	}
 

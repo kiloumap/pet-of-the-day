@@ -2,9 +2,10 @@ package commands
 
 import (
 	"context"
-	"github.com/google/uuid"
 	"pet-of-the-day/internal/pet/domain"
 	"pet-of-the-day/internal/shared/events"
+
+	"github.com/google/uuid"
 )
 
 type AddCoOwner struct {

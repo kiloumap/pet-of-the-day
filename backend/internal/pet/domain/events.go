@@ -1,8 +1,9 @@
 package domain
 
 import (
-	"github.com/google/uuid"
 	"pet-of-the-day/internal/shared/events"
+
+	"github.com/google/uuid"
 )
 
 const (

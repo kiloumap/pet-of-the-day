@@ -1,0 +1,11 @@
+issues:
+  exclude-dirs:
+    - ent
+
+linters:
+  enable:
+    - gofmt
+    - govet
+    - errcheck
+    - unused
+    - gosimple
