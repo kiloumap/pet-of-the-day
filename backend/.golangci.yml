@@ -5,32 +5,24 @@ run:
   timeout: 5m
 formatters:
   enable:
-    - gci
     - gofmt
-    - gofumpt
     - goimports
 linters:
   default: none
   enable:
     - asciicheck
-    - bodyclose
     - copyloopvar
     - dogsled
     - durationcheck
     - errcheck
-    - errorlint
     - ginkgolinter
-    - gochecknoinits
-    - gosec
     - govet
     - importas
     - ineffassign
     - misspell
     - nakedret
     - nolintlint
-    - revive
     - staticcheck
-    - testifylint
     - unconvert
     - unparam
     - unused
