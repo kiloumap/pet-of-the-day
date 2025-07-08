@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-
 	"pet-of-the-day/internal/shared/auth"
 	sharederrors "pet-of-the-day/internal/shared/errors"
+	"pet-of-the-day/internal/shared/logger"
 	"pet-of-the-day/internal/user/application/commands"
 	"pet-of-the-day/internal/user/application/queries"
 	"pet-of-the-day/internal/user/domain"
@@ -54,6 +54,8 @@ func (c *Controller) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	result, err := c.registerHandler.Handle(r.Context(), cmd)
+	logger.DebugJSON("user", result)
+
 	if err != nil {
 		c.handleError(w, err)
 		return

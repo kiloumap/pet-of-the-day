@@ -1,49 +1,41 @@
 #!/bin/bash
 
-# Script de développement pour Pet of the Day
-# Usage: ./dev.sh [start|stop|restart|logs|shell|migrate|test]
-
 set -e
 
-# Couleurs pour les messages
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# Configuration
 COMPOSE_FILE="docker-compose.yml"
 SERVICE_API="api"
+SERVICE_API_DEV="api-dev"
 SERVICE_DB="db"
 
-# Fonction d'aide
 show_help() {
     echo "Pet of the Day - Development Helper"
     echo ""
     echo "Usage: $0 [COMMAND]"
     echo ""
     echo "Commands:"
-    echo "  start     Start all services"
+    echo "  start     Start all services (normal mode)"
+    echo "  dev-watch Start all services with Air hot reload"
     echo "  stop      Stop all services"
     echo "  restart   Restart all services"
     echo "  logs      Show logs (add service name for specific logs)"
     echo "  shell     Open shell in API container"
     echo "  db        Open PostgreSQL shell"
-    echo "  migrate   Run migrations"
-    echo "  seed      Run database seeding"
-    echo "  test      Run tests"
     echo "  build     Build containers"
     echo "  clean     Clean up containers and volumes"
+    echo "  ent-gen   Generate Ent code inside container"
     echo ""
     echo "Examples:"
     echo "  $0 start"
-    echo "  $0 logs api"
-    echo "  $0 shell"
-    echo "  $0 migrate up"
+    echo "  $0 dev-watch"
+    echo "  $0 logs api-dev"
 }
 
-# Vérifier si Docker et Docker Compose sont installés
 check_dependencies() {
     if ! command -v docker &> /dev/null; then
         echo -e "${RED}Error: Docker not found${NC}"
@@ -58,7 +50,6 @@ check_dependencies() {
     fi
 }
 
-# Fonction pour utiliser docker-compose ou docker compose
 compose_cmd() {
     if command -v docker-compose &> /dev/null; then
         docker-compose "$@"
@@ -67,7 +58,6 @@ compose_cmd() {
     fi
 }
 
-# Attendre que l'API soit prête
 wait_for_api() {
     echo -e "${YELLOW}Waiting for API to be ready...${NC}"
 
@@ -89,18 +79,28 @@ wait_for_api() {
     return 1
 }
 
-# Fonction principale
 main() {
     check_dependencies
 
     case "${1:-}" in
         "start")
-            echo -e "${YELLOW}Starting Pet of the Day services...${NC}"
-            compose_cmd up -d
+            echo -e "${YELLOW}Starting Pet of the Day services (normal mode)...${NC}"
+            compose_cmd --profile default up -d
             wait_for_api
             echo -e "${GREEN}All services are running!${NC}"
             echo -e "${BLUE}API: http://localhost:8080${NC}"
             echo -e "${BLUE}Database: localhost:5432${NC}"
+            echo -e "${BLUE}Adminer: http://localhost:8081${NC}"
+            ;;
+        "dev-watch")
+            echo -e "${YELLOW}Starting Pet of the Day services (dev-watch mode with Air)...${NC}"
+            compose_cmd --profile dev-watch up -d
+            echo -e "${GREEN}Services started with hot reload!${NC}"
+            echo -e "${BLUE}API: http://localhost:8080 (with Air hot reload)${NC}"
+            echo -e "${BLUE}Database: localhost:5432${NC}"
+            echo -e "${BLUE}Adminer: http://localhost:8081${NC}"
+            echo -e "${YELLOW}Edit your Go files and see changes instantly!${NC}"
+            echo -e "${YELLOW}Use 'just logs api-dev' to see Air logs${NC}"
             ;;
         "stop")
             echo -e "${YELLOW}Stopping all services...${NC}"
@@ -110,7 +110,6 @@ main() {
         "restart")
             echo -e "${YELLOW}Restarting services...${NC}"
             compose_cmd restart
-            wait_for_api
             echo -e "${GREEN}Services restarted!${NC}"
             ;;
         "logs")
@@ -124,25 +123,15 @@ main() {
             ;;
         "shell")
             echo -e "${YELLOW}Opening shell in API container...${NC}"
-            compose_cmd exec $SERVICE_API /bin/bash
+            if compose_cmd ps $SERVICE_API_DEV | grep -q "Up"; then
+                compose_cmd exec $SERVICE_API_DEV /bin/bash
+            else
+                compose_cmd exec $SERVICE_API /bin/bash
+            fi
             ;;
         "db")
             echo -e "${YELLOW}Opening PostgreSQL shell...${NC}"
             compose_cmd exec $SERVICE_DB psql -U postgres -d pet_of_the_day
-            ;;
-        "migrate")
-            shift
-            echo -e "${YELLOW}Running migrations...${NC}"
-            ./scripts/migrate.sh "$@"
-            ;;
-        "seed")
-            echo -e "${YELLOW}Seeding database...${NC}"
-            # Ici tu peux ajouter des données de test
-            compose_cmd exec $SERVICE_API ./main seed 2>/dev/null || echo "Seeding not implemented yet"
-            ;;
-        "test")
-            echo -e "${YELLOW}Running tests...${NC}"
-            compose_cmd exec $SERVICE_API go test ./... -v
             ;;
         "build")
             echo -e "${YELLOW}Building containers...${NC}"
@@ -162,13 +151,6 @@ main() {
         "status")
             echo -e "${YELLOW}Service status:${NC}"
             compose_cmd ps
-            echo ""
-            echo -e "${YELLOW}API Health:${NC}"
-            if curl -s http://localhost:8080/health > /dev/null 2>&1; then
-                echo -e "${GREEN}✓ API is healthy${NC}"
-            else
-                echo -e "${RED}✗ API is not responding${NC}"
-            fi
             ;;
         "help"|"-h"|"--help")
             show_help

@@ -201,7 +201,7 @@ security-scan:
     @echo "{{yellow}}Running security scan...{{nc}}"
     govulncheck ./... || echo "{{red}}Security scan failed. Install with: just install-tools{{nc}}"
 
-# Start with hot reload (requires air)
+# TODO Start with hot reload (requires air)
 dev-watch:
     @echo "{{yellow}}Starting with hot reload...{{nc}}"
     @if ! command -v air &> /dev/null; then \
