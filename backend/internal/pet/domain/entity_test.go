@@ -1,23 +1,23 @@
 package domain_test
 
 import (
+	"github.com/google/uuid"
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
 	"pet-of-the-day/internal/pet/domain"
 )
 
 func TestNewPet_Success(t *testing.T) {
-	id := uuid.New()
-	pet, err := domain.NewPet(id, "Arthas", domain.SpeciesDog, "aussie", time.Now(), "https://picsum.photos/200/300")
+	ownerID := uuid.New()
+	pet, err := domain.NewPet(ownerID, "Arthas", domain.SpeciesDog, "aussie", time.Now(), "https://picsum.photos/200/300")
 
 	assert.NoErrorf(t, err, "Expected no error, got %v", err)
 	assert.Equal(t, "Arthas", pet.Name())
 	assert.Equal(t, "dog", string(pet.Species()))
-	assert.Equal(t, id, pet.OwnerID())
+	assert.Equal(t, ownerID, pet.OwnerID())
 
 	events := pet.DomainEvents()
 	assert.Len(t, events, 1)

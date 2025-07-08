@@ -7,7 +7,7 @@ import (
 )
 
 type Repository interface {
-	Save(ctx context.Context, pet *Pet) error
+	Save(ctx context.Context, pet *Pet, ownerID uuid.UUID) error
 	AddCoOwner(ctx context.Context, petID uuid.UUID, userID uuid.UUID) error
 	FindByID(ctx context.Context, id uuid.UUID) (*Pet, error)
 	FindOneByOwnerIdAndName(ctx context.Context, ownerId uuid.UUID, name string) (*Pet, error)

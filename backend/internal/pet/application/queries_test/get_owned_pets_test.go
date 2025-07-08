@@ -31,7 +31,7 @@ func TestGetOwnedPets_Handle_Success(t *testing.T) {
 		"https://picsum.photos/200/300",
 	)
 
-	err := repo.Save(context.Background(), arthas)
+	err := repo.Save(context.Background(), arthas, ownerID)
 	assert.NoError(t, err)
 
 	archie, _ := domain.NewPet(
@@ -43,7 +43,7 @@ func TestGetOwnedPets_Handle_Success(t *testing.T) {
 		"https://picsum.photos/200/300",
 	)
 
-	err = repo.Save(context.Background(), archie)
+	err = repo.Save(context.Background(), archie, ownerID)
 	assert.NoError(t, err)
 
 	query := queries.GetOwnedPets{

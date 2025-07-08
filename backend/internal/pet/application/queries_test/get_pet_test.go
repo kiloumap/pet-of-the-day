@@ -31,7 +31,7 @@ func TestGetPetByIDHandler_Handle_Success(t *testing.T) {
 		"https://picsum.photos/200/300",
 	)
 
-	err := repo.Save(context.Background(), pet)
+	err := repo.Save(context.Background(), pet, ownerID)
 	assert.NoError(t, err)
 
 	query := queries.GetPetById{

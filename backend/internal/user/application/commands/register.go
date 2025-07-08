@@ -3,7 +3,6 @@ package commands
 import (
 	"context"
 	"log"
-
 	"pet-of-the-day/internal/shared/events"
 	"pet-of-the-day/internal/shared/types"
 	"pet-of-the-day/internal/user/domain"
@@ -12,10 +11,10 @@ import (
 )
 
 type RegisterUser struct {
-	Email     string `json:"email"`
-	Password  string `json:"password"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
+	Email     string
+	Password  string
+	FirstName string
+	LastName  string
 }
 
 type RegisterUserResult struct {

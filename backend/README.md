@@ -44,7 +44,7 @@ just stop              # Stop services
 just logs              # View logs
 just shell             # Shell into API container
 just db                # PostgreSQL shell
-just migrate-up        # Apply migrations
+just ent-migrate       # Apply migrations
 just test              # Run tests
 just test user         # Run user context tests only
 just test pet          # Run pet context tests only
@@ -119,16 +119,11 @@ backend/
 
 ```bash
 # Apply all migrations
-just migrate-up
+just ent-migrate
 
-# Create new migration
-just migrate-create add_new_feature
 
 # Check status
-just migrate-status
-
-# Rollback
-just migrate-down
+just ent-status
 ```
 
 ## 🔌 API Endpoints
@@ -222,12 +217,8 @@ just dev-watch
 ### Creating New Migration
 
 ```bash
-# Create migration files
-just migrate-create add_notifications
-
-# Edit generated files
-# Then apply
-just migrate-up
+# Edit schema files
+just ent-up
 ```
 
 ### Debug Commands

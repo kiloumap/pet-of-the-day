@@ -32,7 +32,7 @@ func TestAddCoOwnerHandler_Handle_Success(t *testing.T) {
 		time.Date(2025, time.August, 8, 0, 0, 0, 0, time.Local),
 		"https://picsum.photos/200/300",
 	)
-	err := repo.Save(context.Background(), arthas)
+	err := repo.Save(context.Background(), arthas, userID)
 	assert.NoError(t, err)
 
 	coOwnerID := uuid.New()
@@ -63,7 +63,7 @@ func TestAddCoOwnerHandler_Handle_PetNotFound(t *testing.T) {
 		time.Date(2025, time.August, 8, 0, 0, 0, 0, time.Local),
 		"https://picsum.photos/200/300",
 	)
-	err := repo.Save(context.Background(), arthas)
+	err := repo.Save(context.Background(), arthas, petID)
 	assert.NoError(t, err)
 
 	coOwnerID := uuid.New()

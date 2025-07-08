@@ -2,7 +2,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     ports:
       - "8080:8080"
     depends_on:
@@ -18,9 +18,8 @@ services:
       - PORT=8080
     restart: unless-stopped
     volumes:
-      # Pour le développement, tu peux décommenter cette ligne pour un rechargement à chaud
-      # - .:/app
-      - /app/tmp
+      - .:/app
+      - /app/tmp  # Exclut le dossier tmp du volume
     networks:
       - pet-network
 
@@ -35,7 +34,6 @@ services:
       - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
-      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d pet_of_the_day"]
       interval: 10s
@@ -46,7 +44,6 @@ services:
     networks:
       - pet-network
 
-  # Service optionnel pour adminer (interface web PostgreSQL)
   adminer:
     image: adminer:latest
     ports:

@@ -31,7 +31,7 @@ func TestGetCoOwnedPets_Handle_Success(t *testing.T) {
 		"https://picsum.photos/200/300",
 	)
 
-	err := repo.Save(context.Background(), arthas)
+	err := repo.Save(context.Background(), arthas, userID)
 	assert.NoError(t, err)
 
 	otherUserID := uuid.New()
@@ -44,7 +44,7 @@ func TestGetCoOwnedPets_Handle_Success(t *testing.T) {
 		"https://picsum.photos/200/300",
 	)
 
-	err = repo.Save(context.Background(), archie)
+	err = repo.Save(context.Background(), archie, otherUserID)
 	assert.NoError(t, err)
 	err = repo.AddCoOwner(context.Background(), archie.ID(), userID)
 	assert.NoError(t, err)

@@ -23,7 +23,7 @@ func NewMockPetRepository() *MockPetRepository {
 	}
 }
 
-func (r *MockPetRepository) Save(ctx context.Context, pet *domain.Pet) error {
+func (r *MockPetRepository) Save(ctx context.Context, pet *domain.Pet, ownerID uuid.UUID) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 

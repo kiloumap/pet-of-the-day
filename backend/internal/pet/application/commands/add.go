@@ -12,7 +12,6 @@ import (
 )
 
 type AddPet struct {
-	OwnerID   uuid.UUID
 	Name      string
 	Species   domain.Species
 	Breed     string
@@ -37,8 +36,8 @@ func NewAddPetHandler(petRepo domain.Repository, eventBus events.Bus) *AddPetHan
 	}
 }
 
-func (ph *AddPetHandler) Handle(ctx context.Context, cmd AddPet) (*AddPetResult, error) {
-	exists, err := ph.petRepo.ExistsByOwnerId(ctx, cmd.OwnerID, cmd.Name)
+func (ph *AddPetHandler) Handle(ctx context.Context, cmd AddPet, ownerID uuid.UUID) (*AddPetResult, error) {
+	exists, err := ph.petRepo.ExistsByOwnerId(ctx, ownerID, cmd.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -47,12 +46,12 @@ func (ph *AddPetHandler) Handle(ctx context.Context, cmd AddPet) (*AddPetResult,
 		return nil, domain.ErrPetAlreadyExist
 	}
 
-	pet, err := domain.NewPet(cmd.OwnerID, cmd.Name, cmd.Species, cmd.Breed, cmd.BirthDate, cmd.PhotoURL)
+	pet, err := domain.NewPet(ownerID, cmd.Name, cmd.Species, cmd.Breed, cmd.BirthDate, cmd.PhotoURL)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := ph.petRepo.Save(ctx, pet); err != nil {
+	if err := ph.petRepo.Save(ctx, pet, ownerID); err != nil {
 		return nil, err
 	}
 

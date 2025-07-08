@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-
 	"pet-of-the-day/internal/shared/auth"
 	sharederrors "pet-of-the-day/internal/shared/errors"
 	"pet-of-the-day/internal/user/application/commands"
@@ -54,6 +53,7 @@ func (c *Controller) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	result, err := c.registerHandler.Handle(r.Context(), cmd)
+
 	if err != nil {
 		c.handleError(w, err)
 		return

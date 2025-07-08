@@ -22,9 +22,9 @@ func TestAddPetHandler_Handle_Success(t *testing.T) {
 	repo := infrastructure.NewMockPetRepository()
 	eventBus := events.NewInMemoryBus()
 	handler := commands.NewAddPetHandler(repo, eventBus)
+	ownerID := uuid.New()
 
 	cmd := commands.AddPet{
-		OwnerID:   uuid.New(),
 		Name:      "Arthas",
 		Species:   "dog",
 		Breed:     "Mini Aussi",
@@ -32,7 +32,7 @@ func TestAddPetHandler_Handle_Success(t *testing.T) {
 		PhotoURL:  "https://picsum.photos/200/300",
 	}
 
-	result, err := handler.Handle(context.Background(), cmd)
+	result, err := handler.Handle(context.Background(), cmd, ownerID)
 	assert.NoErrorf(t, err, "Expected no error, got %v", err)
 
 	assert.NotNilf(t, result, "Expected result, got nil")
@@ -49,10 +49,9 @@ func TestAddPetHandler_Handle_PetAlreadyExists(t *testing.T) {
 	ownerID := uuid.New()
 
 	existingPet, _ := domain.NewPet(ownerID, "Arthas", "dog", "Aussi", time.Time{}, "https://picsum.photos/200/300")
-	_ = repo.Save(context.Background(), existingPet)
+	_ = repo.Save(context.Background(), existingPet, ownerID)
 
 	cmd := commands.AddPet{
-		OwnerID:   existingPet.OwnerID(),
 		Name:      "Arthas",
 		Species:   domain.Species("dog"),
 		Breed:     "Mini Aussi",
@@ -60,7 +59,7 @@ func TestAddPetHandler_Handle_PetAlreadyExists(t *testing.T) {
 		PhotoURL:  "https://picsum.photos/200/300",
 	}
 
-	result, err := handler.Handle(context.Background(), cmd)
+	result, err := handler.Handle(context.Background(), cmd, ownerID)
 
 	assert.ErrorIs(t, err, domain.ErrPetAlreadyExist)
 	assert.Nil(t, result)
@@ -72,8 +71,8 @@ func TestAddPetHandler_Handle_InvalidName(t *testing.T) {
 	eventBus := events.NewInMemoryBus()
 	handler := commands.NewAddPetHandler(repo, eventBus)
 
+	ownerID := uuid.New()
 	cmd := commands.AddPet{
-		OwnerID:   uuid.New(),
 		Name:      "",
 		Species:   domain.Species("dog"),
 		Breed:     "Mini Aussi",
@@ -81,7 +80,7 @@ func TestAddPetHandler_Handle_InvalidName(t *testing.T) {
 		PhotoURL:  "https://picsum.photos/200/300",
 	}
 
-	result, err := handler.Handle(context.Background(), cmd)
+	result, err := handler.Handle(context.Background(), cmd, ownerID)
 
 	assert.ErrorIs(t, err, domain.ErrPetInvalidName)
 	assert.Nil(t, result)
