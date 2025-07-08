@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"pet-of-the-day/internal/shared/events"
-	"pet-of-the-day/internal/shared/logger"
 	"pet-of-the-day/internal/shared/types"
 	"pet-of-the-day/internal/user/domain"
 
@@ -36,7 +35,6 @@ func NewRegisterUserHandler(userRepo domain.Repository, eventBus events.Bus) *Re
 }
 
 func (h *RegisterUserHandler) Handle(ctx context.Context, cmd RegisterUser) (*RegisterUserResult, error) {
-	logger.InfoJSON("cmd2", cmd)
 	email, err := types.NewEmail(cmd.Email)
 	if err != nil {
 		return nil, domain.ErrUserInvalidEmail

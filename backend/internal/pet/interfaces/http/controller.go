@@ -2,15 +2,15 @@ package http
 
 import (
 	"encoding/json"
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"pet-of-the-day/internal/pet/application/commands"
 	"pet-of-the-day/internal/pet/application/queries"
 	"pet-of-the-day/internal/pet/domain"
+	"pet-of-the-day/internal/shared/auth"
 	sharederrors "pet-of-the-day/internal/shared/errors"
-
-	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 )
 
 type Controller struct {
@@ -36,17 +36,20 @@ func (c *Controller) RegisterRoutes(router *mux.Router, authMiddleware func(http
 	protected := router.NewRoute().Subrouter()
 	protected.Use(authMiddleware)
 	protected.HandleFunc("/pet/add", c.AddPet).Methods(http.MethodPost)
-	protected.HandleFunc("/pet/{id}", c.GetPetById).Methods(http.MethodGet)
+	protected.HandleFunc("/pet/id/{id}", c.GetPetById).Methods(http.MethodGet)
+	protected.HandleFunc("/pet/owned", c.GetOwnedPets).Methods(http.MethodGet)
 }
 
 func (c *Controller) AddPet(w http.ResponseWriter, r *http.Request) {
 	var cmd commands.AddPet
+	ownerID, _ := auth.GetUserIDFromContext(r.Context())
+
 	if err := json.NewDecoder(r.Body).Decode(&cmd); err != nil {
 		http.Error(w, sharederrors.ErrInvalidRequestBody.Error(), http.StatusBadRequest)
 		return
 	}
 
-	result, err := c.addHandler.Handle(r.Context(), cmd)
+	result, err := c.addHandler.Handle(r.Context(), cmd, ownerID)
 	if err != nil {
 		c.handleError(w, err)
 		return
@@ -98,6 +101,45 @@ func (c *Controller) GetPetById(w http.ResponseWriter, r *http.Request) {
 		"created_at":   result.CreatedAt,
 		"owner_id":     result.OwnerID,
 		"co_owner_ids": result.CoOwnerIDs,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Failed to encode JSON response: %v", err)
+		return
+	}
+}
+
+func (c *Controller) GetOwnedPets(w http.ResponseWriter, r *http.Request) {
+	UserID, _ := auth.GetUserIDFromContext(r.Context())
+
+	query := queries.GetOwnedPets{UserID: UserID}
+
+	pets, err := c.getOwnedPets.Handle(r.Context(), query)
+	if err != nil {
+		c.handleError(w, err)
+		return
+	}
+
+	petResponses := make([]map[string]interface{}, len(pets.Pets))
+	for i, pet := range pets.Pets {
+		petResponses[i] = map[string]interface{}{
+			"id":         pet.ID(),
+			"name":       pet.Name(),
+			"species":    pet.Species(),
+			"breed":      pet.Breed(),
+			"birth_date": pet.BirthDate(),
+			"photo_url":  pet.PhotoUrl(),
+			"owner_id":   pet.OwnerID(),
+			"created_at": pet.CreatedAt(),
+			"updated_at": pet.UpdatedAt(),
+		}
+	}
+
+	response := map[string]interface{}{
+		"count": len(pets.Pets),
+		"pets":  petResponses,
 	}
 
 	w.Header().Set("Content-Type", "application/json")

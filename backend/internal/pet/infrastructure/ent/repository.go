@@ -2,13 +2,11 @@ package ent
 
 import (
 	"context"
-	"pet-of-the-day/ent/user"
-
+	"github.com/google/uuid"
 	"pet-of-the-day/ent"
 	"pet-of-the-day/ent/pet"
+	"pet-of-the-day/ent/user"
 	"pet-of-the-day/internal/pet/domain"
-
-	"github.com/google/uuid"
 )
 
 type EntPetRepository struct {
@@ -21,7 +19,7 @@ func NewEntPetRepository(client *ent.Client) *EntPetRepository {
 	}
 }
 
-func (r *EntPetRepository) Save(ctx context.Context, domainPet *domain.Pet) error {
+func (r *EntPetRepository) Save(ctx context.Context, domainPet *domain.Pet, ownerID uuid.UUID) error {
 	_, err := r.client.Pet.Create().
 		SetID(domainPet.ID()).
 		SetName(domainPet.Name()).
@@ -29,6 +27,7 @@ func (r *EntPetRepository) Save(ctx context.Context, domainPet *domain.Pet) erro
 		SetBreed(domainPet.Breed()).
 		SetBirthDate(domainPet.BirthDate()).
 		SetPhotoURL(domainPet.PhotoUrl()).
+		SetOwnerID(ownerID).
 		SetCreatedAt(domainPet.CreatedAt()).
 		SetUpdatedAt(domainPet.UpdatedAt()).
 		Save(ctx)
