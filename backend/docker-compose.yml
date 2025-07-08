@@ -2,7 +2,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     ports:
       - "8080:8080"
     depends_on:
@@ -18,9 +18,8 @@ services:
       - PORT=8080
     restart: unless-stopped
     volumes:
-      # For dev
       - .:/app
-      - /app/tmp
+      - /app/tmp  # Exclut le dossier tmp du volume
     networks:
       - pet-network
 
