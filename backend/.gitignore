@@ -5,6 +5,7 @@
 *.so
 *.dylib
 main
+server
 pet-of-the-day
 
 # Fichiers de test

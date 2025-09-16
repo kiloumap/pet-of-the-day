@@ -14,12 +14,12 @@ services:
       - DB_USER=postgres
       - DB_PASSWORD=secret
       - DB_NAME=pet_of_the_day
-      - JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+      - JWT_SECRET=cX1iqVeMxAZbNEGrJsaM6miQeROZlidUc+5Mq8vYKnI=
       - PORT=8080
     restart: unless-stopped
     volumes:
       - .:/app
-      - /app/tmp  # Exclut le dossier tmp du volume
+      - /app/tmp  # Exclude tmp directory from volume
     networks:
       - pet-network
 

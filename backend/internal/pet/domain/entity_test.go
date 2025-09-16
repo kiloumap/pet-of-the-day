@@ -1,9 +1,10 @@
 package domain_test
 
 import (
-	"github.com/google/uuid"
 	"testing"
 	"time"
+
+	"github.com/google/uuid"
 
 	"github.com/stretchr/testify/assert"
 

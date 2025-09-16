@@ -48,7 +48,26 @@ func (c *Controller) RegisterRoutes(router *mux.Router, authMiddleware func(http
 func (c *Controller) Register(w http.ResponseWriter, r *http.Request) {
 	var cmd commands.RegisterUser
 	if err := json.NewDecoder(r.Body).Decode(&cmd); err != nil {
+		log.Printf("Failed to decode request body: %v", err)
 		http.Error(w, sharederrors.ErrInvalidRequestBody.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Validate required fields
+	if cmd.Email == "" {
+		http.Error(w, "Email is required", http.StatusBadRequest)
+		return
+	}
+	if cmd.Password == "" {
+		http.Error(w, "Password is required", http.StatusBadRequest)
+		return
+	}
+	if cmd.FirstName == "" {
+		http.Error(w, "First name is required", http.StatusBadRequest)
+		return
+	}
+	if cmd.LastName == "" {
+		http.Error(w, "Last name is required", http.StatusBadRequest)
 		return
 	}
 
@@ -81,6 +100,7 @@ func (c *Controller) Register(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.Printf("Failed to encode JSON response: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 }
@@ -88,7 +108,18 @@ func (c *Controller) Register(w http.ResponseWriter, r *http.Request) {
 func (c *Controller) Login(w http.ResponseWriter, r *http.Request) {
 	var cmd commands.LoginUser
 	if err := json.NewDecoder(r.Body).Decode(&cmd); err != nil {
+		log.Printf("Failed to decode request body: %v", err)
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	// Validate required fields
+	if cmd.Email == "" {
+		http.Error(w, "Email is required", http.StatusBadRequest)
+		return
+	}
+	if cmd.Password == "" {
+		http.Error(w, "Password is required", http.StatusBadRequest)
 		return
 	}
 
@@ -112,6 +143,7 @@ func (c *Controller) Login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.Printf("Failed to encode JSON response: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 }
@@ -119,7 +151,8 @@ func (c *Controller) Login(w http.ResponseWriter, r *http.Request) {
 func (c *Controller) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
-		http.Error(w, "User ID not found in context", http.StatusUnauthorized)
+		log.Printf("User ID not found in context")
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
@@ -146,7 +179,7 @@ func (c *Controller) handleError(w http.ResponseWriter, err error) {
 	case domain.ErrUserInvalidPassword:
 		http.Error(w, "Invalid password", http.StatusUnauthorized)
 	case domain.ErrUserInvalidEmail:
-		http.Error(w, "Invalid email format", http.StatusNotFound)
+		http.Error(w, "Invalid email format", http.StatusBadRequest)
 	case domain.ErrUserInvalidName:
 		http.Error(w, "Invalid name", http.StatusBadRequest)
 	default:

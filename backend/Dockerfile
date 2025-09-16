@@ -14,7 +14,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd/server
 
 FROM alpine:latest
 
-# Installer les outils nécessaires
+# Install necessary tools
 RUN apk --no-cache add ca-certificates curl bash postgresql-client \
     && curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz | tar -xz
 

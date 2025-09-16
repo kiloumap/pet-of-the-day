@@ -2,8 +2,6 @@ package http
 
 import (
 	"encoding/json"
-	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"pet-of-the-day/internal/pet/application/commands"
@@ -11,6 +9,9 @@ import (
 	"pet-of-the-day/internal/pet/domain"
 	"pet-of-the-day/internal/shared/auth"
 	sharederrors "pet-of-the-day/internal/shared/errors"
+
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
 type Controller struct {
@@ -42,10 +43,26 @@ func (c *Controller) RegisterRoutes(router *mux.Router, authMiddleware func(http
 
 func (c *Controller) AddPet(w http.ResponseWriter, r *http.Request) {
 	var cmd commands.AddPet
-	ownerID, _ := auth.GetUserIDFromContext(r.Context())
+	ownerID, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		log.Printf("User ID not found in context")
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 
 	if err := json.NewDecoder(r.Body).Decode(&cmd); err != nil {
+		log.Printf("Failed to decode request body: %v", err)
 		http.Error(w, sharederrors.ErrInvalidRequestBody.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Validate required fields
+	if cmd.Name == "" {
+		http.Error(w, "Pet name is required", http.StatusBadRequest)
+		return
+	}
+	if cmd.Species == "" {
+		http.Error(w, "Pet species is required", http.StatusBadRequest)
 		return
 	}
 
@@ -112,7 +129,12 @@ func (c *Controller) GetPetById(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) GetOwnedPets(w http.ResponseWriter, r *http.Request) {
-	UserID, _ := auth.GetUserIDFromContext(r.Context())
+	UserID, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		log.Printf("User ID not found in context")
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 
 	query := queries.GetOwnedPets{UserID: UserID}
 

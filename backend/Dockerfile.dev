@@ -4,7 +4,7 @@ RUN apk add --no-cache git ca-certificates bash postgresql-client
 
 WORKDIR /app
 
-# Installer air pour le hot reload
+# Install air for hot reload
 RUN go install github.com/air-verse/air@latest
 
 COPY go.mod go.sum ./
