@@ -1,6 +1,6 @@
 module pet-of-the-day
 
-go 1.24
+go 1.25
 
 require (
 	ariga.io/atlas v0.35.0
