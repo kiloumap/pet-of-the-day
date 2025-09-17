@@ -1,20 +1,24 @@
-import { configureStore } from '@reduxjs/toolkit';
+import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import { persistStore, persistReducer } from 'redux-persist';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import petsReducer from './petsSlice';
+import authReducer from './authSlice';
+import petReducer from './petSlice';
 
 const persistConfig = {
     key: 'root',
     storage: AsyncStorage,
-    whitelist: ['pets', 'groups', 'dailyActions'], // Only persist these fields
+    whitelist: ['auth'], // Only persist auth state
 };
 
-const persistedReducer = persistReducer(persistConfig, petsReducer);
+const rootReducer = combineReducers({
+    auth: authReducer,
+    pets: petReducer,
+});
+
+const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 export const store = configureStore({
-    reducer: {
-        pets: persistedReducer,
-    },
+    reducer: persistedReducer,
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({
             serializableCheck: {

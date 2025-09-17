@@ -1,96 +1,42 @@
 import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useDispatch } from 'react-redux';
-import { Home, Users, BarChart3, User, Award } from 'lucide-react-native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useAppDispatch, useAppSelector } from '../hooks';
+import { checkAuthStatus } from '../store/authSlice';
+import { AuthNavigator } from './AuthNavigator';
+import { MainNavigator } from './MainNavigator';
 
-import HomeScreen from '../screens/home/HomeScreen';
-import GroupsScreen from '../screens/groups/GroupsScreen';
-import LeaderboardScreen from '../screens/leaderboard/LeaderboardScreen';
-import ProfileScreen from '../screens/profile/ProfileScreen';
-import BadgesScreen from '../screens/badges/BadgesScreen';
-import { setPets, setGroups } from '@store/petsSlice';
-import { pets, groups } from '../../data/mockData';
+export type RootStackParamList = {
+  Auth: undefined;
+  MainApp: undefined;
+};
 
-const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const AppNavigator: React.FC = () => {
-    const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
 
-    // Initialize data on app start
-    useEffect(() => {
-        dispatch(setPets(pets));
-        dispatch(setGroups(groups));
-    }, [dispatch]);
+  // Check authentication status on app start
+  useEffect(() => {
+    dispatch(checkAuthStatus());
+  }, [dispatch]);
 
-    const getTabBarIcon = (routeName: string, focused: boolean, color: string, size: number) => {
-        switch (routeName) {
-            case 'Home':
-                return <Home size={size} color={color} />;
-            case 'Groups':
-                return <Users size={size} color={color} />;
-            case 'Badges':
-                return <Award size={size} color={color} />;
-            case 'Leaderboard':
-                return <BarChart3 size={size} color={color} />;
-            case 'Profile':
-                return <User size={size} color={color} />;
-            default:
-                return <Home size={size} color={color} />;
-        }
-    };
-
-    return (
-        <NavigationContainer>
-            <Tab.Navigator
-                screenOptions={({ route }) => ({
-                    tabBarIcon: ({ focused, color, size }) =>
-                        getTabBarIcon(route.name, focused, color, size),
-                    tabBarActiveTintColor: '#3b82f6',
-                    tabBarInactiveTintColor: '#9ca3af',
-                    tabBarStyle: {
-                        backgroundColor: 'white',
-                        borderTopWidth: 1,
-                        borderTopColor: '#f3f4f6',
-                        paddingBottom: 8,
-                        paddingTop: 8,
-                        height: 80,
-                    },
-                    tabBarLabelStyle: {
-                        fontSize: 12,
-                        fontWeight: '500',
-                    },
-                    headerShown: false,
-                })}
-            >
-                <Tab.Screen
-                    name="Home"
-                    component={HomeScreen}
-                    options={{ tabBarLabel: 'Accueil' }}
-                />
-                <Tab.Screen
-                    name="Groups"
-                    component={GroupsScreen}
-                    options={{ tabBarLabel: 'Groupes' }}
-                />
-                <Tab.Screen
-                    name="Badges"
-                    component={BadgesScreen}
-                    options={{ tabBarLabel: 'Badges' }}
-                />
-                <Tab.Screen
-                    name="Leaderboard"
-                    component={LeaderboardScreen}
-                    options={{ tabBarLabel: 'Classement' }}
-                />
-                <Tab.Screen
-                    name="Profile"
-                    component={ProfileScreen}
-                    options={{ tabBarLabel: 'Profil' }}
-                />
-            </Tab.Navigator>
-        </NavigationContainer>
-    );
+  return (
+    <NavigationContainer>
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: false,
+        }}
+      >
+        {isAuthenticated ? (
+          <Stack.Screen name="MainApp" component={MainNavigator} />
+        ) : (
+          <Stack.Screen name="Auth" component={AuthNavigator} />
+        )}
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
 };
 
 export default AppNavigator;

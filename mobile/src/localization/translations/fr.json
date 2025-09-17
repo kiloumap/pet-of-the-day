@@ -1,0 +1,99 @@
+{
+  "auth": {
+    "login": "Connexion",
+    "register": "Inscription",
+    "logout": "Déconnexion",
+    "email": "Email",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "loginButton": "Se connecter",
+    "registerButton": "Créer le compte",
+    "loginTitle": "Connexion",
+    "loginSubtitle": "Connectez-vous pour accéder à votre compte Pet of the Day",
+    "registerTitle": "Créer un compte",
+    "registerSubtitle": "Rejoignez Pet of the Day et commencez à suivre vos compagnons",
+    "noAccount": "Pas encore de compte ?",
+    "hasAccount": "Déjà un compte ?",
+    "signInLink": "Se connecter",
+    "createAccountLink": "Créer un compte",
+    "errors": {
+      "loginError": "Erreur de connexion",
+      "registerError": "Erreur d'inscription"
+    },
+    "placeholders": {
+      "email": "votre@email.com",
+      "password": "Votre mot de passe",
+      "choosePassword": "Choisissez votre mot de passe",
+      "repeatPassword": "Répétez votre mot de passe",
+      "firstName": "Votre prénom",
+      "lastName": "Votre nom"
+    },
+    "validations": {
+      "emailRequired": "L'email est requis",
+      "emailInvalid": "Format d'email invalide",
+      "passwordRequired": "Le mot de passe est requis",
+      "passwordMinLength": "Le mot de passe doit contenir au moins 6 caractères",
+      "passwordMismatch": "Les mots de passe ne correspondent pas",
+      "firstNameRequired": "Le prénom est requis",
+      "lastNameRequired": "Le nom est requis",
+      "confirmPasswordRequired": "Veuillez confirmer le mot de passe"
+    }
+  },
+  "pets": {
+    "myPets": "Mes animaux",
+    "addPet": "Ajouter un animal",
+    "noPets": "Aucun animal de compagnie",
+    "noPetsSubtitle": "Commencez par ajouter votre premier compagnon !",
+    "addAnimal": "Ajouter un animal",
+    "addPetTitle": "Ajouter un animal",
+    "addPetSubtitle": "Ajoutez votre compagnon à votre profil Pet of the Day",
+    "name": "Nom",
+    "species": "Espèce",
+    "breed": "Race",
+    "birthDate": "Date de naissance",
+    "photoUrl": "URL de la photo",
+    "basicInfo": "Informations de base",
+    "additionalInfo": "Informations complémentaires",
+    "dateFormatHelp": "Format: YYYY-MM-DD (ex: 2020-01-15)",
+    "photoUrlHelp": "Lien vers une photo de votre animal",
+    "addSuccess": "Votre animal a été ajouté avec succès !",
+    "validations": {
+      "nameRequired": "Le nom de l'animal est requis",
+      "speciesRequired": "L'espèce de l'animal est requise",
+      "nameRequiredValidation": "Le nom est requis",
+      "speciesRequiredValidation": "L'espèce est requise",
+      "photoUrlInvalid": "URL de photo invalide",
+      "dateFormatInvalid": "Format de date invalide (YYYY-MM-DD)"
+    },
+    "placeholders": {
+      "petName": "Archie, Arthas, Betty...",
+      "species": "Chien, Chat, Lapin...",
+      "breed": "Labrador, Persan, Bélier...",
+      "photoUrl": "https://example.com/photo.jpg"
+    }
+  },
+  "navigation": {
+    "home": "Accueil",
+    "myPets": "Mes animaux",
+    "profile": "Profil",
+    "settings": "Paramètres"
+  },
+  "common": {
+    "ok": "OK",
+    "cancel": "Annuler",
+    "add": "Ajouter",
+    "addedOn": "Ajouté le",
+    "save": "Sauvegarder",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "retry": "Réessayer",
+    "refresh": "Actualiser",
+    "success": "Succès",
+    "optional": "(optionnel)",
+    "dateFormat": "Format: YYYY-MM-DD (ex: 2020-01-15)\n"
+  }
+}
