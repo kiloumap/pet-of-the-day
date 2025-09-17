@@ -149,7 +149,7 @@ dev:
     just start
     @echo "{{green}}Environment ready!{{nc}}"
     @echo "{{green}}API: http://localhost:8080{{nc}}"
-    @echo "{{green}}Adminer: http://localhost:8081{{nc}}"
+    @echo "{{green}}Adminer: http://localhost:8082{{nc}}"
 
 # Install development tools
 install-tools:
@@ -318,7 +318,7 @@ info:
     @echo ""
     @echo "{{yellow}}Services:{{nc}}"
     @echo "  • API: http://localhost:8080"
-    @echo "  • Adminer: http://localhost:8081"
+    @echo "  • Adminer: http://localhost:8082"
     @echo "  • PostgreSQL: localhost:5432"
     @echo ""
     @echo "{{yellow}}Main commands:{{nc}}"

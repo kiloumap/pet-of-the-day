@@ -90,7 +90,7 @@ main() {
             echo -e "${GREEN}All services are running!${NC}"
             echo -e "${BLUE}API: http://localhost:8080${NC}"
             echo -e "${BLUE}Database: localhost:5432${NC}"
-            echo -e "${BLUE}Adminer: http://localhost:8081${NC}"
+            echo -e "${BLUE}Adminer: http://localhost:8082${NC}"
             ;;
         "dev-watch")
             echo -e "${YELLOW}Starting Pet of the Day services (dev-watch mode with Air)...${NC}"
@@ -98,7 +98,7 @@ main() {
             echo -e "${GREEN}Services started with hot reload!${NC}"
             echo -e "${BLUE}API: http://localhost:8080 (with Air hot reload)${NC}"
             echo -e "${BLUE}Database: localhost:5432${NC}"
-            echo -e "${BLUE}Adminer: http://localhost:8081${NC}"
+            echo -e "${BLUE}Adminer: http://localhost:8082${NC}"
             echo -e "${YELLOW}Edit your Go files and see changes instantly!${NC}"
             echo -e "${YELLOW}Use 'just logs api-dev' to see Air logs${NC}"
             ;;

@@ -36,8 +36,8 @@ func NewController(
 
 func (c *Controller) RegisterRoutes(router *mux.Router, authMiddleware func(http.Handler) http.Handler) {
 	// Public routes
-	router.HandleFunc("/auth/register", c.Register).Methods(http.MethodPost)
-	router.HandleFunc("/auth/login", c.Login).Methods(http.MethodPost)
+	router.HandleFunc("/auth/register", c.Register).Methods(http.MethodPost, http.MethodOptions)
+	router.HandleFunc("/auth/login", c.Login).Methods(http.MethodPost, http.MethodOptions)
 
 	// Protected routes
 	protected := router.NewRoute().Subrouter()
@@ -149,9 +149,9 @@ func (c *Controller) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
-	userID, ok := auth.GetUserIDFromContext(r.Context())
-	if !ok {
-		log.Printf("User ID not found in context")
+	userID, err := auth.GetUserIDFromContext(r.Context())
+	if err != nil {
+		log.Printf("User ID not found in context: %v", err)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}

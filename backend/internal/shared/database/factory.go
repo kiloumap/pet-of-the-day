@@ -5,16 +5,15 @@ import (
 	"fmt"
 	"log"
 	"os"
+	userInfraEnt "pet-of-the-day/internal/user/infrastructure/ent"
 
+	_ "github.com/lib/pq"
 	"pet-of-the-day/ent"
 	petDomain "pet-of-the-day/internal/pet/domain"
 	petInfra "pet-of-the-day/internal/pet/infrastructure"
 	petInfraEnt "pet-of-the-day/internal/pet/infrastructure/ent"
 	userDomain "pet-of-the-day/internal/user/domain"
 	userInfra "pet-of-the-day/internal/user/infrastructure"
-	userInfraEnt "pet-of-the-day/internal/user/infrastructure/ent"
-
-	_ "github.com/lib/pq"
 )
 
 type RepositoryFactory struct {

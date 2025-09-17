@@ -22,8 +22,9 @@ func (Group) Fields() []ent.Field {
 			NotEmpty(),
 		field.String("description").
 			Optional(),
-		field.Enum("type").
-			Values("family", "neighborhood", "friends"),
+		field.Enum("privacy").
+			Values("private", "public").
+			Default("private"),
 		field.Time("created_at").
 			Default(time.Now).
 			Immutable(),
@@ -39,7 +40,9 @@ func (Group) Edges() []ent.Edge {
 			Ref("created_groups").
 			Unique().
 			Required(),
-		edge.To("members", Pet.Type),
+		edge.To("memberships", Membership.Type),
+		edge.To("invitations", Invitation.Type),
 		edge.To("behaviors", Behavior.Type),
+		edge.To("members", Pet.Type),
 	}
 }

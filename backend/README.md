@@ -31,7 +31,7 @@ just start
 
 The application will be available at:
 - **API**: http://localhost:8080
-- **Adminer** (DB interface): http://localhost:8081
+- **Adminer** (DB interface): http://localhost:8082
 - **Database**: localhost:5432
 
 ## 📚 Useful Commands

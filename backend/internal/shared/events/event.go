@@ -44,3 +44,41 @@ type HandlerFunc func(ctx context.Context, event Event) error
 func (f HandlerFunc) Handle(ctx context.Context, event Event) error {
 	return f(ctx, event)
 }
+
+// EventBus interface for publishing events
+type EventBus interface {
+	Publish(ctx context.Context, event Event) error
+	Subscribe(eventType string, handler Handler)
+}
+
+// InMemoryEventBus is a simple in-memory implementation
+type InMemoryEventBus struct {
+	handlers map[string][]Handler
+}
+
+func NewInMemoryEventBus() *InMemoryEventBus {
+	return &InMemoryEventBus{
+		handlers: make(map[string][]Handler),
+	}
+}
+
+func (b *InMemoryEventBus) Publish(ctx context.Context, event Event) error {
+	handlers, exists := b.handlers[event.EventType()]
+	if !exists {
+		return nil // No handlers for this event type
+	}
+
+	for _, handler := range handlers {
+		if err := handler.Handle(ctx, event); err != nil {
+			// Log error but don't stop processing other handlers
+			// In production, you might want to use a proper logger
+			continue
+		}
+	}
+
+	return nil
+}
+
+func (b *InMemoryEventBus) Subscribe(eventType string, handler Handler) {
+	b.handlers[eventType] = append(b.handlers[eventType], handler)
+}

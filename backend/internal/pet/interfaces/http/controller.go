@@ -43,9 +43,9 @@ func (c *Controller) RegisterRoutes(router *mux.Router, authMiddleware func(http
 
 func (c *Controller) AddPet(w http.ResponseWriter, r *http.Request) {
 	var cmd commands.AddPet
-	ownerID, ok := auth.GetUserIDFromContext(r.Context())
-	if !ok {
-		log.Printf("User ID not found in context")
+	ownerID, err := auth.GetUserIDFromContext(r.Context())
+	if err != nil {
+		log.Printf("User ID not found in context: %v", err)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
@@ -129,9 +129,9 @@ func (c *Controller) GetPetById(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) GetOwnedPets(w http.ResponseWriter, r *http.Request) {
-	UserID, ok := auth.GetUserIDFromContext(r.Context())
-	if !ok {
-		log.Printf("User ID not found in context")
+	UserID, err := auth.GetUserIDFromContext(r.Context())
+	if err != nil {
+		log.Printf("User ID not found in context: %v", err)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}

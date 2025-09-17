@@ -1,7 +1,10 @@
 package auth
 
 import (
+	"context"
 	"fmt"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -12,6 +15,8 @@ import (
 type JWTService interface {
 	GenerateToken(userID uuid.UUID) (string, error)
 	ValidateToken(tokenString string) (*Claims, error)
+	AuthMiddleware(next http.Handler) http.Handler
+	OptionalAuthMiddleware(next http.Handler) http.Handler
 }
 
 type Claims struct {
@@ -64,4 +69,70 @@ func (s *jwtService) ValidateToken(tokenString string) (*Claims, error) {
 	}
 
 	return nil, fmt.Errorf("invalid token")
+}
+
+// Context keys for storing user information
+type contextKey string
+
+const (
+	UserIDKey contextKey = "user_id"
+)
+
+// AuthMiddleware is a HTTP middleware for JWT authentication
+func (s *jwtService) AuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			http.Error(w, "Authorization header required", http.StatusUnauthorized)
+			return
+		}
+
+		// Check for Bearer token
+		const bearerPrefix = "Bearer "
+		if !strings.HasPrefix(authHeader, bearerPrefix) {
+			http.Error(w, "Invalid authorization header format", http.StatusUnauthorized)
+			return
+		}
+
+		tokenString := authHeader[len(bearerPrefix):]
+		claims, err := s.ValidateToken(tokenString)
+		if err != nil {
+			http.Error(w, "Invalid token", http.StatusUnauthorized)
+			return
+		}
+
+		// Add user information to context
+		ctx := context.WithValue(r.Context(), UserIDKey, claims.UserID)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+// OptionalAuthMiddleware is a middleware that extracts auth info if present but doesn't require it
+func (s *jwtService) OptionalAuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authHeader := r.Header.Get("Authorization")
+		if authHeader != "" {
+			const bearerPrefix = "Bearer "
+			if strings.HasPrefix(authHeader, bearerPrefix) {
+				tokenString := authHeader[len(bearerPrefix):]
+				claims, err := s.ValidateToken(tokenString)
+				if err == nil {
+					// Add user information to context
+					ctx := context.WithValue(r.Context(), UserIDKey, claims.UserID)
+					r = r.WithContext(ctx)
+				}
+			}
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+// GetUserIDFromContext extracts user ID from request context
+func GetUserIDFromContext(ctx context.Context) (uuid.UUID, error) {
+	userID, ok := ctx.Value(UserIDKey).(uuid.UUID)
+	if !ok {
+		return uuid.Nil, fmt.Errorf("user ID not found in context")
+	}
+	return userID, nil
 }
