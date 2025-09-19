@@ -16,3 +16,11 @@ func (s Species) IsValid() bool {
 		return false
 	}
 }
+
+func NewSpecies(s string) (Species, error) {
+	species := Species(s)
+	if !species.IsValid() {
+		return "", ErrPetInvalidSpecies
+	}
+	return species, nil
+}

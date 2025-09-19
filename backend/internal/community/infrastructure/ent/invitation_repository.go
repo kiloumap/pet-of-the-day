@@ -2,6 +2,7 @@ package ent
 
 import (
 	"context"
+	"pet-of-the-day/ent"
 	"pet-of-the-day/internal/community/domain"
 
 	"github.com/google/uuid"
@@ -9,11 +10,13 @@ import (
 
 // EntInvitationRepository implements the InvitationRepository interface using Ent
 type EntInvitationRepository struct {
-	// We'll inject the Ent client here
+	client *ent.Client
 }
 
-func NewEntInvitationRepository() *EntInvitationRepository {
-	return &EntInvitationRepository{}
+func NewEntInvitationRepository(client *ent.Client) *EntInvitationRepository {
+	return &EntInvitationRepository{
+		client: client,
+	}
 }
 
 func (r *EntInvitationRepository) Save(ctx context.Context, invitation *domain.Invitation) error {

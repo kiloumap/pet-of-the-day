@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"pet-of-the-day/internal/community/application/commands"
 	"pet-of-the-day/internal/community/application/queries"
+	"pet-of-the-day/internal/community/domain"
 	"pet-of-the-day/internal/shared/auth"
 
 	"github.com/google/uuid"
@@ -14,6 +15,8 @@ import (
 type CommunityHandlers struct {
 	// Command handlers
 	createGroupHandler      *commands.CreateGroupHandler
+	updateGroupHandler      *commands.UpdateGroupHandler
+	deleteGroupHandler      *commands.DeleteGroupHandler
 	joinGroupHandler        *commands.JoinGroupHandler
 	leaveGroupHandler       *commands.LeaveGroupHandler
 	inviteToGroupHandler    *commands.InviteToGroupHandler
@@ -28,6 +31,8 @@ type CommunityHandlers struct {
 
 func NewCommunityHandlers(
 	createGroupHandler *commands.CreateGroupHandler,
+	updateGroupHandler *commands.UpdateGroupHandler,
+	deleteGroupHandler *commands.DeleteGroupHandler,
 	joinGroupHandler *commands.JoinGroupHandler,
 	leaveGroupHandler *commands.LeaveGroupHandler,
 	inviteToGroupHandler *commands.InviteToGroupHandler,
@@ -39,6 +44,8 @@ func NewCommunityHandlers(
 ) *CommunityHandlers {
 	return &CommunityHandlers{
 		createGroupHandler:      createGroupHandler,
+		updateGroupHandler:      updateGroupHandler,
+		deleteGroupHandler:      deleteGroupHandler,
 		joinGroupHandler:        joinGroupHandler,
 		leaveGroupHandler:       leaveGroupHandler,
 		inviteToGroupHandler:    inviteToGroupHandler,
@@ -53,8 +60,10 @@ func NewCommunityHandlers(
 // POST /groups
 func (h *CommunityHandlers) CreateGroup(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		Name        string `json:"name"`
-		Description string `json:"description"`
+		Name        string   `json:"name"`
+		Description string   `json:"description"`
+		Privacy     string   `json:"privacy"`
+		PetIDs      []string `json:"pet_ids,omitempty"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -67,25 +76,45 @@ func (h *CommunityHandlers) CreateGroup(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// Convert string pet IDs to UUIDs
+	var petIDs []uuid.UUID
+	for _, petIDStr := range req.PetIDs {
+		petID, err := uuid.Parse(petIDStr)
+		if err != nil {
+			http.Error(w, "Invalid pet ID format", http.StatusBadRequest)
+			return
+		}
+		petIDs = append(petIDs, petID)
+	}
+
 	cmd := commands.CreateGroupCommand{
 		Name:        req.Name,
 		Description: req.Description,
+		Privacy:     domain.GroupPrivacy(req.Privacy),
 		CreatorID:   userID,
+		PetIDs:      petIDs,
 	}
 
-	group, err := h.createGroupHandler.Handle(r.Context(), cmd)
+	result, err := h.createGroupHandler.Handle(r.Context(), cmd)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	response := map[string]interface{}{
-		"id":          group.ID(),
-		"name":        group.Name(),
-		"description": group.Description(),
-		"privacy":     group.Privacy(),
-		"creator_id":  group.CreatorID(),
-		"created_at":  group.CreatedAt(),
+		"id":          result.Group.ID(),
+		"name":        result.Group.Name(),
+		"description": result.Group.Description(),
+		"privacy":     result.Group.Privacy(),
+		"creator_id":  result.Group.CreatorID(),
+		"created_at":  result.Group.CreatedAt(),
+		"invite_code": result.Invitation.InviteCode(),
+		"membership": map[string]interface{}{
+			"id":      result.Membership.ID(),
+			"user_id": result.Membership.UserID(),
+			"pet_ids": result.Membership.PetIDs(),
+			"status":  result.Membership.Status(),
+		},
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -384,6 +413,65 @@ func (h *CommunityHandlers) GetUserGroups(w http.ResponseWriter, r *http.Request
 	json.NewEncoder(w).Encode(response)
 }
 
+// PUT /groups/{groupId}/pets
+func (h *CommunityHandlers) UpdateMembershipPets(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	groupIDStr, ok := vars["groupId"]
+	if !ok {
+		http.Error(w, "Group ID is required", http.StatusBadRequest)
+		return
+	}
+
+	groupID, err := uuid.Parse(groupIDStr)
+	if err != nil {
+		http.Error(w, "Invalid group ID format", http.StatusBadRequest)
+		return
+	}
+
+	var req struct {
+		PetIDs []string `json:"pet_ids"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	userID, ok := getUserIDOrError(w, r)
+	if !ok {
+		return
+	}
+
+	// Convert string pet IDs to UUIDs
+	var petIDs []uuid.UUID
+	for _, petIDStr := range req.PetIDs {
+		petID, err := uuid.Parse(petIDStr)
+		if err != nil {
+			http.Error(w, "Invalid pet ID format", http.StatusBadRequest)
+			return
+		}
+		petIDs = append(petIDs, petID)
+	}
+
+	cmd := commands.UpdateMembershipPetsCommand{
+		GroupID: groupID,
+		UserID:  userID,
+		PetIDs:  petIDs,
+	}
+
+	err = h.updatePetsHandler.Handle(r.Context(), cmd)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "Pets updated successfully",
+	})
+}
+
 // Helper function to extract user ID from context
 func getUserIDFromContext(r *http.Request) (uuid.UUID, error) {
 	return auth.GetUserIDFromContext(r.Context())
@@ -397,4 +485,84 @@ func getUserIDOrError(w http.ResponseWriter, r *http.Request) (uuid.UUID, bool) 
 		return uuid.Nil, false
 	}
 	return userID, true
+}
+
+// PUT /groups/{groupId}
+func (h *CommunityHandlers) UpdateGroup(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	groupID, err := uuid.Parse(vars["groupId"])
+	if err != nil {
+		http.Error(w, "Invalid group ID", http.StatusBadRequest)
+		return
+	}
+
+	var req struct {
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Privacy     string `json:"privacy"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	userID, ok := getUserIDOrError(w, r)
+	if !ok {
+		return
+	}
+
+	cmd := commands.UpdateGroupCommand{
+		GroupID:     groupID,
+		UserID:      userID,
+		Name:        req.Name,
+		Description: req.Description,
+		Privacy:     domain.GroupPrivacy(req.Privacy),
+	}
+
+	group, err := h.updateGroupHandler.Handle(r.Context(), cmd)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	response := map[string]interface{}{
+		"id":          group.ID(),
+		"name":        group.Name(),
+		"description": group.Description(),
+		"privacy":     group.Privacy(),
+		"creator_id":  group.CreatorID(),
+		"created_at":  group.CreatedAt(),
+		"updated_at":  group.UpdatedAt(),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+// DELETE /groups/{groupId}
+func (h *CommunityHandlers) DeleteGroup(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	groupID, err := uuid.Parse(vars["groupId"])
+	if err != nil {
+		http.Error(w, "Invalid group ID", http.StatusBadRequest)
+		return
+	}
+
+	userID, ok := getUserIDOrError(w, r)
+	if !ok {
+		return
+	}
+
+	cmd := commands.DeleteGroupCommand{
+		GroupID: groupID,
+		UserID:  userID,
+	}
+
+	if err := h.deleteGroupHandler.Handle(r.Context(), cmd); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

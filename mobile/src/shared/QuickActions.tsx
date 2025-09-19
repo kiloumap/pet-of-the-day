@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Plus, Camera } from 'lucide-react-native';
+import { useTranslation } from '../hooks';
 
 interface QuickActionsProps {
     onNoteAction: () => void;
@@ -8,13 +9,15 @@ interface QuickActionsProps {
 }
 
 const QuickActions: React.FC<QuickActionsProps> = ({ onNoteAction, onPhotoMoment }) => {
+    const { t } = useTranslation();
+
     return (
         <View style={styles.container}>
             <TouchableOpacity style={[styles.button, styles.blueButton]} onPress={onNoteAction}>
                 <Plus size={20} color="white" />
-                <Text style={styles.buttonText}>Noter action</Text>
+                <Text style={styles.buttonText}>{t('points.recordAction')}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.button, styles.purpleButton]} onPress={onPhotoMoment}>
+            <TouchableOpacity style={[styles.button, styles.greenButton]} onPress={onPhotoMoment}>
                 <Camera size={20} color="white" />
                 <Text style={styles.buttonText}>Photo moment</Text>
             </TouchableOpacity>
@@ -40,8 +43,8 @@ const styles = StyleSheet.create({
     blueButton: {
         backgroundColor: '#3b82f6',
     },
-    purpleButton: {
-        backgroundColor: '#8b5cf6',
+    greenButton: {
+        backgroundColor: '#10b981',
     },
     buttonText: {
         color: 'white',

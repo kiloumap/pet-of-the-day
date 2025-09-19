@@ -1,194 +1,343 @@
-import React from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Users, Settings } from 'lucide-react-native';
-import { useSelector } from 'react-redux';
+import React, { useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  RefreshControl,
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { useAppDispatch, useAppSelector } from '../../hooks';
+import { useTranslation } from '../../hooks/useTranslation';
+import { useTheme } from '../../theme/ThemeContext';
+import { fetchUserGroups, clearError } from '../../store/groupSlice';
+import { MaterialIcons } from '@expo/vector-icons';
 
-import { selectGroups, selectPets } from '../../store/petsSlice';
+const GroupsScreen = () => {
+  const { t } = useTranslation();
+  const { theme } = useTheme();
+  const navigation = useNavigation();
+  const dispatch = useAppDispatch();
 
-const GroupsScreen: React.FC = () => {
-    const groups = useSelector(selectGroups);
-    const pets = useSelector(selectPets);
+  const {
+    createdGroups,
+    joinedGroups,
+    isLoading,
+    error,
+  } = useAppSelector((state) => state.groups);
 
-    const topPets = [...pets]
-        .sort((a, b) => b.points - a.points)
-        .slice(0, 3);
+  const { user } = useAppSelector((state) => state.auth);
 
-    return (
-        <SafeAreaView style={styles.container}>
-            <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-                <Text style={styles.screenTitle}>Mes Groupes</Text>
+  useEffect(() => {
+    if (user?.id) {
+      dispatch(fetchUserGroups(user.id));
+    }
+  }, [dispatch, user?.id]);
 
-                <View style={styles.groupsContainer}>
-                    {groups.map(group => (
-                        <View key={group.id} style={styles.groupCard}>
-                            <View style={styles.groupHeader}>
-                                <View style={styles.groupInfo}>
-                                    <View style={styles.groupIcon}>
-                                        <Users size={24} color="white" />
-                                    </View>
-                                    <View>
-                                        <Text style={styles.groupName}>{group.name}</Text>
-                                        <Text style={styles.groupMembers}>{group.members} membres</Text>
-                                    </View>
-                                </View>
-                                <TouchableOpacity>
-                                    <Settings size={20} color="#3b82f6" />
-                                </TouchableOpacity>
-                            </View>
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        dispatch(clearError());
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, dispatch]);
 
-                            <View style={styles.leaderboard}>
-                                <Text style={styles.leaderboardTitle}>Top du jour</Text>
-                                {topPets.map((pet, index) => (
-                                    <View key={pet.id} style={styles.leaderboardItem}>
-                                        <View style={styles.leaderboardLeft}>
-                                            <View style={styles.rankBadge}>
-                                                <Text style={styles.rankText}>{index + 1}</Text>
-                                            </View>
-                                            <Text style={styles.petEmoji}>{pet.image}</Text>
-                                            <Text style={styles.petName}>{pet.name}</Text>
-                                        </View>
-                                        <Text style={styles.petPoints}>{pet.points}</Text>
-                                    </View>
-                                ))}
-                            </View>
-                        </View>
-                    ))}
-                </View>
+  const handleRefresh = () => {
+    if (user?.id) {
+      dispatch(fetchUserGroups(user.id));
+    }
+  };
 
-                {groups.length === 0 && (
-                    <View style={styles.emptyState}>
-                        <Text style={styles.emptyText}>Aucun groupe trouvé</Text>
-                        <Text style={styles.emptySubtext}>
-                            Créez ou rejoignez un groupe pour commencer !
-                        </Text>
-                    </View>
-                )}
-            </ScrollView>
-        </SafeAreaView>
-    );
-};
+  const handleCreateGroup = () => {
+    navigation.navigate('CreateGroup' as never);
+  };
 
-const styles = StyleSheet.create({
+  const handleJoinGroup = () => {
+    navigation.navigate('JoinGroup' as never);
+  };
+
+  const handleGroupPress = (groupId: string) => {
+    navigation.navigate('GroupDetail' as never, { groupId } as never);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  const styles = StyleSheet.create({
     container: {
-        flex: 1,
-        backgroundColor: '#f8fafc',
+      flex: 1,
+      backgroundColor: theme.colors.background.primary,
     },
-    scrollView: {
-        flex: 1,
-        padding: 16,
+    scrollContainer: {
+      flexGrow: 1,
+      padding: 16,
     },
-    screenTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#1f2937',
-        marginBottom: 24,
+    headerSection: {
+      marginBottom: 24,
     },
-    groupsContainer: {
-        gap: 16,
+    title: {
+      fontSize: 28,
+      fontWeight: 'bold',
+      color: theme.colors.text.primary,
+      marginBottom: 8,
+    },
+    subtitle: {
+      fontSize: 16,
+      color: theme.colors.text.secondary,
+      marginBottom: 20,
+    },
+    actionButtons: {
+      flexDirection: 'row',
+      gap: 12,
+      marginBottom: 24,
+    },
+    actionButton: {
+      flex: 1,
+      backgroundColor: theme.colors.primary,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderRadius: 8,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+    },
+    actionButtonSecondary: {
+      backgroundColor: theme.colors.background.secondary,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    actionButtonText: {
+      color: theme.colors.text.inverse,
+      fontWeight: '600',
+      fontSize: 16,
+    },
+    actionButtonTextSecondary: {
+      color: theme.colors.text.primary,
+    },
+    section: {
+      marginBottom: 24,
+    },
+    sectionTitle: {
+      fontSize: 20,
+      fontWeight: '600',
+      color: theme.colors.text.primary,
+      marginBottom: 12,
     },
     groupCard: {
-        backgroundColor: 'white',
-        borderRadius: 12,
-        padding: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
-        borderWidth: 1,
-        borderColor: '#f3f4f6',
+      backgroundColor: theme.colors.background.secondary,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 12,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
     },
     groupHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: 12,
-    },
-    groupInfo: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    groupIcon: {
-        width: 48,
-        height: 48,
-        backgroundColor: '#8b5cf6',
-        borderRadius: 24,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 12,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: 8,
     },
     groupName: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#1f2937',
+      fontSize: 18,
+      fontWeight: '600',
+      color: theme.colors.text.primary,
+      flex: 1,
+      marginRight: 8,
     },
-    groupMembers: {
-        fontSize: 14,
-        color: '#6b7280',
+    groupDescription: {
+      fontSize: 14,
+      color: theme.colors.text.secondary,
+      marginBottom: 8,
+      lineHeight: 20,
     },
-    leaderboard: {
-        marginTop: 8,
+    groupMeta: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
     },
-    leaderboardTitle: {
-        fontSize: 14,
-        fontWeight: '500',
-        color: '#374151',
-        marginBottom: 8,
+    groupDate: {
+      fontSize: 12,
+      color: theme.colors.text.tertiary,
     },
-    leaderboardItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingVertical: 8,
+    memberCount: {
+      fontSize: 12,
+      color: theme.colors.text.secondary,
+      backgroundColor: theme.colors.background.tertiary,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 12,
     },
-    leaderboardLeft: {
-        flexDirection: 'row',
-        alignItems: 'center',
+    emptyContainer: {
+      alignItems: 'center',
+      padding: 32,
+      backgroundColor: theme.colors.background.secondary,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
     },
-    rankBadge: {
-        width: 24,
-        height: 24,
-        backgroundColor: '#f59e0b',
-        borderRadius: 12,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 12,
+    emptyIcon: {
+      marginBottom: 16,
     },
-    rankText: {
-        fontSize: 12,
-        fontWeight: 'bold',
-        color: 'white',
+    emptyTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: theme.colors.text.primary,
+      marginBottom: 8,
+      textAlign: 'center',
     },
-    petEmoji: {
-        fontSize: 18,
-        marginRight: 12,
+    emptySubtitle: {
+      fontSize: 14,
+      color: theme.colors.text.secondary,
+      textAlign: 'center',
+      lineHeight: 20,
     },
-    petName: {
-        fontSize: 16,
-        fontWeight: '500',
-        color: '#1f2937',
+    errorContainer: {
+      backgroundColor: theme.colors.error,
+      padding: 12,
+      borderRadius: 8,
+      marginBottom: 16,
     },
-    petPoints: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#2563eb',
+    errorText: {
+      color: theme.colors.text.inverse,
+      textAlign: 'center',
+      fontSize: 14,
     },
-    emptyState: {
-        alignItems: 'center',
-        marginTop: 60,
-    },
-    emptyText: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#6b7280',
-        marginBottom: 8,
-    },
-    emptySubtext: {
-        fontSize: 14,
-        color: '#9ca3af',
-        textAlign: 'center',
-    },
-});
+  });
+
+  const hasGroups = createdGroups.length > 0 || joinedGroups.length > 0;
+
+  return (
+    <View style={styles.container}>
+      <ScrollView
+        style={styles.scrollContainer}
+        contentContainerStyle={{ flexGrow: 1 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={handleRefresh}
+            tintColor={theme.colors.primary}
+          />
+        }
+      >
+        <View style={styles.headerSection}>
+          <Text style={styles.title}>{t('groups.title')}</Text>
+          <Text style={styles.subtitle}>{t('groups.myGroups')}</Text>
+
+          {error && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{error.message}</Text>
+            </View>
+          )}
+
+          <View style={styles.actionButtons}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handleCreateGroup}
+            >
+              <MaterialIcons name="add" size={20} color={theme.colors.text.inverse} />
+              <Text style={styles.actionButtonText}>
+                {t('groups.createGroup')}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.actionButton, styles.actionButtonSecondary]}
+              onPress={handleJoinGroup}
+            >
+              <MaterialIcons name="group-add" size={20} color={theme.colors.text.primary} />
+              <Text style={[styles.actionButtonText, styles.actionButtonTextSecondary]}>
+                {t('groups.joinGroup')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {!hasGroups ? (
+          <View style={styles.emptyContainer}>
+            <MaterialIcons
+              name="group"
+              size={64}
+              color={theme.colors.text.tertiary}
+              style={styles.emptyIcon}
+            />
+            <Text style={styles.emptyTitle}>{t('groups.noGroups')}</Text>
+            <Text style={styles.emptySubtitle}>{t('groups.noGroupsSubtitle')}</Text>
+          </View>
+        ) : (
+          <>
+            {createdGroups.length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>{t('groups.createdGroups')}</Text>
+                {createdGroups.map((group) => (
+                  <TouchableOpacity
+                    key={group.id}
+                    style={styles.groupCard}
+                    onPress={() => handleGroupPress(group.id)}
+                  >
+                    <View style={styles.groupHeader}>
+                      <Text style={styles.groupName}>{group.name}</Text>
+                      <MaterialIcons
+                        name="admin-panel-settings"
+                        size={20}
+                        color={theme.colors.primary}
+                      />
+                    </View>
+                    {group.description && (
+                      <Text style={styles.groupDescription}>{group.description}</Text>
+                    )}
+                    <View style={styles.groupMeta}>
+                      <Text style={styles.groupDate}>
+                        {t('common.addedOn')} {formatDate(group.created_at)}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
+            {joinedGroups.length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>{t('groups.joinedGroups')}</Text>
+                {joinedGroups.map(({ group, membership }) => (
+                  <TouchableOpacity
+                    key={group.id}
+                    style={styles.groupCard}
+                    onPress={() => handleGroupPress(group.id)}
+                  >
+                    <View style={styles.groupHeader}>
+                      <Text style={styles.groupName}>{group.name}</Text>
+                      <MaterialIcons
+                        name="group"
+                        size={20}
+                        color={theme.colors.text.secondary}
+                      />
+                    </View>
+                    {group.description && (
+                      <Text style={styles.groupDescription}>{group.description}</Text>
+                    )}
+                    <View style={styles.groupMeta}>
+                      <Text style={styles.groupDate}>
+                        {t('common.addedOn')} {formatDate(membership.joined_at)}
+                      </Text>
+                      {membership.pet_ids && (
+                        <Text style={styles.memberCount}>
+                          {membership.pet_ids.length} {t('pets.myPets').toLowerCase()}
+                        </Text>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </>
+        )}
+      </ScrollView>
+    </View>
+  );
+};
 
 export default GroupsScreen;

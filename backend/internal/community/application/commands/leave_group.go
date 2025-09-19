@@ -32,7 +32,6 @@ func NewLeaveGroupHandler(
 }
 
 func (h *LeaveGroupHandler) Handle(ctx context.Context, cmd LeaveGroupCommand) error {
-	// Check if group exists
 	group, err := h.groupRepo.FindByID(ctx, cmd.GroupID)
 	if err != nil {
 		return domain.ErrGroupNotFound
@@ -41,7 +40,6 @@ func (h *LeaveGroupHandler) Handle(ctx context.Context, cmd LeaveGroupCommand) e
 		return domain.ErrGroupNotFound
 	}
 
-	// Find membership
 	membership, err := h.membershipRepo.FindByGroupAndUser(ctx, cmd.GroupID, cmd.UserID)
 	if err != nil {
 		return domain.ErrMembershipNotFound
@@ -50,22 +48,18 @@ func (h *LeaveGroupHandler) Handle(ctx context.Context, cmd LeaveGroupCommand) e
 		return domain.ErrMembershipNotFound
 	}
 
-	// Check if user is the creator - they cannot leave their own group
 	if group.IsCreator(cmd.UserID) {
 		return domain.ErrMembershipCannotLeave
 	}
 
-	// Leave the group
 	if err := membership.Leave(); err != nil {
 		return err
 	}
 
-	// Save membership
 	if err := h.membershipRepo.Save(ctx, membership); err != nil {
 		return err
 	}
 
-	// Publish events
 	for _, event := range membership.DomainEvents() {
 		if err := h.eventBus.Publish(ctx, event); err != nil {
 			// Log error but don't fail the command

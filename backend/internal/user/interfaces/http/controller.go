@@ -42,7 +42,7 @@ func (c *Controller) RegisterRoutes(router *mux.Router, authMiddleware func(http
 	// Protected routes
 	protected := router.NewRoute().Subrouter()
 	protected.Use(authMiddleware)
-	protected.HandleFunc("/users/me", c.GetCurrentUser).Methods(http.MethodGet)
+	protected.HandleFunc("/users/me", c.GetCurrentUser).Methods(http.MethodGet, http.MethodOptions)
 }
 
 func (c *Controller) Register(w http.ResponseWriter, r *http.Request) {
@@ -54,20 +54,22 @@ func (c *Controller) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate required fields
+	var validationErrors []sharederrors.ValidationError
 	if cmd.Email == "" {
-		http.Error(w, "Email is required", http.StatusBadRequest)
-		return
+		validationErrors = append(validationErrors, sharederrors.NewRequiredFieldError("email"))
 	}
 	if cmd.Password == "" {
-		http.Error(w, "Password is required", http.StatusBadRequest)
-		return
+		validationErrors = append(validationErrors, sharederrors.NewRequiredFieldError("password"))
 	}
 	if cmd.FirstName == "" {
-		http.Error(w, "First name is required", http.StatusBadRequest)
-		return
+		validationErrors = append(validationErrors, sharederrors.NewRequiredFieldError("first_name"))
 	}
 	if cmd.LastName == "" {
-		http.Error(w, "Last name is required", http.StatusBadRequest)
+		validationErrors = append(validationErrors, sharederrors.NewRequiredFieldError("last_name"))
+	}
+
+	if len(validationErrors) > 0 {
+		sharederrors.WriteValidationErrorResponse(w, validationErrors)
 		return
 	}
 
@@ -114,12 +116,16 @@ func (c *Controller) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate required fields
+	var validationErrors []sharederrors.ValidationError
 	if cmd.Email == "" {
-		http.Error(w, "Email is required", http.StatusBadRequest)
-		return
+		validationErrors = append(validationErrors, sharederrors.NewRequiredFieldError("email"))
 	}
 	if cmd.Password == "" {
-		http.Error(w, "Password is required", http.StatusBadRequest)
+		validationErrors = append(validationErrors, sharederrors.NewRequiredFieldError("password"))
+	}
+
+	if len(validationErrors) > 0 {
+		sharederrors.WriteValidationErrorResponse(w, validationErrors)
 		return
 	}
 
@@ -173,16 +179,19 @@ func (c *Controller) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 func (c *Controller) handleError(w http.ResponseWriter, err error) {
 	switch err {
 	case domain.ErrUserNotFound:
-		http.Error(w, "User not found", http.StatusNotFound)
+		apiErr := sharederrors.NewUserNotFoundError()
+		sharederrors.WriteErrorResponse(w, apiErr.Code, apiErr.Message, http.StatusNotFound)
 	case domain.ErrUserEmailAlreadyUsed:
-		http.Error(w, "Email already in use", http.StatusConflict)
+		apiErr := sharederrors.NewEmailAlreadyExistsError()
+		sharederrors.WriteFieldErrorResponse(w, apiErr.Code, apiErr.Message, apiErr.Field, http.StatusConflict)
 	case domain.ErrUserInvalidPassword:
-		http.Error(w, "Invalid password", http.StatusUnauthorized)
+		apiErr := sharederrors.NewInvalidCredentialsError()
+		sharederrors.WriteErrorResponse(w, apiErr.Code, apiErr.Message, http.StatusUnauthorized)
 	case domain.ErrUserInvalidEmail:
-		http.Error(w, "Invalid email format", http.StatusBadRequest)
+		sharederrors.WriteFieldErrorResponse(w, sharederrors.ErrCodeInvalidFormat, "Invalid email format", "email", http.StatusBadRequest)
 	case domain.ErrUserInvalidName:
-		http.Error(w, "Invalid name", http.StatusBadRequest)
+		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInvalidInput, "Invalid name", http.StatusBadRequest)
 	default:
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInternalServer, "Internal server error", http.StatusInternalServerError)
 	}
 }

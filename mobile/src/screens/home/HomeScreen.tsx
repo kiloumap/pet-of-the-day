@@ -1,21 +1,26 @@
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet, View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
+import { useTheme } from '../../theme';
 
 import PetOfTheDayCard from '../../shared/cards/PetOfTheDayCard';
 import QuickActions from '../../shared/QuickActions';
 import MyPetsSection from './components/MyPetsSection';
-import ActionModal from '../../shared/modals/ActionModal';
+import ModernActionModal from '../../components/ModernActionModal';
 import BadgeCelebrationModal from '../../shared/modals/BadgeCelebrationModal';
 import BadgeProgressWidget from '../../shared/widgets/BadgeProgressWidget';
+import ActivityFeed from '../../components/ActivityFeed';
 import { selectPets, selectTodaysWinner } from '../../store/petsSlice';
 import { useBadgeProgress } from '../../hooks/useBadgeProgress';
+import { useTranslation } from '../../hooks';
 
 const HomeScreen: React.FC = () => {
     const [showActionModal, setShowActionModal] = useState<boolean>(false);
     const navigation = useNavigation();
+    const { t } = useTranslation();
+    const { theme } = useTheme();
 
     const pets = useSelector(selectPets);
     const todaysWinner = useSelector(selectTodaysWinner);
@@ -36,52 +41,113 @@ const HomeScreen: React.FC = () => {
         setShowActionModal(false);
     };
 
-    const handleSelectAction = (actionId: number, petId: number, finalPoints: number) => {
-        // Cette logique sera gérée par le modal ActionModal avec Redux
-        console.log(`Action ${actionId} pour pet ${petId} : ${finalPoints} points`);
-        setShowActionModal(false);
-    };
 
     const handleViewAllBadges = () => {
         // Navigation vers l'onglet Badges
         navigation.navigate('Badges' as never);
     };
 
+    const handleActivityPress = (activity: any) => {
+        // Navigate to group detail or pet detail
+        console.log('Activity pressed:', activity);
+    };
+
+    const styles = StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: theme.colors.background.primary,
+        },
+        scrollView: {
+            flex: 1,
+        },
+        headerSection: {
+            paddingHorizontal: 16,
+            paddingTop: 16,
+            paddingBottom: 8,
+        },
+        welcomeText: {
+            fontSize: 24,
+            fontWeight: '700',
+            color: theme.colors.text.primary,
+            marginBottom: 4,
+        },
+        subtitleText: {
+            fontSize: 14,
+            color: theme.colors.text.secondary,
+            fontWeight: '500',
+        },
+        section: {
+            paddingHorizontal: 16,
+            marginBottom: 16,
+        },
+        activitySection: {
+            backgroundColor: theme.colors.background.secondary,
+            marginHorizontal: 16,
+            marginBottom: 24, // Add more padding bottom
+            borderRadius: 12,
+            overflow: 'hidden',
+            elevation: 2,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.1,
+            shadowRadius: 3,
+            maxHeight: 300,
+        },
+    });
+
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-                {todaysWinner && <PetOfTheDayCard winner={todaysWinner} />}
+                {/* Header Section */}
+                <View style={styles.headerSection}>
+                    <Text style={styles.welcomeText}>{t('navigation.home')}</Text>
+                    <Text style={styles.subtitleText}>{t('common.recentActivity')}</Text>
+                </View>
 
-                <QuickActions
-                    onNoteAction={handleNoteAction}
-                    onPhotoMoment={handlePhotoMoment}
-                />
+                {/* Quick Actions */}
+                <View style={styles.section}>
+                    <QuickActions
+                        onNoteAction={handleNoteAction}
+                        onPhotoMoment={handlePhotoMoment}
+                    />
+                </View>
 
-                <BadgeProgressWidget onViewAll={handleViewAllBadges} />
+                {/* Pet of the Day Card */}
+                {todaysWinner && (
+                    <View style={styles.section}>
+                        <PetOfTheDayCard winner={todaysWinner} />
+                    </View>
+                )}
 
-                <MyPetsSection pets={pets} />
+                {/* Activity Feed */}
+                <View style={styles.activitySection}>
+                    <ActivityFeed onActionPress={handleActivityPress} />
+                </View>
+
+                {/* Badge Progress */}
+                <View style={styles.section}>
+                    <BadgeProgressWidget onViewAll={handleViewAllBadges} />
+                </View>
+
+                {/* My Pets Section */}
+                <View style={styles.section}>
+                    <MyPetsSection pets={pets} />
+                </View>
             </ScrollView>
 
-            <ActionModal
+            <ModernActionModal
                 visible={showActionModal}
                 pets={pets}
                 onClose={handleCloseModal}
-                onSelectAction={handleSelectAction}
+                onSuccess={() => {
+                    // Refresh activity feed or any other data
+                    console.log('Action recorded successfully');
+                }}
             />
 
             <BadgeCelebrationModal />
         </SafeAreaView>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#f8fafc',
-    },
-    scrollView: {
-        flex: 1,
-    },
-});
 
 export default HomeScreen;

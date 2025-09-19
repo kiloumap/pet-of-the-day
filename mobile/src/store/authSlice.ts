@@ -6,7 +6,7 @@ interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  error: string | null;
+  error: ApiError | null;
 }
 
 const initialState: AuthState = {
@@ -25,7 +25,7 @@ export const registerUser = createAsyncThunk(
       return response;
     } catch (error) {
       const apiError = error as ApiError;
-      return rejectWithValue(apiError.message);
+      return rejectWithValue(apiError);
     }
   }
 );
@@ -40,7 +40,7 @@ export const loginUser = createAsyncThunk(
       return { ...response, user };
     } catch (error) {
       const apiError = error as ApiError;
-      return rejectWithValue(apiError.message);
+      return rejectWithValue(apiError);
     }
   }
 );
@@ -53,7 +53,7 @@ export const getCurrentUser = createAsyncThunk(
       return user;
     } catch (error) {
       const apiError = error as ApiError;
-      return rejectWithValue(apiError.message);
+      return rejectWithValue(apiError);
     }
   }
 );
@@ -104,7 +104,7 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.isAuthenticated = false;
         state.user = null;
-        state.error = action.payload as string;
+        state.error = action.payload as ApiError;
       });
 
     // Login
@@ -123,7 +123,7 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.isAuthenticated = false;
         state.user = null;
-        state.error = action.payload as string;
+        state.error = action.payload as ApiError;
       });
 
     // Get current user
@@ -141,7 +141,7 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.isAuthenticated = false;
         state.user = null;
-        state.error = action.payload as string;
+        state.error = action.payload as ApiError;
       });
 
     // Logout

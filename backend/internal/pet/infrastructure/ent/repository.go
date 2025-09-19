@@ -152,6 +152,39 @@ func (r *EntPetRepository) GetCoOwnersByPetID(ctx context.Context, petID uuid.UU
 	return coOwnerIDs, nil
 }
 
+func (r *EntPetRepository) Update(ctx context.Context, domainPet *domain.Pet) (*domain.Pet, error) {
+	// Update the pet in the database
+	_, err := r.client.Pet.
+		UpdateOneID(domainPet.ID()).
+		SetName(domainPet.Name()).
+		SetSpecies(string(domainPet.Species())).
+		SetBreed(domainPet.Breed()).
+		SetBirthDate(domainPet.BirthDate()).
+		SetPhotoURL(domainPet.PhotoURL()).
+		Save(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Load the updated pet with owner to reconstruct the domain pet
+	entPetWithOwner, err := r.client.Pet.
+		Query().
+		Where(pet.IDEQ(domainPet.ID())).
+		WithOwner().
+		Only(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return r.entToDomain(entPetWithOwner)
+}
+
+func (r *EntPetRepository) Delete(ctx context.Context, petID uuid.UUID) error {
+	return r.client.Pet.DeleteOneID(petID).Exec(ctx)
+}
+
 func (r *EntPetRepository) entToDomain(entPet *ent.Pet) (*domain.Pet, error) {
 	return domain.ReconstructPet(
 		entPet.ID,

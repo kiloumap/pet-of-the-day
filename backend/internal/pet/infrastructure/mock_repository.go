@@ -134,3 +134,34 @@ func (r *MockPetRepository) GetCoOwnersByPetID(ctx context.Context, petID uuid.U
 
 	return r.coOwners[petID], nil
 }
+
+func (r *MockPetRepository) Update(ctx context.Context, pet *domain.Pet) (*domain.Pet, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	// Check if pet exists
+	if _, exists := r.pets[pet.ID()]; !exists {
+		return nil, domain.ErrPetNotFound
+	}
+
+	// Update the pet in memory
+	r.pets[pet.ID()] = pet
+
+	return pet, nil
+}
+
+func (r *MockPetRepository) Delete(ctx context.Context, petID uuid.UUID) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	// Check if pet exists
+	if _, exists := r.pets[petID]; !exists {
+		return domain.ErrPetNotFound
+	}
+
+	// Delete the pet and its co-owners
+	delete(r.pets, petID)
+	delete(r.coOwners, petID)
+
+	return nil
+}

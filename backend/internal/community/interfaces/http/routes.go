@@ -19,9 +19,12 @@ func RegisterCommunityRoutes(router *mux.Router, handlers *CommunityHandlers, jw
 
 	// Group routes (all require auth)
 	protected.HandleFunc("/groups", handlers.CreateGroup).Methods("POST")
+	protected.HandleFunc("/groups/{groupId}", handlers.UpdateGroup).Methods("PUT")
+	protected.HandleFunc("/groups/{groupId}", handlers.DeleteGroup).Methods("DELETE")
 	protected.HandleFunc("/groups/{groupId}/join", handlers.JoinGroup).Methods("POST")
 	protected.HandleFunc("/groups/{groupId}/leave", handlers.LeaveGroup).Methods("POST")
 	protected.HandleFunc("/groups/{groupId}/invite", handlers.InviteToGroup).Methods("POST")
+	protected.HandleFunc("/groups/{groupId}/pets", handlers.UpdateMembershipPets).Methods("PUT")
 	protected.HandleFunc("/groups/{groupId}/members", handlers.GetGroupMembers).Methods("GET")
 	protected.HandleFunc("/users/{userId}/groups", handlers.GetUserGroups).Methods("GET")
 	protected.HandleFunc("/invitations/accept", handlers.AcceptInvitation).Methods("POST")

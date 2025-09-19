@@ -1,12 +1,14 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import apiService from '../services/api';
-import { Pet, AddPetRequest, ApiError } from '../types/api';
+import { Pet, AddPetRequest, UpdatePetRequest, ApiError } from '../types/api';
 
 interface PetState {
   pets: Pet[];
   selectedPet: Pet | null;
   isLoading: boolean;
   isAdding: boolean;
+  isUpdating: boolean;
+  isDeleting: boolean;
   error: string | null;
 }
 
@@ -15,6 +17,8 @@ const initialState: PetState = {
   selectedPet: null,
   isLoading: false,
   isAdding: false,
+  isUpdating: false,
+  isDeleting: false,
   error: null,
 };
 
@@ -53,6 +57,36 @@ export const addPet = createAsyncThunk(
       // Refresh pets list after adding
       dispatch(fetchPets());
       return response;
+    } catch (error) {
+      const apiError = error as ApiError;
+      return rejectWithValue(apiError.message);
+    }
+  }
+);
+
+export const updatePet = createAsyncThunk(
+  'pets/updatePet',
+  async (petData: UpdatePetRequest, { rejectWithValue, dispatch }) => {
+    try {
+      const response = await apiService.updatePet(petData);
+      // Refresh pets list after updating
+      dispatch(fetchPets());
+      return response.pet;
+    } catch (error) {
+      const apiError = error as ApiError;
+      return rejectWithValue(apiError);
+    }
+  }
+);
+
+export const deletePet = createAsyncThunk(
+  'pets/deletePet',
+  async (petId: string, { rejectWithValue, dispatch }) => {
+    try {
+      await apiService.deletePet(petId);
+      // Refresh pets list after deleting
+      dispatch(fetchPets());
+      return petId;
     } catch (error) {
       const apiError = error as ApiError;
       return rejectWithValue(apiError.message);
@@ -117,6 +151,38 @@ const petSlice = createSlice({
       })
       .addCase(addPet.rejected, (state, action) => {
         state.isAdding = false;
+        state.error = action.payload as string;
+      });
+
+    // Update pet
+    builder
+      .addCase(updatePet.pending, (state) => {
+        state.isUpdating = true;
+        state.error = null;
+      })
+      .addCase(updatePet.fulfilled, (state, action) => {
+        state.isUpdating = false;
+        state.selectedPet = action.payload;
+        state.error = null;
+      })
+      .addCase(updatePet.rejected, (state, action) => {
+        state.isUpdating = false;
+        state.error = action.payload as string;
+      });
+
+    // Delete pet
+    builder
+      .addCase(deletePet.pending, (state) => {
+        state.isDeleting = true;
+        state.error = null;
+      })
+      .addCase(deletePet.fulfilled, (state) => {
+        state.isDeleting = false;
+        state.selectedPet = null;
+        state.error = null;
+      })
+      .addCase(deletePet.rejected, (state, action) => {
+        state.isDeleting = false;
         state.error = action.payload as string;
       });
   },

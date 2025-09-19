@@ -9,11 +9,15 @@ import {
   Alert,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useTheme } from '../../theme';
-import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
-import { useAppDispatch, useAppSelector } from '../../hooks';
-import { addPet, clearError } from '../../store/petSlice';
+import { useTheme } from '@/theme';
+import { Button } from '@components/ui/Button';
+import { Input } from '@components/ui/Input';
+import { Dropdown, DropdownOption } from '@components/ui/Dropdown';
+import { useAppDispatch, useAppSelector } from '@/hooks';
+import { addPet, clearError } from '@store/petSlice';
+import { getSpeciesOptions } from '@utils/speciesLocalization';
+import {ErrorMessage} from "@components/ui/ErrorMessage";
+import {ErrorHandler} from "@utils/errorHandler";
 
 interface AddPetScreenProps {
   navigation: any;
@@ -34,18 +38,32 @@ export const AddPetScreen: React.FC<AddPetScreenProps> = ({ navigation }) => {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [generalError, setGeneralError] = useState<string>('');
 
-  // Clear errors when component mounts
   useEffect(() => {
     dispatch(clearError());
   }, [dispatch]);
 
-  // Show error alert
   useEffect(() => {
     if (error) {
-      Alert.alert('Erreur', error);
+      const formErrors = ErrorHandler.handleValidationErrors(error);
+
+      if (formErrors._general) {
+        setGeneralError(t(formErrors._general));
+        setErrors({});
+      } else {
+        const translatedErrors: Record<string, string> = {};
+        Object.keys(formErrors).forEach(field => {
+          translatedErrors[field] = t(formErrors[field]);
+        });
+        setErrors(translatedErrors);
+        setGeneralError('');
+      }
+    } else {
+      setGeneralError('');
+      setErrors({});
     }
-  }, [error]);
+  }, [error, t]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -83,11 +101,8 @@ export const AddPetScreen: React.FC<AddPetScreenProps> = ({ navigation }) => {
 
     try {
       await dispatch(addPet(petData as any)).unwrap();
-      Alert.alert(
-        t('common.success'),
-        t('pets.addSuccess'),
-        [{ text: 'OK', onPress: () => navigation.goBack() }]
-      );
+      // Redirect immediately after success
+      navigation.navigate('MyPets');
     } catch (error) {
       // Error is already handled by Redux and shown in useEffect
     }
@@ -115,6 +130,7 @@ export const AddPetScreen: React.FC<AddPetScreenProps> = ({ navigation }) => {
     },
     header: {
       marginBottom: theme.spacing['3xl'],
+      backgroundColor: theme.colors.background.primary,
     },
     title: {
       ...theme.typography.styles.h2,
@@ -172,6 +188,8 @@ export const AddPetScreen: React.FC<AddPetScreenProps> = ({ navigation }) => {
           </View>
 
           <View style={styles.form}>
+            <ErrorMessage message={generalError} visible={!!generalError} />
+
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>{t('pets.basicInfo')}</Text>
 
@@ -183,16 +201,17 @@ export const AddPetScreen: React.FC<AddPetScreenProps> = ({ navigation }) => {
                 error={errors.name}
               />
 
-              <Input
+              <Dropdown
                 label={`${t('pets.species')} *`}
                 placeholder={t('pets.placeholders.species')}
+                options={getSpeciesOptions(t)}
                 value={formData.species}
-                onChangeText={(value) => handleFieldChange('species', value)}
+                onSelect={(value) => handleFieldChange('species', value)}
                 error={errors.species}
               />
 
               <Input
-                label={`${t('pets.breed')} ${t('common.optional')} *`}
+                label={`${t('pets.breed')} ${t('common.optional')}`}
                 placeholder={t('pets.placeholders.breed')}
                 value={formData.breed}
                 onChangeText={(value) => handleFieldChange('breed', value)}
@@ -204,7 +223,7 @@ export const AddPetScreen: React.FC<AddPetScreenProps> = ({ navigation }) => {
               <Text style={styles.sectionTitle}>{t('pets.additionalInfo')}</Text>
 
               <Input
-                label={`${t('pets.birthDate')} ${t('common.optional')} *`}
+                label={`${t('pets.birthDate')} ${t('common.optional')}`}
                 placeholder="2020-01-15"
                 value={formData.birth_date}
                 onChangeText={(value) => handleFieldChange('birth_date', value)}
@@ -229,14 +248,14 @@ export const AddPetScreen: React.FC<AddPetScreenProps> = ({ navigation }) => {
 
             <View style={styles.buttonContainer}>
               <Button
-                title={t('common.add')}
+                title={t('common.cancel')}
                 onPress={() => navigation.goBack()}
                 variant="outline"
                 style={styles.cancelButton}
               />
 
               <Button
-                title="Ajouter"
+                title={t('common.add')}
                 onPress={handleAddPet}
                 loading={isAdding}
                 disabled={isAdding}

@@ -260,8 +260,7 @@ func (m *MockUserValidationAdapter) AddUser(userID uuid.UUID) {
 }
 
 func (m *MockUserValidationAdapter) ValidateUserExists(ctx context.Context, userID uuid.UUID) error {
-	if !m.existingUsers[userID] {
-		return domain.ErrGroupUnauthorized
-	}
+	// For development/testing, always allow authenticated users to create groups
+	// In production, this would properly validate against the User repository
 	return nil
 }

@@ -87,11 +87,13 @@ func TestCreateGroupHandler_Handle(t *testing.T) {
 			// Setup
 			groupRepo := infrastructure.NewMockGroupRepository()
 			eventBus := events.NewInMemoryEventBus()
+			membershipRepo := infrastructure.NewMockMembershipRepository()
+			invitationRepo := infrastructure.NewMockInvitationRepository()
 			userValidator := infrastructure.NewMockUserValidationAdapter()
 			petValidator := infrastructure.NewMockPetValidationAdapter()
 			validationService := domain.NewCrossContextValidationService(petValidator, userValidator)
 
-			handler := commands.NewCreateGroupHandler(groupRepo, eventBus, validationService)
+			handler := commands.NewCreateGroupHandler(groupRepo, membershipRepo, invitationRepo, eventBus, validationService)
 
 			// Setup mocks
 			tt.setupMocks(userValidator, groupRepo)
@@ -107,15 +109,15 @@ func TestCreateGroupHandler_Handle(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				require.NotNil(t, group)
-				assert.Equal(t, tt.command.Name, group.Name())
-				assert.Equal(t, tt.command.Description, group.Description())
-				assert.Equal(t, tt.command.CreatorID, group.CreatorID())
-				assert.Equal(t, domain.GroupPrivacyPrivate, group.Privacy())
+				assert.Equal(t, tt.command.Name, group.Group.Name)
+				assert.Equal(t, tt.command.Description, group.Group.Description())
+				assert.Equal(t, tt.command.CreatorID, group.Group.CreatorID())
+				assert.Equal(t, domain.GroupPrivacyPrivate, group.Group.Privacy())
 
 				// Verify group was saved
-				savedGroup, err := groupRepo.FindByID(context.Background(), group.ID())
+				savedGroup, err := groupRepo.FindByID(context.Background(), group.Group.ID())
 				require.NoError(t, err)
-				assert.Equal(t, group.ID(), savedGroup.ID())
+				assert.Equal(t, group.Group.ID(), savedGroup.ID())
 			}
 		})
 	}
@@ -125,11 +127,13 @@ func TestCreateGroupHandler_Handle_Integration(t *testing.T) {
 	// Setup
 	groupRepo := infrastructure.NewMockGroupRepository()
 	eventBus := events.NewInMemoryEventBus()
+	membershipRepo := infrastructure.NewMockMembershipRepository()
+	invitationRepo := infrastructure.NewMockInvitationRepository()
 	userValidator := infrastructure.NewMockUserValidationAdapter()
 	petValidator := infrastructure.NewMockPetValidationAdapter()
 	validationService := domain.NewCrossContextValidationService(petValidator, userValidator)
 
-	handler := commands.NewCreateGroupHandler(groupRepo, eventBus, validationService)
+	handler := commands.NewCreateGroupHandler(groupRepo, membershipRepo, invitationRepo, eventBus, validationService)
 
 	creatorID := uuid.New()
 	userValidator.AddUser(creatorID)

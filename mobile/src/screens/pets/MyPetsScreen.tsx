@@ -13,6 +13,8 @@ import { Button } from '../../components/ui/Button';
 import { useAppDispatch, useAppSelector, useTranslation } from '../../hooks';
 import { fetchPets, clearError } from '../../store/petSlice';
 import { Pet } from '../../types/api';
+import { getLocalizedSpecies } from '../../utils/speciesLocalization';
+import { ErrorHandler } from '../../utils/errorHandler';
 
 interface MyPetsScreenProps {
   navigation: any;
@@ -26,6 +28,8 @@ export const MyPetsScreen: React.FC<MyPetsScreenProps> = ({ navigation }) => {
   const { user } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
+    // Clear any existing error when entering this screen
+    dispatch(clearError());
     dispatch(fetchPets());
   }, [dispatch]);
 
@@ -40,6 +44,7 @@ export const MyPetsScreen: React.FC<MyPetsScreenProps> = ({ navigation }) => {
   const handlePetPress = (pet: Pet) => {
     navigation.navigate('PetDetail', { petId: pet.id });
   };
+
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
@@ -63,12 +68,12 @@ export const MyPetsScreen: React.FC<MyPetsScreenProps> = ({ navigation }) => {
     >
       <View style={styles.petInfo}>
         <Text style={styles.petName}>{pet.name}</Text>
-        <Text style={styles.petSpecies}>{pet.species}</Text>
+        <Text style={styles.petSpecies}>{getLocalizedSpecies(pet.species, t)}</Text>
         {pet.breed && <Text style={styles.petBreed}>{pet.breed}</Text>}
       </View>
       <View style={styles.petMeta}>
         <Text style={styles.petDate}>
-          {t('pets.addedOn')} {new Date(pet.created_at).toLocaleDateString()}
+          {t('common.addedOn')} {new Date(pet.created_at).toLocaleDateString()}
         </Text>
       </View>
     </TouchableOpacity>
@@ -183,7 +188,9 @@ export const MyPetsScreen: React.FC<MyPetsScreenProps> = ({ navigation }) => {
 
       {error && (
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
+          <Text style={styles.errorText}>
+            {ErrorHandler.getDisplayMessage({ message: error, type: 'unknown' }, t)}
+          </Text>
         </View>
       )}
 

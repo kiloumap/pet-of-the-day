@@ -97,3 +97,43 @@ func (p *Pet) PhotoUrl() string     { return p.photoUrl }
 func (p *Pet) BirthDate() time.Time { return p.birthDate }
 func (p *Pet) CreatedAt() time.Time { return p.createdAt }
 func (p *Pet) UpdatedAt() time.Time { return p.updatedAt }
+func (p *Pet) PhotoURL() string   { return p.photoUrl }
+
+// Update methods
+func (p *Pet) UpdateName(name string) error {
+	if name == "" {
+		return ErrPetInvalidName
+	}
+	p.name = name
+	p.updatedAt = time.Now()
+	return nil
+}
+
+func (p *Pet) UpdateSpecies(species string) error {
+	spec, err := NewSpecies(species)
+	if err != nil {
+		return err
+	}
+	p.species = spec
+	p.updatedAt = time.Now()
+	return nil
+}
+
+func (p *Pet) UpdateBreed(breed string) {
+	p.breed = breed
+	p.updatedAt = time.Now()
+}
+
+func (p *Pet) UpdateBirthDate(birthDate string) {
+	if birthDate != "" {
+		if parsed, err := time.Parse("2006-01-02", birthDate); err == nil {
+			p.birthDate = parsed
+		}
+	}
+	p.updatedAt = time.Now()
+}
+
+func (p *Pet) UpdatePhotoURL(photoUrl string) {
+	p.photoUrl = photoUrl
+	p.updatedAt = time.Now()
+}

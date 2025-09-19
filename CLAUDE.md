@@ -10,27 +10,41 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `backend/` - Go API server with DDD/Clean Architecture
 - `mobile/` - React Native app using Expo
 
+### Recent Major Features Implemented
+- **Community System**: Complete group management with memberships, invitations, and pet assignment
+- **Points System**: Behavior tracking with point rewards and leaderboards
+- **Dark Mode**: Full theming system with light/dark mode support
+- **Internationalization**: French/English language support
+- **Group Management**: Create, join, manage groups with pet selection
+
 ### Backend Architecture (Go)
 The backend follows Domain-Driven Design with bounded contexts:
 
 ```
 backend/internal/
 ├── shared/          # Cross-cutting concerns
-│   ├── auth/        # JWT authentication
+│   ├── auth/        # JWT authentication with middleware
 │   ├── database/    # Database connection & factory
-│   ├── errors/      # Common errors
+│   ├── errors/      # Common errors with API response formatting
 │   ├── events/      # Event bus system
 │   └── types/       # Shared value objects
 ├── user/            # User bounded context
-│   ├── domain/      # Business logic & rules
-│   ├── application/ # Use cases (commands/queries)
-│   ├── infrastructure/ # Data persistence
-│   └── interfaces/  # HTTP controllers
-└── pet/             # Pet bounded context
-    ├── domain/      # Pet business logic
-    ├── application/ # Pet use cases
-    ├── infrastructure/ # Pet persistence
-    └── interfaces/  # Pet HTTP API
+│   ├── domain/      # User business logic & rules
+│   ├── application/ # User use cases (commands/queries)
+│   ├── infrastructure/ # User data persistence
+│   └── interfaces/  # User HTTP controllers
+├── pet/             # Pet bounded context
+│   ├── domain/      # Pet business logic
+│   ├── application/ # Pet use cases
+│   ├── infrastructure/ # Pet persistence
+│   └── interfaces/  # Pet HTTP API
+├── community/       # Community bounded context
+│   ├── domain/      # Group, membership, invitation logic
+│   ├── application/ # Community commands/queries
+│   ├── infrastructure/ # Mock repositories for testing
+│   └── interfaces/  # Community HTTP API
+└── points/          # Points system
+    └── interfaces/  # Behavior and scoring HTTP API
 ```
 
 **Key Patterns:**
@@ -42,14 +56,35 @@ backend/internal/
 ### Mobile Architecture (React Native)
 ```
 mobile/src/
-├── screens/         # Screen components
-├── shared/          # Reusable UI components
-├── navigation/      # Navigation configuration
-├── utils/           # Utility functions
-└── constants/       # App constants
+├── screens/         # Screen components (auth, home, pets, groups)
+│   ├── auth/        # Login, register screens
+│   ├── home/        # Home screen with components
+│   ├── pets/        # Pet management screens
+│   └── groups/      # Group management screens
+├── components/      # Reusable components
+│   ├── ui/          # Basic UI components (Button, Input, etc.)
+│   ├── ModernActionModal.tsx # Points recording modal
+│   ├── PetCheckboxSelector.tsx # Pet selection with checkboxes
+│   └── GroupCreatedModal.tsx # Group creation success modal
+├── shared/          # Shared components
+│   ├── cards/       # Card components (PetCard, PetOfTheDayCard)
+│   ├── modals/      # Modal components
+│   └── widgets/     # Widget components
+├── navigation/      # Navigation configuration (Tab, Stack)
+├── store/           # Redux state management
+│   ├── authSlice.ts # Authentication state
+│   ├── petSlice.ts  # Pet management state
+│   ├── pointsSlice.ts # Points system state
+│   └── groupSlice.ts # Group management state
+├── services/        # API services
+├── theme/           # Theming system (light/dark mode)
+├── localization/    # i18n translations (FR/EN)
+├── hooks/           # Custom React hooks
+├── types/           # TypeScript type definitions
+└── utils/           # Utility functions
 ```
 
-Uses TypeScript with path aliases configured in `tsconfig.json`.
+Uses TypeScript with path aliases and follows React Native best practices.
 
 ## Common Development Commands
 
@@ -174,6 +209,68 @@ Run `just test-architecture` to validate these constraints.
 When working on features:
 - **User context**: Authentication, user management, profiles
 - **Pet context**: Pet CRUD, owner/co-owner relationships
+- **Community context**: Groups, memberships, invitations, pet assignments
+- **Points context**: Behavior tracking, scoring, leaderboards
 - **Shared**: Cross-cutting concerns (auth, database, events, types)
 
 Avoid direct dependencies between bounded contexts at infrastructure/interfaces layers.
+
+## UI/UX Guidelines & Common Patterns
+
+### Theme System
+- **Always use theme colors** instead of hardcoded colors
+- **Import useTheme hook**: `import { useTheme } from '../theme';`
+- **Use theme.colors.primary**, `theme.colors.background.primary`, etc.
+- **Support both light and dark modes** - never hardcode colors
+
+### Component Patterns
+- **Move StyleSheet inside component** when using theme
+- **Use StyleSheet.create()** inside functional component after theme hook
+- **Consistent spacing** using theme.spacing values
+- **Proper loading states** and error handling
+
+### Translation Support
+- **Always use translations** for user-facing text
+- **Import useTranslation**: `import { useTranslation } from '../hooks';`
+- **Use t() function**: `t('navigation.home')`, `t('pets.myPets')`
+- **Add translations to both FR and EN** files in `/src/localization/translations/`
+
+### Data Handling Best Practices
+- **Default values for optional data**: Use `pet.points ?? 0` for default points
+- **Proper empty states** with helpful messages
+- **Loading states** for async operations
+- **Error boundaries** and user-friendly error messages
+
+### API Integration
+- **Use Redux Toolkit** for state management
+- **Async thunks** for API calls
+- **Proper error handling** with ApiError types
+- **Token management** handled automatically by API service
+- **Data validation** on both frontend and backend
+
+### Component Reusability
+- **PetCheckboxSelector**: Reusable pet selection with checkboxes
+- **Modal patterns**: GroupCreatedModal, ModernActionModal for consistent UX
+- **Card components**: PetCard, PetOfTheDayCard with theme support
+- **Form components**: Input, Button with consistent styling
+
+### Common Pitfalls to Avoid
+1. **Hardcoded colors** - Always use theme colors
+2. **Missing translations** - All text should be translatable
+3. **No default values** - Handle undefined/null data gracefully
+4. **Inconsistent styling** - Use theme spacing and colors
+5. **Poor error handling** - Provide meaningful user feedback
+6. **Missing loading states** - Show loading indicators for async operations
+
+### Authorization Best Practices
+- **JWT tokens** handled automatically by API service
+- **Protected routes** with authentication middleware
+- **User context** available via Redux state
+- **Automatic token refresh** on API errors
+- **Logout on 401 errors** for security
+
+### Database Reset for Testing
+```bash
+# Reset local database completely
+cd backend && docker-compose down && docker volume rm backend_db_data && docker-compose up -d
+```

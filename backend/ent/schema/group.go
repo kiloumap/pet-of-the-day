@@ -44,5 +44,6 @@ func (Group) Edges() []ent.Edge {
 		edge.To("invitations", Invitation.Type),
 		edge.To("behaviors", Behavior.Type),
 		edge.To("members", Pet.Type),
+		edge.To("score_events", ScoreEvent.Type),
 	}
 }

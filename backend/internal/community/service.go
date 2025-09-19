@@ -7,6 +7,7 @@ import (
 	"pet-of-the-day/internal/community/infrastructure"
 	"pet-of-the-day/internal/community/interfaces/http"
 	"pet-of-the-day/internal/shared/auth"
+	"pet-of-the-day/internal/shared/database"
 	"pet-of-the-day/internal/shared/events"
 )
 
@@ -22,6 +23,8 @@ type CommunityService struct {
 
 	// Command Handlers
 	CreateGroupHandler      *commands.CreateGroupHandler
+	UpdateGroupHandler      *commands.UpdateGroupHandler
+	DeleteGroupHandler      *commands.DeleteGroupHandler
 	JoinGroupHandler        *commands.JoinGroupHandler
 	LeaveGroupHandler       *commands.LeaveGroupHandler
 	InviteToGroupHandler    *commands.InviteToGroupHandler
@@ -38,19 +41,21 @@ type CommunityService struct {
 }
 
 // NewCommunityService creates a new Community service with all dependencies
-func NewCommunityService(eventBus events.EventBus, jwtService auth.JWTService) *CommunityService {
-	// Initialize repositories (using mock for now)
+func NewCommunityService(eventBus events.EventBus, jwtService auth.JWTService, repoFactory *database.RepositoryFactory) *CommunityService {
+	// Initialize repositories (using mocks temporarily until Ent repos are implemented)
 	groupRepo := infrastructure.NewMockGroupRepository()
 	membershipRepo := infrastructure.NewMockMembershipRepository()
 	invitationRepo := infrastructure.NewMockInvitationRepository()
 
-	// Initialize validation services
-	petValidator := infrastructure.NewMockPetValidationAdapter()
-	userValidator := infrastructure.NewMockUserValidationAdapter()
+	// Initialize validation services with real repositories (this fixes the auth issue)
+	petValidator := infrastructure.NewPetValidationAdapter(repoFactory.CreatePetRepository())
+	userValidator := infrastructure.NewUserValidationAdapter(repoFactory.CreateUserRepository())
 	validationService := domain.NewCrossContextValidationService(petValidator, userValidator)
 
 	// Initialize command handlers
-	createGroupHandler := commands.NewCreateGroupHandler(groupRepo, eventBus, validationService)
+	createGroupHandler := commands.NewCreateGroupHandler(groupRepo, membershipRepo, invitationRepo, eventBus, validationService)
+	updateGroupHandler := commands.NewUpdateGroupHandler(groupRepo)
+	deleteGroupHandler := commands.NewDeleteGroupHandler(groupRepo, membershipRepo, invitationRepo)
 	joinGroupHandler := commands.NewJoinGroupHandler(groupRepo, membershipRepo, eventBus, validationService)
 	leaveGroupHandler := commands.NewLeaveGroupHandler(groupRepo, membershipRepo, eventBus)
 	inviteToGroupHandler := commands.NewInviteToGroupHandler(groupRepo, membershipRepo, invitationRepo, eventBus)
@@ -65,6 +70,8 @@ func NewCommunityService(eventBus events.EventBus, jwtService auth.JWTService) *
 	// Initialize HTTP handlers
 	httpHandlers := http.NewCommunityHandlers(
 		createGroupHandler,
+		updateGroupHandler,
+		deleteGroupHandler,
 		joinGroupHandler,
 		leaveGroupHandler,
 		inviteToGroupHandler,
@@ -81,6 +88,8 @@ func NewCommunityService(eventBus events.EventBus, jwtService auth.JWTService) *
 		InvitationRepo:          invitationRepo,
 		ValidationService:       validationService,
 		CreateGroupHandler:      createGroupHandler,
+		UpdateGroupHandler:      updateGroupHandler,
+		DeleteGroupHandler:      deleteGroupHandler,
 		JoinGroupHandler:        joinGroupHandler,
 		LeaveGroupHandler:       leaveGroupHandler,
 		InviteToGroupHandler:    inviteToGroupHandler,

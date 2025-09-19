@@ -2,6 +2,7 @@ package ent
 
 import (
 	"context"
+	"pet-of-the-day/ent"
 	"pet-of-the-day/internal/community/domain"
 
 	"github.com/google/uuid"
@@ -9,12 +10,13 @@ import (
 
 // EntGroupRepository implements the GroupRepository interface using Ent
 type EntGroupRepository struct {
-	// We'll inject the Ent client here
-	// For now, we'll create a mock implementation
+	client *ent.Client
 }
 
-func NewEntGroupRepository() *EntGroupRepository {
-	return &EntGroupRepository{}
+func NewEntGroupRepository(client *ent.Client) *EntGroupRepository {
+	return &EntGroupRepository{
+		client: client,
+	}
 }
 
 func (r *EntGroupRepository) Save(ctx context.Context, group *domain.Group) error {

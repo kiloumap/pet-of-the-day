@@ -3,6 +3,8 @@ import { persistStore, persistReducer } from 'redux-persist';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import authReducer from './authSlice';
 import petReducer from './petSlice';
+import groupReducer from './groupSlice';
+import pointsReducer from './pointsSlice';
 
 const persistConfig = {
     key: 'root',
@@ -13,6 +15,8 @@ const persistConfig = {
 const rootReducer = combineReducers({
     auth: authReducer,
     pets: petReducer,
+    groups: groupReducer,
+    points: pointsReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

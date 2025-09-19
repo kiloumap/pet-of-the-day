@@ -9,7 +9,14 @@ const getApiUrl = (): string => {
 
   // In development, use different URLs for different platforms
   if (__DEV__) {
-    // For Expo Go app, use the local network IP
+    // For Expo SDK 50+, use expoConfig instead of manifest
+    const expoConfig = Constants.expoConfig;
+    if (expoConfig?.hostUri) {
+      const host = expoConfig.hostUri.split(':')[0];
+      return `http://${host}:8080`;
+    }
+
+    // Fallback to manifest for older versions
     if (Constants.manifest?.debuggerHost) {
       const debuggerHost = Constants.manifest.debuggerHost.split(':').shift();
       return `http://${debuggerHost}:8080`;
@@ -39,6 +46,7 @@ if (__DEV__) {
   console.log(`🌐 API Configuration:
   Platform: ${Platform.OS}
   URL: ${apiUrl}
+  Expo expoConfig.hostUri: ${Constants.expoConfig?.hostUri || 'not available'}
   Expo debuggerHost: ${Constants.manifest?.debuggerHost || 'not available'}
   `);
 }

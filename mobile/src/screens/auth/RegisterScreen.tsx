@@ -9,11 +9,14 @@ import {
   Alert,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useTheme } from '../../theme';
-import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
-import { useAppDispatch, useAppSelector } from '../../hooks';
-import { registerUser, clearError } from '../../store/authSlice';
+import { useTheme } from '@/theme';
+import { Button } from '@components/ui/Button';
+import { Input } from '@components/ui/Input';
+import { ErrorMessage } from '@components/ui/ErrorMessage';
+import { LanguageSwitcher } from '@components/ui/LanguageSwitcher';
+import { useAppDispatch, useAppSelector } from '@/hooks';
+import { registerUser, clearError } from '@store/authSlice';
+import { ErrorHandler } from '@utils/errorHandler';
 
 interface RegisterScreenProps {
   navigation: any;
@@ -34,6 +37,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [generalError, setGeneralError] = useState<string>('');
 
   useEffect(() => {
     dispatch(clearError());
@@ -47,9 +51,27 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
 
   useEffect(() => {
     if (error) {
-      Alert.alert(t('auth.errors.loginError'), error);
+      // Handle API errors with field mapping
+      const formErrors = ErrorHandler.handleValidationErrors(error);
+
+      if (formErrors._general) {
+        // Show general error above form
+        setGeneralError(t(formErrors._general));
+        setErrors({});
+      } else {
+        // Apply field-specific errors to form
+        const translatedErrors: Record<string, string> = {};
+        Object.keys(formErrors).forEach(field => {
+          translatedErrors[field] = t(formErrors[field]);
+        });
+        setErrors(translatedErrors);
+        setGeneralError('');
+      }
+    } else {
+      setGeneralError('');
+      setErrors({});
     }
-  }, [error]);
+  }, [error, t]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -88,7 +110,13 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
   const handleRegister = async () => {
     if (!validateForm()) return;
 
-    const { confirmPassword, ...registerData } = formData;
+    const { confirmPassword, firstName, lastName, ...otherData } = formData;
+    const registerData = {
+      ...otherData,
+      first_name: firstName,
+      last_name: lastName,
+    };
+
     dispatch(registerUser(registerData));
   };
 
@@ -150,10 +178,17 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
       color: theme.colors.primary,
       fontWeight: theme.typography.fontWeight.medium,
     },
+    languageSwitcher: {
+      position: 'absolute',
+      top: theme.spacing.xl,
+      right: theme.spacing.lg,
+      zIndex: 1,
+    },
   });
 
   return (
     <View style={styles.container}>
+      <LanguageSwitcher variant="compact" style={styles.languageSwitcher} />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoid}
@@ -170,6 +205,8 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
           </View>
 
           <View style={styles.form}>
+            <ErrorMessage message={generalError} visible={!!generalError} />
+
             <View style={styles.nameRow}>
               <Input
                 label={t('auth.firstName')}

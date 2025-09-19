@@ -148,6 +148,16 @@ main() {
                 echo -e "${GREEN}Cleanup completed!${NC}"
             fi
             ;;
+        "seed")
+            echo -e "${YELLOW}Seeding database with predefined behaviors...${NC}"
+            if [ -f "cmd/seed/main.go" ]; then
+                go run ./cmd/seed
+                echo -e "${GREEN}Database seeding completed!${NC}"
+            else
+                echo -e "${RED}Seed script not found at cmd/seed/main.go${NC}"
+                exit 1
+            fi
+            ;;
         "status")
             echo -e "${YELLOW}Service status:${NC}"
             compose_cmd ps

@@ -24,7 +24,14 @@ func (Behavior) Fields() []ent.Field {
 			Optional(),
 		field.Int("points"),
 		field.Enum("category").
-			Values("positive", "negative"),
+			Values("hygiene", "play", "training", "socialization", "care", "behavior"),
+		field.Enum("species").
+			Values("dog", "cat", "both").
+			Default("both").
+			Comment("Which species this behavior applies to"),
+		field.String("icon").
+			Optional().
+			Comment("Icon name for the behavior"),
 		field.Bool("is_global").
 			Default(true),
 		field.Time("created_at").
@@ -57,6 +64,11 @@ func (ScoreEvent) Fields() []ent.Field {
 		field.Time("recorded_at").
 			Default(time.Now).
 			Immutable(),
+		field.Time("action_date").
+			Default(time.Now).
+			Comment("When the action actually happened"),
+		field.UUID("group_id", uuid.UUID{}).
+			Comment("ID of the group where this action was recorded"),
 	}
 }
 
@@ -72,6 +84,11 @@ func (ScoreEvent) Edges() []ent.Edge {
 			Required(),
 		edge.From("recorded_by", User.Type).
 			Ref("recorded_events").
+			Unique().
+			Required(),
+		edge.From("group", Group.Type).
+			Ref("score_events").
+			Field("group_id").
 			Unique().
 			Required(),
 	}

@@ -16,17 +16,23 @@ import (
 
 type Controller struct {
 	addHandler    *commands.AddPetHandler
+	updateHandler *commands.UpdatePetHandler
+	deleteHandler *commands.DeletePetHandler
 	getOwnedPets  *queries.GetOwnedPetsHandler
 	getPetHandler *queries.GetPetByIDHandler
 }
 
 func NewPetController(
 	addHandler *commands.AddPetHandler,
+	updateHandler *commands.UpdatePetHandler,
+	deleteHandler *commands.DeletePetHandler,
 	getOwnedPets *queries.GetOwnedPetsHandler,
 	getPetHandler *queries.GetPetByIDHandler,
 ) *Controller {
 	return &Controller{
 		addHandler:    addHandler,
+		updateHandler: updateHandler,
+		deleteHandler: deleteHandler,
 		getOwnedPets:  getOwnedPets,
 		getPetHandler: getPetHandler,
 	}
@@ -36,12 +42,23 @@ func (c *Controller) RegisterRoutes(router *mux.Router, authMiddleware func(http
 	// Protected routes
 	protected := router.NewRoute().Subrouter()
 	protected.Use(authMiddleware)
-	protected.HandleFunc("/pets", c.AddPet).Methods(http.MethodPost)
-	protected.HandleFunc("/pets", c.GetOwnedPets).Methods(http.MethodGet)
-	protected.HandleFunc("/pets/{id}", c.GetPetById).Methods(http.MethodGet)
+	protected.HandleFunc("/pets", c.AddPet).Methods(http.MethodPost, http.MethodOptions)
+	protected.HandleFunc("/pets", c.GetOwnedPets).Methods(http.MethodGet, http.MethodOptions)
+	protected.HandleFunc("/pets/{id}", c.GetPetById).Methods(http.MethodGet, http.MethodOptions)
+	protected.HandleFunc("/pets/{id}", c.UpdatePet).Methods(http.MethodPut, http.MethodOptions)
+	protected.HandleFunc("/pets/{id}", c.DeletePet).Methods(http.MethodDelete, http.MethodOptions)
 }
 
 func (c *Controller) AddPet(w http.ResponseWriter, r *http.Request) {
+	// Handle OPTIONS request
+	if r.Method == http.MethodOptions {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
 	var cmd commands.AddPet
 	ownerID, err := auth.GetUserIDFromContext(r.Context())
 	if err != nil {
@@ -57,12 +74,16 @@ func (c *Controller) AddPet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate required fields
+	var validationErrors []sharederrors.ValidationError
 	if cmd.Name == "" {
-		http.Error(w, "Pet name is required", http.StatusBadRequest)
-		return
+		validationErrors = append(validationErrors, sharederrors.NewRequiredFieldError("name"))
 	}
 	if cmd.Species == "" {
-		http.Error(w, "Pet species is required", http.StatusBadRequest)
+		validationErrors = append(validationErrors, sharederrors.NewRequiredFieldError("species"))
+	}
+
+	if len(validationErrors) > 0 {
+		sharederrors.WriteValidationErrorResponse(w, validationErrors)
 		return
 	}
 
@@ -172,17 +193,129 @@ func (c *Controller) GetOwnedPets(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (c *Controller) UpdatePet(w http.ResponseWriter, r *http.Request) {
+	// Handle OPTIONS request
+	if r.Method == http.MethodOptions {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "PUT, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	vars := mux.Vars(r)
+	petID, err := uuid.Parse(vars["id"])
+	if err != nil {
+		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInvalidFormat, "Invalid pet ID", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := auth.GetUserIDFromContext(r.Context())
+	if err != nil {
+		log.Printf("User ID not found in context: %v", err)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var req struct {
+		Name      *string `json:"name,omitempty"`
+		Species   *string `json:"species,omitempty"`
+		Breed     *string `json:"breed,omitempty"`
+		BirthDate *string `json:"birth_date,omitempty"`
+		PhotoURL  *string `json:"photo_url,omitempty"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInvalidInput, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	cmd := commands.UpdatePetCommand{
+		PetID:     petID,
+		UserID:    userID,
+		Name:      req.Name,
+		Species:   req.Species,
+		Breed:     req.Breed,
+		BirthDate: req.BirthDate,
+		PhotoURL:  req.PhotoURL,
+	}
+
+	result, err := c.updateHandler.Handle(r.Context(), cmd)
+	if err != nil {
+		c.handleError(w, err)
+		return
+	}
+
+	response := map[string]interface{}{
+		"id":           result.Pet.ID(),
+		"name":         result.Pet.Name(),
+		"species":      result.Pet.Species(),
+		"breed":        result.Pet.Breed(),
+		"birth_date":   result.Pet.BirthDate(),
+		"photo_url":    result.Pet.PhotoURL(),
+		"created_at":   result.Pet.CreatedAt(),
+		"updated_at":   result.Pet.UpdatedAt(),
+		"owner_id":     result.Pet.OwnerID(),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Failed to encode JSON response: %v", err)
+		return
+	}
+}
+
+func (c *Controller) DeletePet(w http.ResponseWriter, r *http.Request) {
+	// Handle OPTIONS request
+	if r.Method == http.MethodOptions {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	vars := mux.Vars(r)
+	petID, err := uuid.Parse(vars["id"])
+	if err != nil {
+		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInvalidFormat, "Invalid pet ID", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := auth.GetUserIDFromContext(r.Context())
+	if err != nil {
+		log.Printf("User ID not found in context: %v", err)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	cmd := commands.DeletePetCommand{
+		PetID:  petID,
+		UserID: userID,
+	}
+
+	err = c.deleteHandler.Handle(r.Context(), cmd)
+	if err != nil {
+		c.handleError(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (c *Controller) handleError(w http.ResponseWriter, err error) {
 	switch err {
 	case domain.ErrPetNotFound:
-		http.Error(w, "Pet not found", http.StatusNotFound) // ← Corriger
+		apiErr := sharederrors.NewPetNotFoundError()
+		sharederrors.WriteErrorResponse(w, apiErr.Code, apiErr.Message, http.StatusNotFound)
 	case domain.ErrPetInvalidName:
-		http.Error(w, "Invalid pet name", http.StatusBadRequest) // ← Corriger
+		sharederrors.WriteFieldErrorResponse(w, sharederrors.ErrCodeInvalidInput, "Invalid pet name", "name", http.StatusBadRequest)
 	case domain.ErrPetInvalidSpecies:
-		http.Error(w, "Invalid species", http.StatusBadRequest) // ← Corriger
+		sharederrors.WriteFieldErrorResponse(w, sharederrors.ErrCodeInvalidInput, "Invalid species", "species", http.StatusBadRequest)
 	case domain.ErrPetAlreadyExist:
-		http.Error(w, "Pet already exists", http.StatusConflict) // ← Corriger
+		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodePetAlreadyExists, "Pet already exists", http.StatusConflict)
 	default:
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInternalServer, "Internal server error", http.StatusInternalServerError)
 	}
 }

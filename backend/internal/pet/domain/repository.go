@@ -15,4 +15,6 @@ type Repository interface {
 	FindAllPetsByCoOwnerID(ctx context.Context, ownerId uuid.UUID) ([]*Pet, error)
 	ExistsByOwnerId(ctx context.Context, ownerId uuid.UUID, name string) (bool, error)
 	GetCoOwnersByPetID(ctx context.Context, petID uuid.UUID) ([]uuid.UUID, error)
+	Update(ctx context.Context, pet *Pet) (*Pet, error)
+	Delete(ctx context.Context, petID uuid.UUID) error
 }

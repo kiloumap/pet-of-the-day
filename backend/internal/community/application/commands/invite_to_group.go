@@ -37,7 +37,6 @@ func NewInviteToGroupHandler(
 }
 
 func (h *InviteToGroupHandler) Handle(ctx context.Context, cmd InviteToGroupCommand) (*domain.Invitation, error) {
-	// Check if group exists
 	group, err := h.groupRepo.FindByID(ctx, cmd.GroupID)
 	if err != nil {
 		return nil, domain.ErrGroupNotFound
@@ -46,8 +45,6 @@ func (h *InviteToGroupHandler) Handle(ctx context.Context, cmd InviteToGroupComm
 		return nil, domain.ErrGroupNotFound
 	}
 
-	// Check if inviter is group creator or admin
-	// For now, only creator can invite
 	if !group.IsCreator(cmd.InviterID) {
 		return nil, domain.ErrGroupUnauthorized
 	}
@@ -60,7 +57,6 @@ func (h *InviteToGroupHandler) Handle(ctx context.Context, cmd InviteToGroupComm
 			return nil, domain.ErrInvitationInvalid
 		}
 
-		// Check if invitation already exists
 		existing, err := h.invitationRepo.FindByGroupAndEmail(ctx, cmd.GroupID, cmd.InviteeEmail)
 		if err == nil && existing != nil && existing.IsValid() {
 			return nil, domain.ErrInvitationAlreadyExists
@@ -81,12 +77,10 @@ func (h *InviteToGroupHandler) Handle(ctx context.Context, cmd InviteToGroupComm
 		return nil, domain.ErrInvitationInvalid
 	}
 
-	// Save invitation
 	if err := h.invitationRepo.Save(ctx, invitation); err != nil {
 		return nil, err
 	}
 
-	// Publish events
 	for _, event := range invitation.DomainEvents() {
 		if err := h.eventBus.Publish(ctx, event); err != nil {
 			// Log error but don't fail the command

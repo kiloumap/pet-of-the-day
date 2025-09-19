@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/theme';
 import { Button } from '@components/ui/Button';
 import { Input } from '@components/ui/Input';
+import { LanguageSwitcher } from '@components/ui/LanguageSwitcher';
 import { useAppDispatch, useAppSelector } from '@/hooks';
 import { loginUser, clearError } from '@store/authSlice';
 
@@ -45,7 +46,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   // Show error alert
   useEffect(() => {
     if (error) {
-      Alert.alert(t('auth.loginError'), error);
+      Alert.alert(t('auth.loginError'), error.message);
     }
   }, [error, t]);
 
@@ -124,10 +125,17 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       color: theme.colors.primary,
       fontWeight: theme.typography.fontWeight.medium,
     },
+    languageSwitcher: {
+      position: 'absolute',
+      top: theme.spacing.xl,
+      right: theme.spacing.lg,
+      zIndex: 1,
+    },
   });
 
   return (
     <View style={styles.container}>
+      <LanguageSwitcher variant="compact" style={styles.languageSwitcher} />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoid}

@@ -9,6 +9,9 @@ import (
 	petsCommands "pet-of-the-day/internal/pet/application/commands"
 	petQueries "pet-of-the-day/internal/pet/application/queries"
 	pethttp "pet-of-the-day/internal/pet/interfaces/http"
+	pointshttp "pet-of-the-day/internal/points/interfaces/http"
+	"pet-of-the-day/internal/community"
+	"pet-of-the-day/internal/community/interfaces/http"
 	"pet-of-the-day/internal/shared/auth"
 	"pet-of-the-day/internal/shared/database"
 	"pet-of-the-day/internal/shared/events"
@@ -54,33 +57,55 @@ func main() {
 	// Pet bounded context
 	petRepo := repoFactory.CreatePetRepository()
 	addPetHandler := petsCommands.NewAddPetHandler(petRepo, eventBus)
+	updatePetHandler := petsCommands.NewUpdatePetHandler(petRepo, eventBus)
+	deletePetHandler := petsCommands.NewDeletePetHandler(petRepo, eventBus)
 	getUserPetsHandler := petQueries.NewGetOwnedPetsHandler(petRepo)
 	getPetByIdHandler := petQueries.NewGetPetByIDHandler(petRepo)
 
 	petController := pethttp.NewPetController(
 		addPetHandler,
+		updatePetHandler,
+		deletePetHandler,
 		getUserPetsHandler,
 		getPetByIdHandler,
 	)
+
+	// Points system - using Ent client directly for now
+	pointsController := pointshttp.NewController(repoFactory.GetEntClient())
+
+	// Community bounded context
+	communityService := community.NewCommunityService(eventBus, jwtService, repoFactory)
 
 	// HTTP router setup
 	router := mux.NewRouter()
 
 	// Configure CORS first (before any routes)
 	c := cors.New(cors.Options{
-		AllowedOrigins: []string{
-			"http://localhost:8081",   // Expo web dev
-			"http://localhost:19006",  // Expo web dev (alternative port)
-			"http://10.0.2.2:8081",    // Android emulator
-			"http://10.0.2.2:19006",   // Android emulator (alternative)
-			"exp://localhost:19000",   // Expo app
-			"exp://192.168.1.*:19000", // Expo app LAN
-			"*",                       // Allow all origins in development
+		AllowedOrigins: []string{"*"}, // Allow all origins in development
+		AllowedMethods: []string{
+			http.MethodGet,
+			http.MethodPost,
+			http.MethodPut,
+			http.MethodPatch,
+			http.MethodDelete,
+			http.MethodOptions,
+			http.MethodHead,
 		},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Authorization", "Content-Type", "Accept", "X-Requested-With"},
-		AllowCredentials: true,
-		Debug:            true, // Enable debug logs
+		AllowedHeaders: []string{
+			"Accept",
+			"Authorization",
+			"Content-Type",
+			"X-CSRF-Token",
+			"X-Requested-With",
+			"Origin",
+			"Accept-Encoding",
+			"Accept-Language",
+			"Cache-Control",
+		},
+		ExposedHeaders:   []string{"*"},
+		AllowCredentials: false, // Set to false when using wildcard origins
+		MaxAge:           300,   // Cache preflight response for 5 minutes
+		Debug:            true,  // Enable debug logs
 	})
 
 	// Apply CORS middleware to router
@@ -94,6 +119,8 @@ func main() {
 	// Register user routes
 	userController.RegisterRoutes(api, authMiddleware)
 	petController.RegisterRoutes(api, authMiddleware)
+	pointsController.RegisterRoutes(api, authMiddleware)
+	communityhttp.RegisterCommunityRoutes(api, communityService.HTTPHandlers, jwtService)
 
 	// Health check
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
@@ -103,6 +130,17 @@ func main() {
 			log.Printf("Failed to write health check response: %v", err)
 		}
 	}).Methods("GET")
+
+	// Explicit OPTIONS handler for all API routes
+	api.PathPrefix("").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "OPTIONS" {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Accept, Authorization, Content-Type, X-CSRF-Token, X-Requested-With, Origin")
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+	}).Methods("OPTIONS")
 
 	handler := router
 

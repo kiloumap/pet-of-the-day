@@ -61,6 +61,10 @@ func (f *RepositoryFactory) CreatePetRepository() petDomain.Repository {
 	return petInfra.NewMockPetRepository()
 }
 
+func (f *RepositoryFactory) GetEntClient() *ent.Client {
+	return f.entClient
+}
+
 func (f *RepositoryFactory) Close() error {
 	if f.entClient != nil {
 		return f.entClient.Close()
