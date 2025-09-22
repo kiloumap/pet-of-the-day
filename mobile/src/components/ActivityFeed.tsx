@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, RefreshControl, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, RefreshControl, TouchableOpacity } from 'react-native';
 import { Clock, Award, Users } from 'lucide-react-native';
 import { useTranslation } from '../hooks';
 import { useTheme } from '../theme';
@@ -58,64 +58,9 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ onRefresh, onActionPress })
     return t('common.daysAgo', '{{count}}j', { count: diffInDays });
   };
 
-  const getActivityIcon = (points: number) => {
-    if (points >= 10) return <Award size={16} color="#f59e0b" />;
-    if (points >= 5) return <Award size={16} color="#10b981" />;
-    return <Award size={16} color={theme.colors.text.secondary} />;
-  };
-
-  const renderActivityItem = ({ item }: { item: ActivityItem }) => (
-    <TouchableOpacity
-      style={styles.activityItem}
-      onPress={() => onActionPress?.(item)}
-    >
-      <View style={styles.activityIcon}>
-        {getActivityIcon(item.points)}
-      </View>
-
-      <View style={styles.activityContent}>
-        <Text style={styles.activityTitle}>
-          <Text style={styles.petName}>{item.pet_name}</Text>
-          {' • '}
-          <Text style={styles.behaviorName}>{item.behavior_name}</Text>
-        </Text>
-
-        <View style={styles.activityMeta}>
-          <View style={styles.groupInfo}>
-            <Users size={12} color={theme.colors.text.secondary} />
-            <Text style={styles.groupName}>{item.group_name}</Text>
-          </View>
-
-          <View style={styles.timeInfo}>
-            <Clock size={12} color={theme.colors.text.secondary} />
-            <Text style={styles.timeAgo}>{formatTimeAgo(item.recorded_at)}</Text>
-          </View>
-        </View>
-
-        {item.comment && (
-          <Text style={styles.comment} numberOfLines={2}>
-            {item.comment}
-          </Text>
-        )}
-      </View>
-
-      <View style={styles.pointsBadge}>
-        <Text style={styles.pointsText}>+{item.points}</Text>
-      </View>
-    </TouchableOpacity>
-  );
-
-  const renderEmptyState = () => (
-    <View style={styles.emptyState}>
-      <Award size={48} color={theme.colors.text.tertiary} />
-      <Text style={styles.emptyTitle}>{t('points.noActions')}</Text>
-      <Text style={styles.emptySubtitle}>{t('points.noActionsSubtitle')}</Text>
-    </View>
-  );
-
-  const styles = StyleSheet.create({
+  const styles = React.useMemo(() => StyleSheet.create({
     container: {
-      flex: 1,
+      height: 350,
     },
     header: {
       paddingHorizontal: 16,
@@ -205,13 +150,11 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ onRefresh, onActionPress })
       color: '#16a34a',
     },
     emptyContainer: {
-      flex: 1,
+      minHeight: 200,
     },
     emptyState: {
-
       paddingTop: 12,
-
-      flex: 1,
+      minHeight: 150,
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: 32,
@@ -230,7 +173,62 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ onRefresh, onActionPress })
       lineHeight: 20,
       paddingBottom: 12,
     },
-  });
+  }), [theme]);
+
+  const getActivityIcon = (points: number) => {
+    if (points >= 10) return <Award size={16} color="#f59e0b" />;
+    if (points >= 5) return <Award size={16} color="#10b981" />;
+    return <Award size={16} color={theme.colors.text.secondary} />;
+  };
+
+  const renderActivityItem = React.useCallback(({ item }: { item: ActivityItem }) => (
+    <TouchableOpacity
+      style={styles.activityItem}
+      onPress={() => onActionPress?.(item)}
+    >
+      <View style={styles.activityIcon}>
+        {getActivityIcon(item.points)}
+      </View>
+
+      <View style={styles.activityContent}>
+        <Text style={styles.activityTitle}>
+          <Text style={styles.petName}>{item.pet_name}</Text>
+          {' • '}
+          <Text style={styles.behaviorName}>{item.behavior_name}</Text>
+        </Text>
+
+        <View style={styles.activityMeta}>
+          <View style={styles.groupInfo}>
+            <Users size={12} color={theme.colors.text.secondary} />
+            <Text style={styles.groupName}>{item.group_name}</Text>
+          </View>
+
+          <View style={styles.timeInfo}>
+            <Clock size={12} color={theme.colors.text.secondary} />
+            <Text style={styles.timeAgo}>{formatTimeAgo(item.recorded_at)}</Text>
+          </View>
+        </View>
+
+        {item.comment && (
+          <Text style={styles.comment} numberOfLines={2}>
+            {item.comment}
+          </Text>
+        )}
+      </View>
+
+      <View style={styles.pointsBadge}>
+        <Text style={styles.pointsText}>+{item.points}</Text>
+      </View>
+    </TouchableOpacity>
+  ), [styles, theme.colors.text.secondary, onActionPress]);
+
+  const renderEmptyState = () => (
+    <View style={styles.emptyState}>
+      <Award size={48} color={theme.colors.text.tertiary} />
+      <Text style={styles.emptyTitle}>{t('points.noActions')}</Text>
+      <Text style={styles.emptySubtitle}>{t('points.noActionsSubtitle')}</Text>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
@@ -238,10 +236,7 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ onRefresh, onActionPress })
         <Text style={styles.title}>{t('points.recentActions')}</Text>
       </View>
 
-      <FlatList
-        data={activities}
-        renderItem={renderActivityItem}
-        keyExtractor={(item) => item.id}
+      <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -250,9 +245,15 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ onRefresh, onActionPress })
             tintColor={theme.colors.text.secondary}
           />
         }
-        contentContainerStyle={activities.length === 0 ? styles.emptyContainer : undefined}
-        ListEmptyComponent={renderEmptyState}
-      />
+        contentContainerStyle={activities.length === 0 ? styles.emptyContainer : { flexGrow: 1 }}
+        style={{ flex: 1 }}
+      >
+        {activities.length === 0 ? (
+          renderEmptyState()
+        ) : (
+          activities.map((item) => renderActivityItem({ item }))
+        )}
+      </ScrollView>
     </View>
   );
 };

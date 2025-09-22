@@ -98,7 +98,7 @@ const HomeScreen: React.FC = () => {
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.1,
             shadowRadius: 3,
-            maxHeight: 300,
+            maxHeight: 400,
         },
     });
 
