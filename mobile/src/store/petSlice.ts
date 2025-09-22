@@ -189,4 +189,16 @@ const petSlice = createSlice({
 });
 
 export const { clearError, clearSelectedPet, resetPets } = petSlice.actions;
+
+// Selectors
+export const selectPets = (state: any) => state.pets.pets;
+export const selectPetsLoading = (state: any) => state.pets.isLoading;
+export const selectSelectedPet = (state: any) => state.pets.selectedPet;
+export const selectTodaysWinner = (state: any) => {
+  const pets = state.pets.pets;
+  if (!pets || pets.length === 0) return null;
+  // Return first pet as winner for now (you can implement your logic here)
+  return pets[0];
+};
+
 export default petSlice.reducer;

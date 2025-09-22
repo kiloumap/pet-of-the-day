@@ -23,7 +23,6 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const systemColorScheme = useColorScheme() ?? 'light';
   const [themePreference, setThemePreference] = useState<ColorScheme | 'auto'>('auto');
 
-  // Determine actual color scheme based on preference
   const actualColorScheme: ColorScheme =
     themePreference === 'auto' ? systemColorScheme : themePreference;
 
@@ -45,7 +44,6 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     loadThemePreference();
   }, []);
 
-  // Save theme preference to storage when it changes
   const setColorScheme = async (scheme: ColorScheme | 'auto') => {
     try {
       await AsyncStorage.setItem(THEME_STORAGE_KEY, scheme);

@@ -10,6 +10,7 @@ import { MyPetsScreen } from '../screens/pets/MyPetsScreen';
 import { AddPetScreen } from '../screens/pets/AddPetScreen';
 import { PetDetailScreen } from '../screens/pets/PetDetailScreen';
 import { SettingsScreen } from '../screens/settings/SettingsScreen';
+import ProfileScreen from '../screens/profile/ProfileScreen';
 import GroupsScreen from '../screens/groups/GroupsScreen';
 import CreateGroupScreen from '../screens/groups/CreateGroupScreen';
 import JoinGroupScreen from '../screens/groups/JoinGroupScreen';
@@ -18,16 +19,6 @@ import AddActionScreen from '../screens/points/AddActionScreen';
 import LeaderboardScreen from '../screens/points/LeaderboardScreen';
 import HomeScreen from '../screens/home/HomeScreen';
 
-const ProfileScreen = () => {
-  const { theme } = useTheme();
-  return (
-    <View style={[styles.placeholderContainer, { backgroundColor: theme.colors.background.primary }]}>
-      <Text style={[styles.placeholderText, { color: theme.colors.text.primary }]}>
-        Profile Screen
-      </Text>
-    </View>
-  );
-};
 
 
 const styles = StyleSheet.create({
@@ -50,6 +41,8 @@ export type MainTabParamList = {
   SettingsTab: undefined;
 };
 
+export type RootNavigationParamList = MainTabParamList & GroupsStackParamList & PetsStackParamList;
+
 export type PetsStackParamList = {
   MyPets: undefined;
   AddPet: undefined;
@@ -70,6 +63,8 @@ const PetsStack = createNativeStackNavigator<PetsStackParamList>();
 const GroupsStack = createNativeStackNavigator<GroupsStackParamList>();
 
 const PetsStackNavigator: React.FC = () => {
+    const { t } = useTranslation();
+
   return (
     <PetsStack.Navigator
       screenOptions={{
@@ -82,7 +77,7 @@ const PetsStackNavigator: React.FC = () => {
         component={AddPetScreen}
         options={{
           headerShown: true,
-          title: 'Add Pet', // This will be overridden by the screen itself
+          title: 'Add Pet',
           presentation: 'modal',
         }}
       />

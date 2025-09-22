@@ -60,8 +60,19 @@ export const getCurrentUser = createAsyncThunk(
 
 export const logoutUser = createAsyncThunk(
   'auth/logout',
-  async () => {
-    await apiService.logout();
+  async (_, { dispatch, rejectWithValue }) => {
+    try {
+      await apiService.logout();
+      // Clear all related user data
+      dispatch({ type: 'groups/resetGroupState' });
+      dispatch({ type: 'pets/resetPets' });
+    } catch (error) {
+      // Even if logout fails, clear local state for security
+      dispatch({ type: 'groups/resetGroupState' });
+      dispatch({ type: 'pets/resetPets' });
+      const apiError = error as ApiError;
+      return rejectWithValue(apiError);
+    }
   }
 );
 
@@ -150,6 +161,12 @@ const authSlice = createSlice({
         state.user = null;
         state.isAuthenticated = false;
         state.error = null;
+      })
+      .addCase(logoutUser.rejected, (state, action) => {
+        // Even if logout fails, clear local state for security
+        state.user = null;
+        state.isAuthenticated = false;
+        state.error = action.payload as ApiError || null;
       });
 
     // Check auth status

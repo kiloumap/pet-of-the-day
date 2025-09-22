@@ -330,6 +330,7 @@ export const PetDetailScreen: React.FC<PetDetailScreenProps> = ({ navigation, ro
               <Text style={styles.label}>{t('pets.species')}</Text>
               {isEditing ? (
                 <Dropdown
+                  label={`${t('pets.species')} *`}
                   value={formData.species}
                   onSelect={(value) => handleFieldChange('species', value)}
                   options={speciesOptions}

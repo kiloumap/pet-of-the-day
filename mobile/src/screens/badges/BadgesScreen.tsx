@@ -36,7 +36,6 @@ const BadgesScreen: React.FC = () => {
     const [categoryFilter, setCategoryFilter] = useState<CategoryType>('all');
     const [rarityFilter, setRarityFilter] = useState<RarityType>('all');
 
-    // État pour la modal détaillée
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
 
@@ -62,21 +61,17 @@ const BadgesScreen: React.FC = () => {
     const petEarnedBadges = earnedBadges.filter(eb => eb.petId === selectedPet);
     const petBadgeProgress = badgeProgress.filter(bp => bp.petId === selectedPet);
 
-    // Filtrer les badges
     const getFilteredBadges = (): Badge[] => {
         let filteredBadges = [...BADGES];
 
-        // Filtre par catégorie
         if (categoryFilter !== 'all') {
             filteredBadges = getBadgesByCategory(categoryFilter);
         }
 
-        // Filtre par rareté
         if (rarityFilter !== 'all') {
             filteredBadges = filteredBadges.filter(b => b.rarity === rarityFilter);
         }
 
-        // Filtre par statut
         switch (filterType) {
             case 'earned':
                 filteredBadges = filteredBadges.filter(badge =>
@@ -96,7 +91,6 @@ const BadgesScreen: React.FC = () => {
                 break;
         }
 
-        // Trier par rareté puis par nom
         return filteredBadges.sort((a, b) => {
             const rarityDiff = RARITY_ORDER[b.rarity] - RARITY_ORDER[a.rarity];
             if (rarityDiff !== 0) return rarityDiff;

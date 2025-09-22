@@ -23,7 +23,6 @@ const BadgeProgressWidget: React.FC<BadgeProgressWidgetProps> = ({ onViewAll }) 
     const myPet = pets.find(p => p.isOwn);
     if (!myPet) return null;
 
-    // Badges en cours de progression (pas encore obtenus mais avec du progrès)
     const inProgressBadges = badgeProgress
         .filter(p =>
             p.petId === myPet.id &&
@@ -31,14 +30,13 @@ const BadgeProgressWidget: React.FC<BadgeProgressWidgetProps> = ({ onViewAll }) 
             !p.isCompleted &&
             !earnedBadges.some(eb => eb.badgeId === p.badgeId)
         )
-        .sort((a, b) => b.percentage - a.percentage) // Trier par progression décroissante
-        .slice(0, 3); // Top 3
+        .sort((a, b) => b.percentage - a.percentage)
+        .slice(0, 3);
 
-    // Badges récemment obtenus
     const recentBadges = earnedBadges
         .filter(eb => eb.petId === myPet.id)
         .sort((a, b) => new Date(b.earnedAt).getTime() - new Date(a.earnedAt).getTime())
-        .slice(0, 2); // 2 plus récents
+        .slice(0, 2);
 
     if (inProgressBadges.length === 0 && recentBadges.length === 0) {
         return null;
@@ -59,7 +57,6 @@ const BadgeProgressWidget: React.FC<BadgeProgressWidgetProps> = ({ onViewAll }) 
                 )}
             </View>
 
-            {/* Badges récemment obtenus */}
             {recentBadges.length > 0 && (
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>🎉 Récemment obtenus</Text>
@@ -91,7 +88,6 @@ const BadgeProgressWidget: React.FC<BadgeProgressWidgetProps> = ({ onViewAll }) 
                 </View>
             )}
 
-            {/* Badges en progression */}
             {inProgressBadges.length > 0 && (
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>🎯 En cours</Text>

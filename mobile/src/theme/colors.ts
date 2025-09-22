@@ -2,6 +2,7 @@ export const Colors = {
   // Primary Brand Colors
   primary: '#2D9B9B',        // Warm Teal - main brand color
   accent: '#FF7A5C',         // Coral Orange - accent color
+  reverse: '#FFF',
 
   // Light Theme Colors
   light: {

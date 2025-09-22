@@ -8,13 +8,13 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Plus } from 'lucide-react-native';
-import { useTheme } from '../../theme';
-import { Button } from '../../components/ui/Button';
-import { useAppDispatch, useAppSelector, useTranslation } from '../../hooks';
-import { fetchPets, clearError } from '../../store/petSlice';
-import { Pet } from '../../types/api';
-import { getLocalizedSpecies } from '../../utils/speciesLocalization';
-import { ErrorHandler } from '../../utils/errorHandler';
+import { useTheme } from '@/theme';
+import { Button } from '@components/ui/Button';
+import { useAppDispatch, useAppSelector, useTranslation } from '@/hooks';
+import { fetchPets, clearError } from '@store/petSlice';
+import { Pet } from '@/types/api';
+import { getLocalizedSpecies } from '@utils/speciesLocalization';
+import { ErrorHandler } from '@utils/errorHandler';
 
 interface MyPetsScreenProps {
   navigation: any;

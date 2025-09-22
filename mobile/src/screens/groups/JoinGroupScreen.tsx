@@ -215,7 +215,7 @@ const JoinGroupScreen = () => {
       backgroundColor: theme.colors.text.tertiary,
     },
     submitButtonText: {
-      color: theme.colors.text.inverse,
+      color: theme.colors.reverse,
       fontSize: 16,
       fontWeight: '600',
     },

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,26 +12,35 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { CompositeNavigationProp } from '@react-navigation/native';
+import { GroupsStackParamList, MainTabParamList } from '../../navigation/MainNavigator';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useAppDispatch, useAppSelector } from '../../hooks';
-import { useTranslation } from '../../hooks/useTranslation';
-import { useTheme } from '../../theme/ThemeContext';
+import { useAppDispatch, useAppSelector } from '@/hooks';
+import { useTranslation } from '@/hooks';
+import { useTheme } from '@/theme';
 import {
   fetchBehaviors,
   createScoreEvent,
   clearError,
   filterBehaviorsBySpecies,
   setBehaviorCategory,
-} from '../../store/pointsSlice';
-import { Behavior, CreateScoreEventRequest } from '../../types/api';
-import Dropdown from '../../components/ui/Dropdown';
+} from '@store/pointsSlice';
+import { fetchUserGroups } from '@store/groupSlice';
+import { Behavior, CreateScoreEventRequest } from '@/types/api';
+import {Dropdown} from '@components/ui/Dropdown';
 
-type AddActionScreenRouteProp = RouteProp<{ AddAction: { groupId: string; petId?: string } }, 'AddAction'>;
+type AddActionScreenRouteProp = RouteProp<GroupsStackParamList, 'AddAction'>;
+type AddActionScreenNavigationProp = CompositeNavigationProp<
+  NativeStackNavigationProp<GroupsStackParamList, 'AddAction'>,
+  BottomTabNavigationProp<MainTabParamList>
+>;
 
 const AddActionScreen = () => {
   const { t } = useTranslation();
   const { theme } = useTheme();
-  const navigation = useNavigation();
+  const navigation = useNavigation<AddActionScreenNavigationProp>();
   const route = useRoute<AddActionScreenRouteProp>();
   const dispatch = useAppDispatch();
 
@@ -47,6 +56,7 @@ const AddActionScreen = () => {
   } = useAppSelector((state) => state.points);
 
   const { pets } = useAppSelector((state) => state.pets);
+  const { user } = useAppSelector((state) => state.auth);
 
   const [selectedPetId, setSelectedPetId] = useState<string>(routePetId || '');
   const [selectedBehaviorId, setSelectedBehaviorId] = useState<string>('');
@@ -110,7 +120,12 @@ const AddActionScreen = () => {
         action_date: actionDate,
       };
 
-      await dispatch(createScoreEvent(requestData)).unwrap();
+      const result = await dispatch(createScoreEvent(requestData)).unwrap();
+
+      // Refresh groups data to update scores
+      if (user?.id) {
+        dispatch(fetchUserGroups(user.id));
+      }
 
       Alert.alert(
         t('common.success'),
@@ -119,31 +134,48 @@ const AddActionScreen = () => {
           {
             text: t('common.ok'),
             onPress: () => {
-              navigation.goBack();
+              navigation.navigate('HomeTab');
             },
           },
         ]
       );
     } catch (error) {
-      // Error handling is done through Redux and useEffect
+      // Error handled through Redux
     }
   };
 
-  const selectedBehavior = behaviors.find(b => b.id === selectedBehaviorId);
-  const selectedPet = pets.find(p => p.id === selectedPetId);
+  const selectedBehavior = useMemo(() =>
+    behaviors.find(b => b.id === selectedBehaviorId),
+    [behaviors, selectedBehaviorId]
+  );
 
-  const petOptions = pets.map(pet => ({
-    label: pet.name,
-    value: pet.id,
-    icon: pet.species === 'dog' ? 'pets' : 'pets',
-  }));
+  const selectedPet = useMemo(() =>
+    pets.find(p => p.id === selectedPetId),
+    [pets, selectedPetId]
+  );
 
-  const categories = Array.from(new Set(availableBehaviors.map(b => b.category)));
-  const filteredBehaviors = selectedBehaviorCategory
-    ? availableBehaviors.filter(b => b.category === selectedBehaviorCategory)
-    : availableBehaviors;
+  const petOptions = useMemo(() =>
+    pets.map(pet => ({
+      label: pet.name,
+      value: pet.id,
+      icon: pet.species === 'dog' ? 'pets' : 'pets',
+    })),
+    [pets]
+  );
 
-  const getBehaviorIcon = (category: string) => {
+  const categories = useMemo(() =>
+    Array.from(new Set(availableBehaviors.map(b => b.category))),
+    [availableBehaviors]
+  );
+
+  const filteredBehaviors = useMemo(() =>
+    selectedBehaviorCategory
+      ? availableBehaviors.filter(b => b.category === selectedBehaviorCategory)
+      : availableBehaviors,
+    [availableBehaviors, selectedBehaviorCategory]
+  );
+
+  const getBehaviorIcon = useCallback((category: string) => {
     switch (category) {
       case 'hygiene': return 'clean-hands';
       case 'play': return 'sports-tennis';
@@ -153,11 +185,11 @@ const AddActionScreen = () => {
       case 'behavior': return 'psychology';
       default: return 'star';
     }
-  };
+  }, []);
 
-  const getPointsColor = (points: number) => {
-    return points > 0 ? theme.colors.success : theme.colors.error;
-  };
+  const getPointsColor = useCallback((points: number) => {
+    return points > 0 ? theme.colors.status.success : theme.colors.status.error;
+  }, [theme.colors.status.success, theme.colors.status.error]);
 
   const styles = StyleSheet.create({
     container: {
@@ -220,7 +252,7 @@ const AddActionScreen = () => {
       textAlignVertical: 'top',
     },
     inputError: {
-      borderColor: theme.colors.error,
+      borderColor: theme.colors.status.error,
     },
     textArea: {
       height: 80,
@@ -254,7 +286,7 @@ const AddActionScreen = () => {
       color: theme.colors.text.primary,
     },
     categoryChipTextSelected: {
-      color: theme.colors.text.inverse,
+      color: theme.colors.text.secondary,
     },
     behaviorsList: {
       gap: 8,
@@ -340,7 +372,7 @@ const AddActionScreen = () => {
       backgroundColor: theme.colors.text.tertiary,
     },
     submitButtonText: {
-      color: theme.colors.text.inverse,
+      color: theme.colors.reverse,
       fontSize: 16,
       fontWeight: '600',
     },
@@ -385,7 +417,7 @@ const AddActionScreen = () => {
                 style={[styles.input, errors.behavior && styles.inputError]}
                 value={actionDate}
                 onChangeText={setActionDate}
-                placeholder="YYYY-MM-DD"
+                placeholder={t('points.placeholders.date')}
                 placeholderTextColor={theme.colors.text.tertiary}
               />
             </View>
@@ -408,7 +440,7 @@ const AddActionScreen = () => {
                     !selectedBehaviorCategory && styles.categoryChipTextSelected,
                   ]}
                 >
-                  All
+                  {t('common.all')}
                 </Text>
               </TouchableOpacity>
               {categories.map((category) => (
@@ -478,7 +510,7 @@ const AddActionScreen = () => {
                 style={[styles.input, styles.textArea, errors.comment && styles.inputError]}
                 value={comment}
                 onChangeText={setComment}
-                placeholder="Optional comment about this action..."
+                placeholder={t('points.placeholders.comment')}
                 placeholderTextColor={theme.colors.text.tertiary}
                 multiline
                 textAlignVertical="top"
@@ -492,17 +524,17 @@ const AddActionScreen = () => {
 
           {selectedPet && selectedBehavior && (
             <View style={styles.summaryCard}>
-              <Text style={styles.summaryTitle}>Summary</Text>
+              <Text style={styles.summaryTitle}>{t('points.summary')}</Text>
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Pet:</Text>
+                <Text style={styles.summaryLabel}>{t('common.pet')}:</Text>
                 <Text style={styles.summaryValue}>{selectedPet.name}</Text>
               </View>
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Action:</Text>
+                <Text style={styles.summaryLabel}>{t('points.action')}:</Text>
                 <Text style={styles.summaryValue}>{selectedBehavior.name}</Text>
               </View>
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Points:</Text>
+                <Text style={styles.summaryLabel}>{t('common.points')}:</Text>
                 <Text
                   style={[
                     styles.summaryValue,
@@ -513,7 +545,7 @@ const AddActionScreen = () => {
                 </Text>
               </View>
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Date:</Text>
+                <Text style={styles.summaryLabel}>{t('common.date')}:</Text>
                 <Text style={styles.summaryValue}>{actionDate}</Text>
               </View>
             </View>

@@ -39,29 +39,29 @@ const PetOfTheDayCard: React.FC<PetOfTheDayCardProps> = ({ winner }) => {
     title: {
       fontSize: 24,
       fontWeight: 'bold',
-      color: 'white',
+      color: theme.colors.text.primary,
       marginBottom: 8,
     },
     petInfo: {
       fontSize: 18,
-      color: 'white',
+      color: theme.colors.text.primary,
       marginBottom: 4,
     },
     breed: {
       fontSize: 14,
-      color: 'white',
+      color: theme.colors.text.primary,
       opacity: 0.9,
     },
     emoji: {
       fontSize: 48,
-      color: 'white',
+      color: theme.colors.text.primary,
     },
     sparkle: {
       position: 'absolute',
       right: -16,
       bottom: -16,
       fontSize: 64,
-      color: 'white',
+      color: theme.colors.text.primary,
       opacity: 0.2,
     },
   });
@@ -69,7 +69,7 @@ const PetOfTheDayCard: React.FC<PetOfTheDayCardProps> = ({ winner }) => {
   return (
       <View style={styles.container}>
         <LinearGradient
-            colors={[theme.colors.primary, theme.colors.secondary]}
+            colors={[theme.colors.background.primary, theme.colors.background.secondary]}
             style={styles.gradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
@@ -77,7 +77,7 @@ const PetOfTheDayCard: React.FC<PetOfTheDayCardProps> = ({ winner }) => {
           <View style={styles.content}>
             <View style={styles.textContainer}>
               <Text style={styles.title}>🏆 Pet of the Day</Text>
-              <Text style={styles.petInfo}>{winner.name} - {winner.points} pts</Text>
+              <Text style={styles.petInfo}>{winner.name} - {winner.points ?? 0} pts</Text>
               <Text style={styles.breed}>{winner.breed}</Text>
             </View>
             <Text style={styles.emoji}>{winner.image}</Text>

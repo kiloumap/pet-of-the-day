@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Plus, Camera } from 'lucide-react-native';
-import { useTranslation } from '../hooks';
+import { useTranslation } from '@/hooks';
+import { useTheme } from '@/theme';
 
 interface QuickActionsProps {
     onNoteAction: () => void;
@@ -9,17 +10,18 @@ interface QuickActionsProps {
 }
 
 const QuickActions: React.FC<QuickActionsProps> = ({ onNoteAction, onPhotoMoment }) => {
+    const { theme } = useTheme();
     const { t } = useTranslation();
 
     return (
         <View style={styles.container}>
-            <TouchableOpacity style={[styles.button, styles.blueButton]} onPress={onNoteAction}>
-                <Plus size={20} color="white" />
-                <Text style={styles.buttonText}>{t('points.recordAction')}</Text>
+            <TouchableOpacity style={[styles.button, { backgroundColor: theme.colors.accent }]} onPress={onNoteAction}>
+                <Plus size={20} color={theme.colors.reverse} />
+                <Text style={[styles.buttonText, { color: theme.colors.reverse }]}>{t('points.recordAction')}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.button, styles.greenButton]} onPress={onPhotoMoment}>
-                <Camera size={20} color="white" />
-                <Text style={styles.buttonText}>Photo moment</Text>
+            <TouchableOpacity style={[styles.button, { backgroundColor: theme.colors.primary  }]} onPress={onPhotoMoment}>
+                <Camera size={20} color={theme.colors.reverse} />
+                <Text style={[styles.buttonText, {color: theme.colors.reverse}]}>Photo moment</Text>
             </TouchableOpacity>
         </View>
     );
@@ -40,14 +42,7 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         gap: 8,
     },
-    blueButton: {
-        backgroundColor: '#3b82f6',
-    },
-    greenButton: {
-        backgroundColor: '#10b981',
-    },
     buttonText: {
-        color: 'white',
         fontWeight: '600',
     },
 });

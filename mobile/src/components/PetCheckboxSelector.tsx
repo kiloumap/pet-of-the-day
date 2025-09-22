@@ -175,7 +175,7 @@ const PetCheckboxSelector: React.FC<PetCheckboxSelectorProps> = ({
       alignItems: 'center',
       paddingVertical: 12,
       paddingHorizontal: 16,
-      backgroundColor: `${theme.colors.secondary}20`,
+      backgroundColor: `${theme.colors.background.tertiary}`,
       borderRadius: 8,
       marginTop: 16,
       gap: 8,
@@ -183,7 +183,7 @@ const PetCheckboxSelector: React.FC<PetCheckboxSelectorProps> = ({
     summaryText: {
       fontSize: 14,
       fontWeight: '500',
-      color: theme.colors.secondary,
+      color: theme.colors.text.primary,
     },
     emptyState: {
       alignItems: 'center',
@@ -290,7 +290,7 @@ const PetCheckboxSelector: React.FC<PetCheckboxSelectorProps> = ({
 
       {selectedPetIds.length > 0 && (
         <View style={styles.selectionSummary}>
-          <Heart size={16} color={theme.colors.secondary} />
+          <Heart size={16} color={theme.colors.text.primary} />
           <Text style={styles.summaryText}>
             {selectedPetIds.length} {selectedPetIds.length === 1 ? t('pets.petSelected') : t('pets.petsSelected')}
           </Text>

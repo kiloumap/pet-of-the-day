@@ -21,8 +21,9 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ onRefresh, onActionPress })
   const loadActivities = async () => {
     try {
       setIsLoading(true);
-      const response = await apiService.getRecentActivities(20);
-      setActivities(response.activities);
+      // Temporarily show empty state since the endpoint doesn't exist yet
+      // TODO: Implement proper activity feed endpoint in backend
+      setActivities([]);
     } catch (error) {
       console.error('Failed to load activities:', error);
       setActivities([]);
@@ -119,6 +120,7 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ onRefresh, onActionPress })
     header: {
       paddingHorizontal: 16,
       paddingVertical: 12,
+      paddingTop: 12,
       borderBottomWidth: 1,
       borderBottomColor: theme.colors.border,
     },
@@ -206,6 +208,9 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ onRefresh, onActionPress })
       flex: 1,
     },
     emptyState: {
+
+      paddingTop: 12,
+
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
@@ -223,6 +228,7 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ onRefresh, onActionPress })
       color: theme.colors.text.secondary,
       textAlign: 'center',
       lineHeight: 20,
+      paddingBottom: 12,
     },
   });
 

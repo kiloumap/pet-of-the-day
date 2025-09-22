@@ -6,12 +6,15 @@ import (
 	"net/http"
 	"os"
 
+	"pet-of-the-day/internal/community"
+	communityhttp "pet-of-the-day/internal/community/interfaces/http"
 	petsCommands "pet-of-the-day/internal/pet/application/commands"
 	petQueries "pet-of-the-day/internal/pet/application/queries"
 	pethttp "pet-of-the-day/internal/pet/interfaces/http"
+	pointsCommands "pet-of-the-day/internal/points/application/commands"
+	pointsQueries "pet-of-the-day/internal/points/application/queries"
+	pointsinfra "pet-of-the-day/internal/points/infrastructure/ent"
 	pointshttp "pet-of-the-day/internal/points/interfaces/http"
-	"pet-of-the-day/internal/community"
-	"pet-of-the-day/internal/community/interfaces/http"
 	"pet-of-the-day/internal/shared/auth"
 	"pet-of-the-day/internal/shared/database"
 	"pet-of-the-day/internal/shared/events"
@@ -23,11 +26,9 @@ import (
 )
 
 func main() {
-	// Configuration
 	jwtSecret := getEnv("JWT_SECRET", "your-super-secret-jwt-key")
 	port := getEnv("PORT", "8080")
 
-	// Repository Factory (auto-detects Mock vs Ent)
 	repoFactory, err := database.NewRepositoryFactory()
 	if err != nil {
 		log.Fatalf("Failed to create repository factory: %v", err)
@@ -36,12 +37,10 @@ func main() {
 		_ = repoFactory.Close()
 	}(repoFactory)
 
-	// Shared services
 	eventBus := events.NewInMemoryBus()
 	jwtService := auth.NewJWTService(jwtSecret, "pet-of-the-day")
 	authMiddleware := jwtService.AuthMiddleware
 
-	// User bounded context (auto Mock/Ent)
 	userRepo := repoFactory.CreateUserRepository()
 	registerHandler := usersCommands.NewRegisterUserHandler(userRepo, eventBus)
 	loginHandler := usersCommands.NewLoginUserHandler(userRepo, eventBus)
@@ -54,7 +53,6 @@ func main() {
 		jwtService,
 	)
 
-	// Pet bounded context
 	petRepo := repoFactory.CreatePetRepository()
 	addPetHandler := petsCommands.NewAddPetHandler(petRepo, eventBus)
 	updatePetHandler := petsCommands.NewUpdatePetHandler(petRepo, eventBus)
@@ -70,16 +68,34 @@ func main() {
 		getPetByIdHandler,
 	)
 
-	// Points system - using Ent client directly for now
-	pointsController := pointshttp.NewController(repoFactory.GetEntClient())
+	behaviorRepo := pointsinfra.NewBehaviorRepository(repoFactory.GetEntClient())
+	scoreEventRepo := pointsinfra.NewScoreEventRepository(repoFactory.GetEntClient())
+	petAccessChecker := pointsinfra.NewPetAccessChecker(repoFactory.GetEntClient())
+	groupMembershipChecker := pointsinfra.NewGroupMembershipChecker(repoFactory.GetEntClient())
+	scoreEventOwnerChecker := pointsinfra.NewScoreEventOwnerChecker(repoFactory.GetEntClient())
 
-	// Community bounded context
+	getBehaviorsHandler := pointsQueries.NewGetBehaviorsHandler(behaviorRepo)
+	createScoreEventHandler := pointsCommands.NewCreateScoreEventHandler(
+		behaviorRepo, scoreEventRepo, petAccessChecker, groupMembershipChecker, eventBus,
+	)
+	deleteScoreEventHandler := pointsCommands.NewDeleteScoreEventHandler(
+		scoreEventRepo, scoreEventOwnerChecker, eventBus,
+	)
+	getPetScoreEventsHandler := pointsQueries.NewGetPetScoreEventsHandler(scoreEventRepo)
+	getGroupLeaderboardHandler := pointsQueries.NewGetGroupLeaderboardHandler(scoreEventRepo)
+
+	pointsController := pointshttp.NewController(
+		getBehaviorsHandler,
+		createScoreEventHandler,
+		deleteScoreEventHandler,
+		getPetScoreEventsHandler,
+		getGroupLeaderboardHandler,
+	)
+
 	communityService := community.NewCommunityService(eventBus, jwtService, repoFactory)
 
-	// HTTP router setup
 	router := mux.NewRouter()
 
-	// Configure CORS first (before any routes)
 	c := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"}, // Allow all origins in development
 		AllowedMethods: []string{
@@ -103,26 +119,22 @@ func main() {
 			"Cache-Control",
 		},
 		ExposedHeaders:   []string{"*"},
-		AllowCredentials: false, // Set to false when using wildcard origins
-		MaxAge:           300,   // Cache preflight response for 5 minutes
-		Debug:            true,  // Enable debug logs
+		AllowCredentials: false,
+		MaxAge:           300,
+		Debug:            true,
 	})
 
-	// Apply CORS middleware to router
 	router.Use(func(next http.Handler) http.Handler {
 		return c.Handler(next)
 	})
 
-	// API routes
 	api := router.PathPrefix("/api").Subrouter()
 
-	// Register user routes
 	userController.RegisterRoutes(api, authMiddleware)
 	petController.RegisterRoutes(api, authMiddleware)
 	pointsController.RegisterRoutes(api, authMiddleware)
 	communityhttp.RegisterCommunityRoutes(api, communityService.HTTPHandlers, jwtService)
 
-	// Health check
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -131,7 +143,6 @@ func main() {
 		}
 	}).Methods("GET")
 
-	// Explicit OPTIONS handler for all API routes
 	api.PathPrefix("").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "OPTIONS" {
 			w.Header().Set("Access-Control-Allow-Origin", "*")

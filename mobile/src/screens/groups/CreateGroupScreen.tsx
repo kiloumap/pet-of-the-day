@@ -12,6 +12,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { GroupsStackParamList } from '../../navigation/MainNavigator';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -22,10 +24,12 @@ import { CreateGroupRequest } from '../../types/api';
 import PetCheckboxSelector from '../../components/PetCheckboxSelector';
 import GroupCreatedModal from '../../components/GroupCreatedModal';
 
+type CreateGroupScreenNavigationProp = NativeStackNavigationProp<GroupsStackParamList, 'CreateGroup'>;
+
 const CreateGroupScreen = () => {
   const { t } = useTranslation();
   const { theme } = useTheme();
-  const navigation = useNavigation();
+  const navigation = useNavigation<CreateGroupScreenNavigationProp>();
   const dispatch = useAppDispatch();
 
   const { isCreating, error } = useAppSelector((state) => state.groups);
@@ -119,12 +123,13 @@ const CreateGroupScreen = () => {
 
   const handleCloseSuccessModal = () => {
     setShowSuccessModal(false);
-    navigation.goBack();
+    navigation.navigate('Groups');
   };
 
   const handleNavigateToGroup = () => {
     if (createdGroup) {
-      navigation.navigate('GroupDetail' as never, { groupId: createdGroup.id } as never);
+      setShowSuccessModal(false);
+      navigation.navigate('GroupDetail', { groupId: createdGroup.id });
     }
   };
 
@@ -197,14 +202,14 @@ const CreateGroupScreen = () => {
       textAlignVertical: 'top',
     },
     inputError: {
-      borderColor: theme.colors.error,
+      borderColor: theme.colors.status.error,
     },
     textArea: {
       height: 100,
       textAlignVertical: 'top',
     },
     errorText: {
-      color: theme.colors.error,
+      color: theme.colors.status.error,
       fontSize: 14,
       marginTop: 4,
     },
@@ -255,7 +260,7 @@ const CreateGroupScreen = () => {
       backgroundColor: theme.colors.text.tertiary,
     },
     submitButtonText: {
-      color: theme.colors.text.inverse,
+      color: theme.colors.reverse,
       fontSize: 16,
       fontWeight: '600',
     },
@@ -326,7 +331,7 @@ const CreateGroupScreen = () => {
                 pets={pets}
                 selectedPetIds={formData.pet_ids || []}
                 onSelectionChange={handlePetSelectionChange}
-                title="Sélectionner vos animaux"
+                title={t('groups.selectPets')}
                 selectAllByDefault={true}
                 disabled={petsLoading}
               />

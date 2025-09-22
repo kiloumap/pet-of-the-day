@@ -3,6 +3,9 @@ package ent
 import (
 	"context"
 	"pet-of-the-day/ent"
+	"pet-of-the-day/ent/membership"
+	"pet-of-the-day/ent/group"
+	"pet-of-the-day/ent/user"
 	"pet-of-the-day/internal/community/domain"
 
 	"github.com/google/uuid"
@@ -19,34 +22,201 @@ func NewEntMembershipRepository(client *ent.Client) *EntMembershipRepository {
 	}
 }
 
-func (r *EntMembershipRepository) Save(ctx context.Context, membership *domain.Membership) error {
-	// TODO: Implement with Ent once we update the schema
-	panic("not implemented - requires Ent schema update")
+func (r *EntMembershipRepository) Save(ctx context.Context, domainMembership *domain.Membership) error {
+	// Check if membership exists
+	exists, err := r.client.Membership.Query().Where(
+		membership.IDEQ(domainMembership.ID()),
+	).Exist(ctx)
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		// Update existing membership
+		return r.client.Membership.UpdateOneID(domainMembership.ID()).
+			SetStatus(membership.Status(domainMembership.Status())).
+			SetPetIds(domainMembership.PetIDs()).
+			SetUpdatedAt(domainMembership.UpdatedAt()).
+			Exec(ctx)
+	} else {
+		// Create new membership
+		_, err := r.client.Membership.Create().
+			SetID(domainMembership.ID()).
+			SetGroupID(domainMembership.GroupID()).
+			SetUserID(domainMembership.UserID()).
+			SetStatus(membership.Status(domainMembership.Status())).
+			SetPetIds(domainMembership.PetIDs()).
+			SetCreatedAt(domainMembership.CreatedAt()).
+			SetUpdatedAt(domainMembership.UpdatedAt()).
+			Save(ctx)
+		return err
+	}
 }
 
 func (r *EntMembershipRepository) FindByID(ctx context.Context, id uuid.UUID) (*domain.Membership, error) {
-	// TODO: Implement with Ent
-	panic("not implemented - requires Ent schema update")
+	entMembership, err := r.client.Membership.Query().
+		Where(membership.IDEQ(id)).
+		WithGroup().
+		WithUser().
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, domain.ErrMembershipNotFound
+		}
+		return nil, err
+	}
+
+	// Map Ent entity to domain entity
+	status := domain.MembershipStatus(entMembership.Status.String())
+	if err != nil {
+		return nil, err
+	}
+
+	domainMembership := domain.ReconstructMembership(
+		entMembership.ID,
+		entMembership.Edges.Group.ID,
+		entMembership.Edges.User.ID,
+		entMembership.PetIds,
+		status,
+		entMembership.CreatedAt,
+		entMembership.UpdatedAt,
+	)
+
+	return domainMembership, nil
 }
 
 func (r *EntMembershipRepository) FindByGroupAndUser(ctx context.Context, groupID, userID uuid.UUID) (*domain.Membership, error) {
-	// TODO: Implement with Ent
-	panic("not implemented - requires Ent schema update")
+	entMembership, err := r.client.Membership.Query().
+		Where(
+			membership.HasGroupWith(group.IDEQ(groupID)),
+			membership.HasUserWith(user.IDEQ(userID)),
+		).
+		WithGroup().
+		WithUser().
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, domain.ErrMembershipNotFound
+		}
+		return nil, err
+	}
+
+	// Map Ent entity to domain entity
+	status := domain.MembershipStatus(entMembership.Status.String())
+	if err != nil {
+		return nil, err
+	}
+
+	domainMembership := domain.ReconstructMembership(
+		entMembership.ID,
+		entMembership.Edges.Group.ID,
+		entMembership.Edges.User.ID,
+		entMembership.PetIds,
+		status,
+		entMembership.CreatedAt,
+		entMembership.UpdatedAt,
+	)
+
+	return domainMembership, nil
 }
 
 func (r *EntMembershipRepository) FindByGroupID(ctx context.Context, groupID uuid.UUID) ([]*domain.Membership, error) {
-	// TODO: Implement with Ent
-	panic("not implemented - requires Ent schema update")
+	entMemberships, err := r.client.Membership.Query().
+		Where(membership.HasGroupWith(group.IDEQ(groupID))).
+		WithGroup().
+		WithUser().
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var domainMemberships []*domain.Membership
+	for _, entMembership := range entMemberships {
+		status := domain.MembershipStatus(entMembership.Status.String())
+		if err != nil {
+			return nil, err
+		}
+
+		domainMembership := domain.ReconstructMembership(
+			entMembership.ID,
+			entMembership.Edges.Group.ID,
+			entMembership.Edges.User.ID,
+			entMembership.PetIds,
+			status,
+			entMembership.CreatedAt,
+			entMembership.UpdatedAt,
+		)
+		domainMemberships = append(domainMemberships, domainMembership)
+	}
+
+	return domainMemberships, nil
 }
 
 func (r *EntMembershipRepository) FindByUserID(ctx context.Context, userID uuid.UUID) ([]*domain.Membership, error) {
-	// TODO: Implement with Ent
-	panic("not implemented - requires Ent schema update")
+	entMemberships, err := r.client.Membership.Query().
+		Where(membership.HasUserWith(user.IDEQ(userID))).
+		WithGroup().
+		WithUser().
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var domainMemberships []*domain.Membership
+	for _, entMembership := range entMemberships {
+		status := domain.MembershipStatus(entMembership.Status.String())
+		if err != nil {
+			return nil, err
+		}
+
+		domainMembership := domain.ReconstructMembership(
+			entMembership.ID,
+			entMembership.Edges.Group.ID,
+			entMembership.Edges.User.ID,
+			entMembership.PetIds,
+			status,
+			entMembership.CreatedAt,
+			entMembership.UpdatedAt,
+		)
+		domainMemberships = append(domainMemberships, domainMembership)
+	}
+
+	return domainMemberships, nil
 }
 
 func (r *EntMembershipRepository) FindActiveByUserID(ctx context.Context, userID uuid.UUID) ([]*domain.Membership, error) {
-	// TODO: Implement with Ent
-	panic("not implemented - requires Ent schema update")
+	entMemberships, err := r.client.Membership.Query().
+		Where(
+			membership.HasUserWith(user.IDEQ(userID)),
+			membership.StatusEQ(membership.StatusActive),
+		).
+		WithGroup().
+		WithUser().
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var domainMemberships []*domain.Membership
+	for _, entMembership := range entMemberships {
+		status := domain.MembershipStatus(entMembership.Status.String())
+		if err != nil {
+			return nil, err
+		}
+
+		domainMembership := domain.ReconstructMembership(
+			entMembership.ID,
+			entMembership.Edges.Group.ID,
+			entMembership.Edges.User.ID,
+			entMembership.PetIds,
+			status,
+			entMembership.CreatedAt,
+			entMembership.UpdatedAt,
+		)
+		domainMemberships = append(domainMemberships, domainMembership)
+	}
+
+	return domainMemberships, nil
 }
 
 func (r *EntMembershipRepository) FindActiveByGroupID(ctx context.Context, groupID uuid.UUID) ([]*domain.Membership, error) {
@@ -55,8 +225,7 @@ func (r *EntMembershipRepository) FindActiveByGroupID(ctx context.Context, group
 }
 
 func (r *EntMembershipRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	// TODO: Implement with Ent
-	panic("not implemented - requires Ent schema update")
+	return r.client.Membership.DeleteOneID(id).Exec(ctx)
 }
 
 // MockMembershipRepository provides in-memory implementation for testing

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ScrollView, StyleSheet, View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../theme';
+import { useAppDispatch } from '../../hooks';
 
 import PetOfTheDayCard from '../../shared/cards/PetOfTheDayCard';
 import QuickActions from '../../shared/QuickActions';
@@ -12,13 +13,14 @@ import ModernActionModal from '../../components/ModernActionModal';
 import BadgeCelebrationModal from '../../shared/modals/BadgeCelebrationModal';
 import BadgeProgressWidget from '../../shared/widgets/BadgeProgressWidget';
 import ActivityFeed from '../../components/ActivityFeed';
-import { selectPets, selectTodaysWinner } from '../../store/petsSlice';
+import { selectPets, selectTodaysWinner, fetchPets } from '../../store/petSlice';
 import { useBadgeProgress } from '../../hooks/useBadgeProgress';
 import { useTranslation } from '../../hooks';
 
 const HomeScreen: React.FC = () => {
     const [showActionModal, setShowActionModal] = useState<boolean>(false);
     const navigation = useNavigation();
+    const dispatch = useAppDispatch();
     const { t } = useTranslation();
     const { theme } = useTheme();
 
@@ -27,6 +29,11 @@ const HomeScreen: React.FC = () => {
 
     // Hook pour calculer automatiquement la progression des badges
     useBadgeProgress();
+
+    // Load pets on mount
+    useEffect(() => {
+        dispatch(fetchPets());
+    }, [dispatch]);
 
     const handleNoteAction = () => {
         setShowActionModal(true);

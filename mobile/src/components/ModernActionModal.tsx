@@ -8,19 +8,22 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import { X, Award } from 'lucide-react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../store';
-import { useTranslation } from '../hooks';
+import { RootState } from '@/store';
+import { useTranslation } from '@/hooks';
 import {
   fetchBehaviors,
   createScoreEvent,
   filterBehaviorsBySpecies,
   setBehaviorCategory,
   clearError,
-} from '../store/pointsSlice';
-import { Pet, Behavior } from '../types/api';
+} from '@store/pointsSlice';
+import { fetchPets } from '@store/petSlice';
+import { Pet, Behavior } from '@/types/api';
+import { useTheme } from '@/theme';
 
 interface ModernActionModalProps {
   visible: boolean;
@@ -35,11 +38,13 @@ const ModernActionModal: React.FC<ModernActionModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const { theme } = useTheme();
+
   const dispatch = useDispatch();
   const { t } = useTranslation();
 
   const {
-    availableBehaviors,
+    behaviors,
     selectedBehaviorCategory,
     isLoadingBehaviors,
     isCreatingEvent,
@@ -47,39 +52,56 @@ const ModernActionModal: React.FC<ModernActionModalProps> = ({
   } = useSelector((state: RootState) => state.points);
 
   const { groups, joinedGroups } = useSelector((state: RootState) => state.groups);
+  const { isLoading: isLoadingPets } = useSelector((state: RootState) => state.pets);
 
   const [selectedPet, setSelectedPet] = useState<string | null>(null);
   const [comment, setComment] = useState('');
+  const [selectedBehavior, setSelectedBehavior] = useState<Behavior | null>(null);
 
 
-  // Get behavior categories
   const behaviorCategories = useMemo(() => {
-    const categories = new Set(availableBehaviors.map(b => b.category));
-    return Array.from(categories);
-  }, [availableBehaviors]);
+    let behaviorSource = behaviors;
 
-  // Get behaviors for selected category
+    if (selectedPet && pets.length > 0) {
+      const pet = pets.find(p => p.id === selectedPet);
+      if (pet && pet.species) {
+        behaviorSource = behaviors.filter(
+          behavior => behavior.species === pet.species || behavior.species === 'both'
+        );
+      }
+    }
+
+    const categories = new Set(behaviorSource.map(b => b.category));
+    return Array.from(categories);
+  }, [behaviors, selectedPet, pets]);
+
   const categorizedBehaviors = useMemo(() => {
-    if (!selectedBehaviorCategory) return availableBehaviors;
-    return availableBehaviors.filter(b => b.category === selectedBehaviorCategory);
-  }, [availableBehaviors, selectedBehaviorCategory]);
+    let filteredBehaviors = behaviors;
+
+    if (selectedPet && pets.length > 0) {
+      const pet = pets.find(p => p.id === selectedPet);
+
+      if (pet && pet.species) {
+        filteredBehaviors = behaviors.filter(
+          behavior => behavior.species === pet.species || behavior.species === 'both'
+        );
+      }
+    }
+
+    if (selectedBehaviorCategory) {
+      filteredBehaviors = filteredBehaviors.filter(b => b.category === selectedBehaviorCategory);
+    }
+
+    return filteredBehaviors;
+  }, [behaviors, selectedPet, pets, selectedBehaviorCategory]);
 
   useEffect(() => {
     if (visible) {
-      // Load behaviors when modal opens
       dispatch(fetchBehaviors() as any);
+      dispatch(fetchPets() as any);
     }
   }, [visible, dispatch]);
 
-  useEffect(() => {
-    if (selectedPet && pets.length > 0) {
-      const pet = pets.find(p => p.id === selectedPet);
-      if (pet) {
-        // Filter behaviors by pet species
-        dispatch(filterBehaviorsBySpecies(pet.species as 'dog' | 'cat') as any);
-      }
-    }
-  }, [selectedPet, pets, dispatch]);
 
   const handleClose = () => {
     setSelectedPet(null);
@@ -96,24 +118,18 @@ const ModernActionModal: React.FC<ModernActionModalProps> = ({
     }
 
     try {
-      // Find all groups where the selected pet participates
       const relevantGroups: string[] = [];
 
-      // Check created groups
       groups.forEach(group => {
-        // For created groups, we need to check if there are any memberships for this pet
-        // Since the user is the creator, we assume they can add their pets to their own groups
         relevantGroups.push(group.id);
       });
 
-      // Check joined groups
       joinedGroups.forEach(({ membership }) => {
         if (membership.pet_ids.includes(selectedPet)) {
           relevantGroups.push(membership.group_id);
         }
       });
 
-      // Remove duplicates
       const uniqueGroups = [...new Set(relevantGroups)];
 
       if (uniqueGroups.length === 0) {
@@ -121,7 +137,6 @@ const ModernActionModal: React.FC<ModernActionModalProps> = ({
         return;
       }
 
-      // Create score events for all relevant groups
       const eventPromises = uniqueGroups.map(groupId => {
         const eventData = {
           pet_id: selectedPet,
@@ -149,29 +164,40 @@ const ModernActionModal: React.FC<ModernActionModalProps> = ({
   const renderPetSelector = () => (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>{t('points.selectPet')}</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <View style={styles.optionsList}>
-          {pets.map((pet) => (
-            <TouchableOpacity
-              key={pet.id}
-              style={[
-                styles.optionChip,
-                selectedPet === pet.id && styles.selectedChip,
-              ]}
-              onPress={() => setSelectedPet(pet.id)}
-            >
-              <Text
-                style={[
-                  styles.optionText,
-                  selectedPet === pet.id && styles.selectedText,
-                ]}
-              >
-                {pet.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
+      {isLoadingPets ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="small" color="#3b82f6" />
+          <Text style={styles.loadingText}>{t('common.loading', 'Chargement des animaux...')}</Text>
         </View>
-      </ScrollView>
+      ) : pets.length === 0 ? (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>{t('pets.noPets', 'Aucun animal trouvé')}</Text>
+        </View>
+      ) : (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={styles.optionsList}>
+            {pets.map((pet) => (
+              <TouchableOpacity
+                key={pet.id}
+                style={[
+                  styles.optionChip,
+                  selectedPet === pet.id && styles.selectedChip,
+                ]}
+                onPress={() => setSelectedPet(pet.id)}
+              >
+                <Text
+                  style={[
+                    styles.optionText,
+                    selectedPet === pet.id && styles.selectedText,
+                  ]}
+                >
+                  {pet.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+      )}
     </View>
   );
 
@@ -223,15 +249,19 @@ const ModernActionModal: React.FC<ModernActionModalProps> = ({
 
   const renderBehaviors = () => (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Comportements disponibles</Text>
-      {isLoadingBehaviors ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#3b82f6" />
-          <Text style={styles.loadingText}>Chargement...</Text>
-        </View>
-      ) : (
-        <View style={styles.behaviorsGrid}>
-          {categorizedBehaviors.map((behavior) => (
+      <Text style={styles.sectionTitle}>Comportements disponibles ({categorizedBehaviors.length})</Text>
+        {isLoadingBehaviors ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#3b82f6" />
+            <Text style={styles.loadingText}>Chargement...</Text>
+          </View>
+        ) : categorizedBehaviors.length === 0 ? (
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>Aucun comportement disponible pour cette espèce</Text>
+          </View>
+        ) : (
+          <View style={styles.behaviorsGrid}>
+            {categorizedBehaviors.map((behavior) => (
             <TouchableOpacity
               key={behavior.id}
               style={styles.behaviorCard}
@@ -240,9 +270,9 @@ const ModernActionModal: React.FC<ModernActionModalProps> = ({
             >
               <View style={styles.behaviorHeader}>
                 <Text style={styles.behaviorName}>{behavior.name}</Text>
-                <View style={styles.pointsBadge}>
+                <View style={[styles.pointsBadge, {backgroundColor: behavior.points > 0 ? theme.colors.status.success : theme.colors.status.error}]}>
                   <Award size={12} color="#f59e0b" />
-                  <Text style={styles.pointsText}>+{behavior.points}</Text>
+                  <Text style={[styles.pointsText, {color: theme.colors.reverse}]}>{behavior.points > 0 ? '+' + behavior.points : '' + behavior.points}</Text>
                 </View>
               </View>
               {behavior.description && (
@@ -253,7 +283,23 @@ const ModernActionModal: React.FC<ModernActionModalProps> = ({
             </TouchableOpacity>
           ))}
         </View>
-      )}
+        )}
+    </View>
+  );
+
+  const renderCommentInput = () => (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>{t('points.comment', 'Commentaire (optionnel)')}</Text>
+      <TextInput
+        style={[styles.commentInput, { borderColor: theme.colors.border, color: theme.colors.text.primary }]}
+        value={comment}
+        onChangeText={setComment}
+        placeholder={t('points.commentPlaceholder', 'Ajouter un commentaire...')}
+        placeholderTextColor={theme.colors.text.tertiary}
+        multiline
+        numberOfLines={3}
+        maxLength={200}
+      />
     </View>
   );
 
@@ -279,6 +325,7 @@ const ModernActionModal: React.FC<ModernActionModalProps> = ({
             <>
               {renderCategorySelector()}
               {renderBehaviors()}
+              {renderCommentInput()}
             </>
           )}
 
@@ -399,7 +446,6 @@ const styles = StyleSheet.create({
   pointsText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#d97706',
   },
   behaviorDescription: {
     fontSize: 14,
@@ -436,6 +482,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#6b7280',
     marginTop: 8,
+  },
+  commentInput: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+    backgroundColor: 'white',
+    textAlignVertical: 'top',
+    minHeight: 80,
   },
 });
 

@@ -5,6 +5,7 @@ import (
 	"pet-of-the-day/internal/community/application/queries"
 	"pet-of-the-day/internal/community/domain"
 	"pet-of-the-day/internal/community/infrastructure"
+	"pet-of-the-day/internal/community/infrastructure/ent"
 	"pet-of-the-day/internal/community/interfaces/http"
 	"pet-of-the-day/internal/shared/auth"
 	"pet-of-the-day/internal/shared/database"
@@ -42,10 +43,10 @@ type CommunityService struct {
 
 // NewCommunityService creates a new Community service with all dependencies
 func NewCommunityService(eventBus events.EventBus, jwtService auth.JWTService, repoFactory *database.RepositoryFactory) *CommunityService {
-	// Initialize repositories (using mocks temporarily until Ent repos are implemented)
-	groupRepo := infrastructure.NewMockGroupRepository()
-	membershipRepo := infrastructure.NewMockMembershipRepository()
-	invitationRepo := infrastructure.NewMockInvitationRepository()
+	// Initialize real Ent repositories
+	groupRepo := ent.NewEntGroupRepository(repoFactory.GetEntClient())
+	membershipRepo := ent.NewEntMembershipRepository(repoFactory.GetEntClient())
+	invitationRepo := ent.NewEntInvitationRepository(repoFactory.GetEntClient())
 
 	// Initialize validation services with real repositories (this fixes the auth issue)
 	petValidator := infrastructure.NewPetValidationAdapter(repoFactory.CreatePetRepository())
@@ -100,6 +101,75 @@ func NewCommunityService(eventBus events.EventBus, jwtService auth.JWTService, r
 		GetGroupMembersHandler:  getGroupMembersHandler,
 		HTTPHandlers:            httpHandlers,
 	}
+}
+
+// Repository access methods
+func (s *CommunityService) GetGroupRepository() domain.GroupRepository {
+	return s.GroupRepo
+}
+
+func (s *CommunityService) GetMembershipRepository() domain.MembershipRepository {
+	return s.MembershipRepo
+}
+
+func (s *CommunityService) GetInvitationRepository() domain.InvitationRepository {
+	return s.InvitationRepo
+}
+
+// Services access methods
+func (s *CommunityService) GetValidationService() *domain.CrossContextValidationService {
+	return s.ValidationService
+}
+
+// Command handlers access methods
+func (s *CommunityService) GetCreateGroupHandler() *commands.CreateGroupHandler {
+	return s.CreateGroupHandler
+}
+
+func (s *CommunityService) GetUpdateGroupHandler() *commands.UpdateGroupHandler {
+	return s.UpdateGroupHandler
+}
+
+func (s *CommunityService) GetDeleteGroupHandler() *commands.DeleteGroupHandler {
+	return s.DeleteGroupHandler
+}
+
+func (s *CommunityService) GetJoinGroupHandler() *commands.JoinGroupHandler {
+	return s.JoinGroupHandler
+}
+
+func (s *CommunityService) GetLeaveGroupHandler() *commands.LeaveGroupHandler {
+	return s.LeaveGroupHandler
+}
+
+func (s *CommunityService) GetInviteToGroupHandler() *commands.InviteToGroupHandler {
+	return s.InviteToGroupHandler
+}
+
+func (s *CommunityService) GetAcceptInvitationHandler() *commands.AcceptInvitationHandler {
+	return s.AcceptInvitationHandler
+}
+
+func (s *CommunityService) GetUpdatePetsHandler() *commands.UpdateMembershipPetsHandler {
+	return s.UpdatePetsHandler
+}
+
+// Query handlers access methods - fix method name conflicts
+func (s *CommunityService) GetGroupQueryHandler() *queries.GetGroupHandler {
+	return s.GetGroupHandler
+}
+
+func (s *CommunityService) GetUserGroupsQueryHandler() *queries.GetUserGroupsHandler {
+	return s.GetUserGroupsHandler
+}
+
+func (s *CommunityService) GetGroupMembersQueryHandler() *queries.GetGroupMembersHandler {
+	return s.GetGroupMembersHandler
+}
+
+// HTTP handlers access methods
+func (s *CommunityService) GetHTTPHandlers() *http.CommunityHandlers {
+	return s.HTTPHandlers
 }
 
 // SetupTestData configures test data for mock repositories

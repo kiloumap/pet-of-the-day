@@ -6,6 +6,7 @@ export interface Theme {
   colors: {
     primary: string;
     accent: string;
+    reverse: string;
     background: {
       primary: string;
       secondary: string;
@@ -35,6 +36,7 @@ export const createTheme = (colorScheme: ColorScheme): Theme => {
     colors: {
       primary: Colors.primary,
       accent: Colors.accent,
+      reverse: Colors.reverse,
       background: colorSet.background,
       text: colorSet.text,
       border: colorSet.border,

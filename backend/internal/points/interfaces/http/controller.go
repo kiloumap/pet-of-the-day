@@ -8,24 +8,34 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"pet-of-the-day/ent"
-	"pet-of-the-day/ent/behavior"
-	"pet-of-the-day/ent/group"
-	"pet-of-the-day/ent/membership"
-	"pet-of-the-day/ent/pet"
-	"pet-of-the-day/ent/scoreevent"
-	"pet-of-the-day/ent/user"
+	"pet-of-the-day/internal/points/application/commands"
+	"pet-of-the-day/internal/points/application/queries"
+	"pet-of-the-day/internal/points/domain"
 	"pet-of-the-day/internal/shared/auth"
 	sharederrors "pet-of-the-day/internal/shared/errors"
 )
 
 type Controller struct {
-	client *ent.Client
+	getBehaviorsHandler        *queries.GetBehaviorsHandler
+	createScoreEventHandler    *commands.CreateScoreEventHandler
+	deleteScoreEventHandler    *commands.DeleteScoreEventHandler
+	getPetScoreEventsHandler   *queries.GetPetScoreEventsHandler
+	getGroupLeaderboardHandler *queries.GetGroupLeaderboardHandler
 }
 
-func NewController(client *ent.Client) *Controller {
+func NewController(
+	getBehaviorsHandler *queries.GetBehaviorsHandler,
+	createScoreEventHandler *commands.CreateScoreEventHandler,
+	deleteScoreEventHandler *commands.DeleteScoreEventHandler,
+	getPetScoreEventsHandler *queries.GetPetScoreEventsHandler,
+	getGroupLeaderboardHandler *queries.GetGroupLeaderboardHandler,
+) *Controller {
 	return &Controller{
-		client: client,
+		getBehaviorsHandler:        getBehaviorsHandler,
+		createScoreEventHandler:    createScoreEventHandler,
+		deleteScoreEventHandler:    deleteScoreEventHandler,
+		getPetScoreEventsHandler:   getPetScoreEventsHandler,
+		getGroupLeaderboardHandler: getGroupLeaderboardHandler,
 	}
 }
 
@@ -34,18 +44,22 @@ func (c *Controller) GetBehaviors(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	species := r.URL.Query().Get("species")
 
-	query := c.client.Behavior.Query().Where(behavior.IsGlobal(true))
+	var behaviors []domain.Behavior
+	var err error
 
-	if species != "" && (species == "dog" || species == "cat") {
-		query = query.Where(behavior.Or(
-			behavior.SpeciesEQ(behavior.Species(species)),
-			behavior.SpeciesEQ(behavior.Species("both")),
-		))
+	if species != "" {
+		behaviors, err = c.getBehaviorsHandler.GetBySpecies(ctx, species)
+	} else {
+		behaviors, err = c.getBehaviorsHandler.GetAll(ctx)
 	}
 
-	behaviors, err := query.All(ctx)
 	if err != nil {
-		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInternalServer, "Failed to fetch behaviors", http.StatusInternalServerError)
+		_, ok := err.(*queries.InvalidSpeciesError)
+		if ok {
+			sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInvalidInput, err.Error(), http.StatusBadRequest)
+		} else {
+			sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInternalServer, "Failed to fetch behaviors", http.StatusInternalServerError)
+		}
 		return
 	}
 
@@ -123,94 +137,46 @@ func (c *Controller) CreateScoreEvent(w http.ResponseWriter, r *http.Request) {
 		actionDate = parsedDate
 	}
 
-	// Verify pet exists and user has access to it
-	petEntity, err := c.client.Pet.Query().
-		Where(pet.ID(petUUID)).
-		WithOwner().
-		WithCoOwners().
-		Only(ctx)
+	// Build request for domain layer
+	comment := ""
+	if req.Comment != nil {
+		comment = *req.Comment
+	}
+
+	createReq := domain.CreateScoreEventRequest{
+		PetID:      petUUID,
+		BehaviorID: behaviorUUID,
+		GroupID:    groupUUID,
+		UserID:     userUUID,
+		Comment:    comment,
+		ActionDate: actionDate,
+	}
+
+	// Create score event using application layer
+	scoreEvent, err := c.createScoreEventHandler.Handle(ctx, createReq)
 	if err != nil {
-		if ent.IsNotFound(err) {
-			sharederrors.WriteErrorResponse(w, sharederrors.ErrCodePetNotFound, "Pet not found", http.StatusNotFound)
-		} else {
-			sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInternalServer, "Failed to fetch pet", http.StatusInternalServerError)
+		// Handle different error types
+		switch e := err.(type) {
+		case *commands.AuthorizationError:
+			sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeUnauthorized, e.Error(), http.StatusForbidden)
+		case *commands.NotFoundError:
+			sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeValidationFailed, e.Error(), http.StatusNotFound)
+		default:
+			sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInternalServer, "Failed to create score event", http.StatusInternalServerError)
 		}
-		return
-	}
-
-	// Check if user is owner or co-owner
-	hasAccess := false
-	if petEntity.Edges.Owner != nil && petEntity.Edges.Owner.ID == userUUID {
-		hasAccess = true
-	}
-	if !hasAccess {
-		for _, coOwner := range petEntity.Edges.CoOwners {
-			if coOwner.ID == userUUID {
-				hasAccess = true
-				break
-			}
-		}
-	}
-	if !hasAccess {
-		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeUnauthorized, "You don't have permission to record actions for this pet", http.StatusForbidden)
-		return
-	}
-
-	// Verify behavior exists
-	behaviorEntity, err := c.client.Behavior.Get(ctx, behaviorUUID)
-	if err != nil {
-		if ent.IsNotFound(err) {
-			sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeValidationFailed, "Behavior not found", http.StatusNotFound)
-		} else {
-			sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInternalServer, "Failed to fetch behavior", http.StatusInternalServerError)
-		}
-		return
-	}
-
-	// Verify group exists and user is a member
-	_, err = c.client.Group.Query().
-		Where(group.ID(groupUUID)).
-		QueryMemberships().
-		Where(membership.HasUserWith(user.ID(userUUID))).
-		Only(ctx)
-	if err != nil {
-		if ent.IsNotFound(err) {
-			sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeUnauthorized, "You are not a member of this group", http.StatusForbidden)
-		} else {
-			sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInternalServer, "Failed to verify group membership", http.StatusInternalServerError)
-		}
-		return
-	}
-
-	// Create score event
-	scoreEventBuilder := c.client.ScoreEvent.Create().
-		SetPetID(petUUID).
-		SetBehaviorID(behaviorUUID).
-		SetGroupID(groupUUID).
-		SetRecordedByID(userUUID).
-		SetPoints(behaviorEntity.Points).
-		SetActionDate(actionDate)
-
-	if req.Comment != nil && *req.Comment != "" {
-		scoreEventBuilder = scoreEventBuilder.SetComment(*req.Comment)
-	}
-
-	scoreEvent, err := scoreEventBuilder.Save(ctx)
-	if err != nil {
-		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInternalServer, "Failed to create score event", http.StatusInternalServerError)
 		return
 	}
 
 	response := map[string]interface{}{
 		"id":          scoreEvent.ID.String(),
-		"pet_id":      petUUID.String(),
-		"behavior_id": behaviorUUID.String(),
+		"pet_id":      scoreEvent.PetID.String(),
+		"behavior_id": scoreEvent.BehaviorID.String(),
 		"group_id":    scoreEvent.GroupID.String(),
 		"points":      scoreEvent.Points,
 		"comment":     scoreEvent.Comment,
 		"recorded_at": scoreEvent.RecordedAt.Format(time.RFC3339),
 		"action_date": scoreEvent.ActionDate.Format("2006-01-02"),
-		"recorded_by": userUUID.String(),
+		"recorded_by": scoreEvent.RecordedByID.String(),
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -260,71 +226,33 @@ func (c *Controller) GetPetScoreEvents(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Get score events
-	events, err := c.client.ScoreEvent.Query().
-		Where(
-			scoreevent.HasPetWith(pet.ID(petUUID)),
-			scoreevent.GroupID(groupUUID),
-		).
-		WithBehavior().
-		Order(ent.Desc(scoreevent.FieldActionDate), ent.Desc(scoreevent.FieldRecordedAt)).
-		Limit(limit).
-		All(ctx)
+	// Use application layer to get pet score events
+	result, err := c.getPetScoreEventsHandler.Handle(ctx, petUUID, groupUUID, limit)
 	if err != nil {
 		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInternalServer, "Failed to fetch score events", http.StatusInternalServerError)
 		return
 	}
 
-	// Calculate total points for this pet in this group
-	totalPoints, err := c.client.ScoreEvent.Query().
-		Where(
-			scoreevent.HasPetWith(pet.ID(petUUID)),
-			scoreevent.GroupID(groupUUID),
-		).
-		Aggregate(ent.Sum(scoreevent.FieldPoints)).
-		Int(ctx)
-	if err != nil {
-		totalPoints = 0 // if no events found
-	}
-
 	// Format events for response
 	var formattedEvents []map[string]interface{}
-	for _, event := range events {
+	for _, event := range result.Events {
 		formattedEvent := map[string]interface{}{
 			"id":          event.ID.String(),
+			"pet_id":      event.PetID.String(),
+			"behavior_id": event.BehaviorID.String(),
 			"group_id":    event.GroupID.String(),
 			"points":      event.Points,
 			"comment":     event.Comment,
 			"recorded_at": event.RecordedAt.Format(time.RFC3339),
 			"action_date": event.ActionDate.Format("2006-01-02"),
+			"recorded_by": event.RecordedByID.String(),
 		}
-
-		if event.Edges.Pet != nil {
-			formattedEvent["pet_id"] = event.Edges.Pet.ID.String()
-		}
-		if event.Edges.Behavior != nil {
-			formattedEvent["behavior_id"] = event.Edges.Behavior.ID.String()
-		}
-		if event.Edges.RecordedBy != nil {
-			formattedEvent["recorded_by"] = event.Edges.RecordedBy.ID.String()
-		}
-
-		if event.Edges.Behavior != nil {
-			formattedEvent["behavior"] = map[string]interface{}{
-				"id":          event.Edges.Behavior.ID.String(),
-				"name":        event.Edges.Behavior.Name,
-				"description": event.Edges.Behavior.Description,
-				"category":    event.Edges.Behavior.Category,
-				"points":      event.Edges.Behavior.Points,
-			}
-		}
-
 		formattedEvents = append(formattedEvents, formattedEvent)
 	}
 
 	response := map[string]interface{}{
 		"events":       formattedEvents,
-		"total_points": totalPoints,
+		"total_points": result.TotalPoints,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -358,116 +286,42 @@ func (c *Controller) GetGroupLeaderboard(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// Calculate date range based on period
-	now := time.Now()
-	var startDate, endDate time.Time
-
-	switch period {
-	case "daily":
-		startDate = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-		endDate = startDate.Add(24 * time.Hour)
-	case "weekly":
-		// Start of week (Monday)
-		weekday := int(now.Weekday())
-		if weekday == 0 {
-			weekday = 7 // Sunday = 7
-		}
-		startDate = now.AddDate(0, 0, -(weekday-1))
-		startDate = time.Date(startDate.Year(), startDate.Month(), startDate.Day(), 0, 0, 0, 0, startDate.Location())
-		endDate = startDate.Add(7 * 24 * time.Hour)
-	default:
-		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInvalidInput, "Invalid period (daily or weekly)", http.StatusBadRequest)
-		return
+	// Build request for domain layer
+	req := domain.LeaderboardRequest{
+		GroupID: groupUUID,
+		Period:  domain.Period(period),
 	}
 
-	// Query to get leaderboard data
-	type LeaderboardResult struct {
-		PetID       uuid.UUID `json:"pet_id"`
-		PetName     string    `json:"pet_name"`
-		Species     string    `json:"species"`
-		OwnerName   string    `json:"owner_name"`
-		TotalPoints int       `json:"total_points"`
-		ActionCount int       `json:"actions_count"`
-	}
-
-	// This is a complex query, we'll need to do it in steps
-	// First, get all pets in the group and their score events in the period
-	events, err := c.client.ScoreEvent.Query().
-		Where(
-			scoreevent.GroupID(groupUUID),
-			scoreevent.ActionDateGTE(startDate),
-			scoreevent.ActionDateLT(endDate),
-		).
-		WithPet(func(pq *ent.PetQuery) {
-			pq.WithOwner()
-		}).
-		All(ctx)
+	// Use application layer to get leaderboard
+	result, err := c.getGroupLeaderboardHandler.Handle(ctx, req)
 	if err != nil {
-		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInternalServer, "Failed to fetch leaderboard data", http.StatusInternalServerError)
+		if err.Error() == "invalid period: "+period {
+			sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInvalidInput, "Invalid period (daily or weekly)", http.StatusBadRequest)
+		} else {
+			sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInternalServer, "Failed to fetch leaderboard data", http.StatusInternalServerError)
+		}
 		return
 	}
 
-	// Aggregate by pet
-	petStats := make(map[uuid.UUID]LeaderboardResult)
-	for _, event := range events {
-		if event.Edges.Pet == nil {
-			continue
-		}
-
-		petID := event.Edges.Pet.ID
-		if stats, exists := petStats[petID]; exists {
-			stats.TotalPoints += event.Points
-			stats.ActionCount++
-			petStats[petID] = stats
-		} else {
-			ownerName := "Unknown"
-			if event.Edges.Pet.Edges.Owner != nil {
-				ownerName = event.Edges.Pet.Edges.Owner.FirstName + " " + event.Edges.Pet.Edges.Owner.LastName
-			}
-
-			petStats[petID] = LeaderboardResult{
-				PetID:       petID,
-				PetName:     event.Edges.Pet.Name,
-				Species:     event.Edges.Pet.Species,
-				OwnerName:   ownerName,
-				TotalPoints: event.Points,
-				ActionCount: 1,
-			}
-		}
-	}
-
-	// Convert to slice and sort by points (descending)
+	// Convert to response format
 	var leaderboard []map[string]interface{}
-	for _, stats := range petStats {
+	for _, entry := range result.Leaderboard {
 		leaderboard = append(leaderboard, map[string]interface{}{
-			"pet_id":       stats.PetID.String(),
-			"pet_name":     stats.PetName,
-			"species":      stats.Species,
-			"owner_name":   stats.OwnerName,
-			"total_points": stats.TotalPoints,
-			"actions_count": stats.ActionCount,
+			"pet_id":        entry.PetID.String(),
+			"pet_name":      entry.PetName,
+			"species":       entry.Species,
+			"owner_name":    entry.OwnerName,
+			"total_points":  entry.TotalPoints,
+			"actions_count": entry.ActionCount,
+			"rank":          entry.Rank,
 		})
-	}
-
-	// Sort by total points (descending)
-	for i := 0; i < len(leaderboard); i++ {
-		for j := i + 1; j < len(leaderboard); j++ {
-			if leaderboard[j]["total_points"].(int) > leaderboard[i]["total_points"].(int) {
-				leaderboard[i], leaderboard[j] = leaderboard[j], leaderboard[i]
-			}
-		}
-	}
-
-	// Add rank
-	for i, entry := range leaderboard {
-		entry["rank"] = i + 1
 	}
 
 	response := map[string]interface{}{
 		"daily":        leaderboard,
 		"weekly":       leaderboard, // Same data for now, could be different queries
-		"period_start": startDate.Format("2006-01-02"),
-		"period_end":   endDate.Format("2006-01-02"),
+		"period_start": result.PeriodStart,
+		"period_end":   result.PeriodEnd,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -497,30 +351,18 @@ func (c *Controller) DeleteScoreEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify event exists and user has permission to delete it
-	event, err := c.client.ScoreEvent.Query().
-		Where(scoreevent.ID(eventUUID)).
-		WithRecordedBy().
-		Only(ctx)
+	// Use application layer to delete score event
+	err = c.deleteScoreEventHandler.Handle(ctx, userUUID, eventUUID)
 	if err != nil {
-		if ent.IsNotFound(err) {
-			sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeValidationFailed, "Score event not found", http.StatusNotFound)
-		} else {
-			sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInternalServer, "Failed to fetch score event", http.StatusInternalServerError)
+		// Handle different error types
+		switch e := err.(type) {
+		case *commands.AuthorizationError:
+			sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeUnauthorized, e.Error(), http.StatusForbidden)
+		case *commands.NotFoundError:
+			sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeValidationFailed, e.Error(), http.StatusNotFound)
+		default:
+			sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInternalServer, "Failed to delete score event", http.StatusInternalServerError)
 		}
-		return
-	}
-
-	// Only the user who recorded the event can delete it
-	if event.Edges.RecordedBy.ID != userUUID {
-		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeUnauthorized, "You can only delete your own score events", http.StatusForbidden)
-		return
-	}
-
-	// Delete the event
-	err = c.client.ScoreEvent.DeleteOne(event).Exec(ctx)
-	if err != nil {
-		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInternalServer, "Failed to delete score event", http.StatusInternalServerError)
 		return
 	}
 

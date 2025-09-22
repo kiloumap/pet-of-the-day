@@ -6,7 +6,6 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/theme';

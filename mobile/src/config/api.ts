@@ -41,15 +41,7 @@ const getApiUrl = (): string => {
 
 const apiUrl = getApiUrl();
 
-// Debug logging in development
-if (__DEV__) {
-  console.log(`🌐 API Configuration:
-  Platform: ${Platform.OS}
-  URL: ${apiUrl}
-  Expo expoConfig.hostUri: ${Constants.expoConfig?.hostUri || 'not available'}
-  Expo debuggerHost: ${Constants.manifest?.debuggerHost || 'not available'}
-  `);
-}
+// API configuration ready
 
 export const API_CONFIG = {
   BASE_URL: apiUrl,

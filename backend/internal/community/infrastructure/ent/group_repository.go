@@ -3,6 +3,8 @@ package ent
 import (
 	"context"
 	"pet-of-the-day/ent"
+	"pet-of-the-day/ent/group"
+	"pet-of-the-day/ent/user"
 	"pet-of-the-day/internal/community/domain"
 
 	"github.com/google/uuid"
@@ -19,36 +21,124 @@ func NewEntGroupRepository(client *ent.Client) *EntGroupRepository {
 	}
 }
 
-func (r *EntGroupRepository) Save(ctx context.Context, group *domain.Group) error {
-	// TODO: Implement with Ent once we update the schema
-	// This would typically:
-	// 1. Check if group exists (by ID)
-	// 2. If exists, update; if not, create
-	// 3. Map domain entity to Ent entity
-	// 4. Save to database
-	panic("not implemented - requires Ent schema update")
+func (r *EntGroupRepository) Save(ctx context.Context, domainGroup *domain.Group) error {
+	// Check if group exists
+	exists, err := r.client.Group.Query().Where(
+		group.IDEQ(domainGroup.ID()),
+	).Exist(ctx)
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		// Update existing group
+		return r.client.Group.UpdateOneID(domainGroup.ID()).
+			SetName(domainGroup.Name()).
+			SetDescription(domainGroup.Description()).
+			SetPrivacy(group.Privacy(domainGroup.Privacy())).
+			SetUpdatedAt(domainGroup.UpdatedAt()).
+			Exec(ctx)
+	} else {
+		// Create new group
+		_, err := r.client.Group.Create().
+			SetID(domainGroup.ID()).
+			SetName(domainGroup.Name()).
+			SetDescription(domainGroup.Description()).
+			SetPrivacy(group.Privacy(domainGroup.Privacy())).
+			SetCreatorID(domainGroup.CreatorID()).
+			SetCreatedAt(domainGroup.CreatedAt()).
+			SetUpdatedAt(domainGroup.UpdatedAt()).
+			Save(ctx)
+		return err
+	}
 }
 
 func (r *EntGroupRepository) FindByID(ctx context.Context, id uuid.UUID) (*domain.Group, error) {
-	// TODO: Implement with Ent
-	// 1. Query database by ID
-	// 2. Map Ent entity to domain entity using ReconstructGroup
-	panic("not implemented - requires Ent schema update")
+	entGroup, err := r.client.Group.Query().
+		Where(group.IDEQ(id)).
+		WithCreator().
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, domain.ErrGroupNotFound
+		}
+		return nil, err
+	}
+
+	// Map Ent entity to domain entity
+	privacy := domain.GroupPrivacy(entGroup.Privacy.String())
+
+	domainGroup := domain.ReconstructGroup(
+		entGroup.ID,
+		entGroup.Name,
+		entGroup.Description,
+		privacy,
+		entGroup.Edges.Creator.ID,
+		entGroup.CreatedAt,
+		entGroup.UpdatedAt,
+	)
+
+	return domainGroup, nil
 }
 
 func (r *EntGroupRepository) FindByCreatorID(ctx context.Context, creatorID uuid.UUID) ([]*domain.Group, error) {
-	// TODO: Implement with Ent
-	panic("not implemented - requires Ent schema update")
+	entGroups, err := r.client.Group.Query().
+		Where(group.HasCreatorWith(user.IDEQ(creatorID))).
+		WithCreator().
+		All(ctx)
+
+	var domainGroups []*domain.Group
+	for _, entGroup := range entGroups {
+		privacy := domain.GroupPrivacy(entGroup.Privacy.String())
+		if err != nil {
+			return nil, err
+		}
+
+		domainGroup := domain.ReconstructGroup(
+			entGroup.ID,
+			entGroup.Name,
+			entGroup.Description,
+			privacy,
+			entGroup.Edges.Creator.ID,
+			entGroup.CreatedAt,
+			entGroup.UpdatedAt,
+		)
+		domainGroups = append(domainGroups, domainGroup)
+	}
+
+	return domainGroups, nil
 }
 
 func (r *EntGroupRepository) FindByName(ctx context.Context, name string) (*domain.Group, error) {
-	// TODO: Implement with Ent
-	panic("not implemented - requires Ent schema update")
+	entGroup, err := r.client.Group.Query().
+		Where(group.NameEQ(name)).
+		WithCreator().
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, domain.ErrGroupNotFound
+		}
+		return nil, err
+	}
+
+	// Map Ent entity to domain entity
+	privacy := domain.GroupPrivacy(entGroup.Privacy.String())
+
+	domainGroup := domain.ReconstructGroup(
+		entGroup.ID,
+		entGroup.Name,
+		entGroup.Description,
+		privacy,
+		entGroup.Edges.Creator.ID,
+		entGroup.CreatedAt,
+		entGroup.UpdatedAt,
+	)
+
+	return domainGroup, nil
 }
 
 func (r *EntGroupRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	// TODO: Implement with Ent
-	panic("not implemented - requires Ent schema update")
+	return r.client.Group.DeleteOneID(id).Exec(ctx)
 }
 
 // MockGroupRepository provides in-memory implementation for testing

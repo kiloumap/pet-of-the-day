@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { useTheme } from '../../theme/ThemeContext';
+import { useTheme } from '@/theme';
 import { AlertCircle } from 'lucide-react-native';
 
 interface ErrorMessageProps {
@@ -22,8 +22,8 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = ({
     container: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: theme.colors.error + '10',
-      borderColor: theme.colors.error,
+      backgroundColor: theme.colors.status.error + '10',
+      borderColor: theme.colors.status.error,
       borderWidth: 1,
       borderRadius: 8,
       padding: 12,
@@ -33,7 +33,7 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = ({
       marginRight: 8,
     },
     text: {
-      color: theme.colors.error,
+      color: theme.colors.status.error,
       fontSize: 14,
       flex: 1,
       fontWeight: '500',
@@ -44,7 +44,7 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = ({
     <View style={styles.container}>
       <AlertCircle
         size={16}
-        color={theme.colors.error}
+        color={theme.colors.status.error}
         style={styles.icon}
       />
       <Text style={styles.text}>{message}</Text>

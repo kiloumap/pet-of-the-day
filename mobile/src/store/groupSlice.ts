@@ -14,7 +14,6 @@ import {
 } from '../types/api';
 
 interface GroupState {
-  // Groups data
   groups: Group[];
   createdGroups: Group[];
   joinedGroups: { group: Group; membership: Membership }[];
@@ -22,7 +21,6 @@ interface GroupState {
   currentGroupMembers: Membership[];
   currentGroupInvitations: Invitation[];
 
-  // Loading states
   isLoading: boolean;
   isCreating: boolean;
   isJoining: boolean;
@@ -30,10 +28,8 @@ interface GroupState {
   isInviting: boolean;
   isUpdatingPets: boolean;
 
-  // Error states
   error: ApiError | null;
 
-  // UI states
   isCreator: boolean;
   userMembership: Membership | null;
 }
@@ -56,7 +52,6 @@ const initialState: GroupState = {
   userMembership: null,
 };
 
-// Async thunks
 export const fetchUserGroups = createAsyncThunk(
   'groups/fetchUserGroups',
   async (userId: string, { rejectWithValue }) => {
@@ -103,6 +98,7 @@ export const fetchGroupMembers = createAsyncThunk(
       const response = await apiService.getGroupMembers(groupId);
       return response;
     } catch (error) {
+      console.error('❌ Error fetching group members:', error);
       const apiError = error as ApiError;
       return rejectWithValue(apiError);
     }
@@ -217,7 +213,6 @@ const groupSlice = createSlice({
     resetGroupState: () => initialState,
   },
   extraReducers: (builder) => {
-    // Fetch user groups
     builder
       .addCase(fetchUserGroups.pending, (state) => {
         state.isLoading = true;
@@ -238,7 +233,6 @@ const groupSlice = createSlice({
         state.error = action.payload as ApiError;
       });
 
-    // Create group
     builder
       .addCase(createGroup.pending, (state) => {
         state.isCreating = true;
@@ -256,6 +250,20 @@ const groupSlice = createSlice({
         };
         state.createdGroups.push(newGroup);
         state.groups.push(newGroup);
+
+        // Creator automatically becomes a member
+        if (action.payload.membership) {
+          const membership: Membership = {
+            id: action.payload.membership.id,
+            group_id: action.payload.membership.group_id,
+            user_id: action.payload.membership.user_id,
+            pet_ids: action.payload.membership.pet_ids,
+            status: action.payload.membership.status,
+            joined_at: action.payload.membership.created_at,
+          };
+          state.joinedGroups.push({ group: newGroup, membership });
+        }
+
         state.error = null;
       })
       .addCase(createGroup.rejected, (state, action) => {
@@ -263,7 +271,6 @@ const groupSlice = createSlice({
         state.error = action.payload as ApiError;
       });
 
-    // Fetch group
     builder
       .addCase(fetchGroup.pending, (state) => {
         state.isLoading = true;
@@ -281,7 +288,6 @@ const groupSlice = createSlice({
         state.error = action.payload as ApiError;
       });
 
-    // Fetch group members
     builder
       .addCase(fetchGroupMembers.pending, (state) => {
         state.isLoading = true;
@@ -298,7 +304,6 @@ const groupSlice = createSlice({
         state.error = action.payload as ApiError;
       });
 
-    // Join group
     builder
       .addCase(joinGroup.pending, (state) => {
         state.isJoining = true;
@@ -321,7 +326,6 @@ const groupSlice = createSlice({
         state.error = action.payload as ApiError;
       });
 
-    // Leave group
     builder
       .addCase(leaveGroup.pending, (state) => {
         state.isLeaving = true;
@@ -330,11 +334,9 @@ const groupSlice = createSlice({
       .addCase(leaveGroup.fulfilled, (state, action) => {
         state.isLeaving = false;
         state.userMembership = null;
-        // Remove from joined groups
         state.joinedGroups = state.joinedGroups.filter(
           jg => jg.group.id !== action.payload
         );
-        // Remove from groups list
         state.groups = state.groups.filter(
           group => group.id !== action.payload ||
           state.createdGroups.some(cg => cg.id === group.id)
@@ -346,7 +348,6 @@ const groupSlice = createSlice({
         state.error = action.payload as ApiError;
       });
 
-    // Invite to group
     builder
       .addCase(inviteToGroup.pending, (state) => {
         state.isInviting = true;
@@ -354,7 +355,6 @@ const groupSlice = createSlice({
       })
       .addCase(inviteToGroup.fulfilled, (state, action) => {
         state.isInviting = false;
-        // Add invitation to current group invitations if we're viewing the group
         if (state.currentGroup && state.currentGroup.id === action.payload.group_id) {
           const newInvitation: Invitation = {
             id: action.payload.id,
@@ -374,7 +374,6 @@ const groupSlice = createSlice({
         state.error = action.payload as ApiError;
       });
 
-    // Accept invitation
     builder
       .addCase(acceptInvitation.pending, (state) => {
         state.isJoining = true;
@@ -397,7 +396,6 @@ const groupSlice = createSlice({
         state.error = action.payload as ApiError;
       });
 
-    // Update group
     builder
       .addCase(updateGroup.pending, (state) => {
         state.isLoading = true;
@@ -405,7 +403,6 @@ const groupSlice = createSlice({
       })
       .addCase(updateGroup.fulfilled, (state, action) => {
         state.isLoading = false;
-        // Update current group if it matches
         if (state.currentGroup && state.currentGroup.id === action.payload.id) {
           state.currentGroup = {
             ...state.currentGroup,
@@ -414,7 +411,6 @@ const groupSlice = createSlice({
             privacy: action.payload.privacy,
           };
         }
-        // Update in created groups
         const createdIndex = state.createdGroups.findIndex(g => g.id === action.payload.id);
         if (createdIndex !== -1) {
           state.createdGroups[createdIndex] = {
@@ -424,7 +420,6 @@ const groupSlice = createSlice({
             privacy: action.payload.privacy,
           };
         }
-        // Update in joined groups
         const joinedIndex = state.joinedGroups.findIndex(jg => jg.group.id === action.payload.id);
         if (joinedIndex !== -1) {
           state.joinedGroups[joinedIndex].group = {
@@ -441,7 +436,6 @@ const groupSlice = createSlice({
         state.error = action.payload as ApiError;
       });
 
-    // Delete group
     builder
       .addCase(deleteGroup.pending, (state) => {
         state.isLoading = true;
@@ -450,11 +444,8 @@ const groupSlice = createSlice({
       .addCase(deleteGroup.fulfilled, (state, action) => {
         state.isLoading = false;
         const groupId = action.payload;
-        // Remove from created groups
         state.createdGroups = state.createdGroups.filter(g => g.id !== groupId);
-        // Remove from joined groups
         state.joinedGroups = state.joinedGroups.filter(jg => jg.group.id !== groupId);
-        // Clear current group if it matches
         if (state.currentGroup && state.currentGroup.id === groupId) {
           state.currentGroup = null;
           state.currentGroupMembers = [];
@@ -469,7 +460,6 @@ const groupSlice = createSlice({
         state.error = action.payload as ApiError;
       });
 
-    // Update membership pets
     builder
       .addCase(updateMembershipPets.pending, (state) => {
         state.isUpdatingPets = true;
@@ -477,11 +467,9 @@ const groupSlice = createSlice({
       })
       .addCase(updateMembershipPets.fulfilled, (state, action) => {
         state.isUpdatingPets = false;
-        // Update user membership pet_ids
         if (state.userMembership) {
           state.userMembership.pet_ids = action.payload.pet_ids;
         }
-        // Update in current group members if applicable
         const memberIndex = state.currentGroupMembers.findIndex(
           member => member.user_id === state.userMembership?.user_id
         );

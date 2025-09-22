@@ -362,7 +362,7 @@ const GroupDetailScreen = () => {
       borderRadius: 12,
     },
     adminText: {
-      color: theme.colors.text.inverse,
+      color: theme.colors.reverse,
       fontSize: 12,
       fontWeight: '600',
     },
@@ -411,7 +411,7 @@ const GroupDetailScreen = () => {
       borderRadius: 20,
     },
     saveButtonText: {
-      color: theme.colors.text.inverse,
+      color: theme.colors.reverse,
       fontSize: 14,
       fontWeight: '600',
     },
@@ -489,14 +489,14 @@ const GroupDetailScreen = () => {
       textAlign: 'center',
     },
     leaveButton: {
-      backgroundColor: theme.colors.error,
+      backgroundColor: theme.colors.status.error,
       borderRadius: 8,
       paddingVertical: 16,
       alignItems: 'center',
       marginTop: 16,
     },
     leaveButtonText: {
-      color: theme.colors.text.inverse,
+      color: theme.colors.reverse,
       fontSize: 16,
       fontWeight: '600',
     },

@@ -96,7 +96,7 @@ const GroupsScreen = () => {
     },
     actionButton: {
       flex: 1,
-      backgroundColor: theme.colors.primary,
+      backgroundColor: theme.colors.accent,
       paddingVertical: 12,
       paddingHorizontal: 16,
       borderRadius: 8,
@@ -106,17 +106,17 @@ const GroupsScreen = () => {
       gap: 8,
     },
     actionButtonSecondary: {
-      backgroundColor: theme.colors.background.secondary,
+      backgroundColor: theme.colors.primary,
       borderWidth: 1,
       borderColor: theme.colors.border,
     },
     actionButtonText: {
-      color: theme.colors.text.inverse,
+      color: theme.colors.reverse,
       fontWeight: '600',
       fontSize: 16,
     },
     actionButtonTextSecondary: {
-      color: theme.colors.text.primary,
+      color: theme.colors.reverse,
     },
     section: {
       marginBottom: 24,
@@ -196,13 +196,13 @@ const GroupsScreen = () => {
       lineHeight: 20,
     },
     errorContainer: {
-      backgroundColor: theme.colors.error,
+      backgroundColor: theme.colors.status.error,
       padding: 12,
       borderRadius: 8,
       marginBottom: 16,
     },
     errorText: {
-      color: theme.colors.text.inverse,
+      color: theme.colors.text.secondary,
       textAlign: 'center',
       fontSize: 14,
     },
@@ -238,7 +238,7 @@ const GroupsScreen = () => {
               style={styles.actionButton}
               onPress={handleCreateGroup}
             >
-              <MaterialIcons name="add" size={20} color={theme.colors.text.inverse} />
+              <MaterialIcons name="add" size={20} color={theme.colors.reverse} />
               <Text style={styles.actionButtonText}>
                 {t('groups.createGroup')}
               </Text>
@@ -248,7 +248,7 @@ const GroupsScreen = () => {
               style={[styles.actionButton, styles.actionButtonSecondary]}
               onPress={handleJoinGroup}
             >
-              <MaterialIcons name="group-add" size={20} color={theme.colors.text.primary} />
+              <MaterialIcons name="group-add" size={20} color={theme.colors.reverse} />
               <Text style={[styles.actionButtonText, styles.actionButtonTextSecondary]}>
                 {t('groups.joinGroup')}
               </Text>

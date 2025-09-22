@@ -58,7 +58,6 @@ class ApiService {
       if (tokens?.accessToken) {
         config.headers.Authorization = `Bearer ${tokens.accessToken}`;
         if (__DEV__) {
-          console.log('🔑 Adding auth token to request:', config.url);
         }
       } else {
         if (__DEV__) {
@@ -153,7 +152,8 @@ class ApiService {
   private async getStoredTokens(): Promise<AuthTokens | null> {
     try {
       const tokens = await AsyncStorage.getItem(TOKEN_STORAGE_KEY);
-      return tokens ? JSON.parse(tokens) : null;
+      const parsed = tokens ? JSON.parse(tokens) : null;
+      return parsed;
     } catch (error) {
       console.warn('Failed to get stored tokens:', error);
       return null;
@@ -323,8 +323,24 @@ class ApiService {
   // Points system methods
   async getBehaviors(species?: 'dog' | 'cat'): Promise<GetBehaviorsResponse> {
     const params = species ? { species } : {};
-    const response: AxiosResponse<GetBehaviorsResponse> = await this.client.get('/api/behaviors', { params });
-    return response.data;
+    const response: AxiosResponse<any> = await this.client.get('/api/behaviors', { params });
+
+    // Map Go API response (PascalCase) to TypeScript interface (snake_case)
+    const mappedBehaviors = response.data.behaviors.map((behavior: any) => ({
+      id: behavior.ID,
+      name: behavior.Name,
+      description: behavior.Description,
+      points: behavior.Points,
+      category: behavior.Category,
+      species: behavior.Species,
+      icon: behavior.Icon,
+      is_global: behavior.IsGlobal,
+      created_at: behavior.CreatedAt || new Date().toISOString(),
+    }));
+
+    return {
+      behaviors: mappedBehaviors,
+    };
   }
 
   async createScoreEvent(data: CreateScoreEventRequest): Promise<CreateScoreEventResponse> {

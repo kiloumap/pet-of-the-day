@@ -169,7 +169,7 @@ const LeaderboardScreen = () => {
       color: theme.colors.text.primary,
     },
     periodButtonTextActive: {
-      color: theme.colors.text.inverse,
+      color: theme.colors.reverse,
     },
     periodInfo: {
       alignItems: 'center',
@@ -342,7 +342,7 @@ const LeaderboardScreen = () => {
       gap: 8,
     },
     addActionButtonText: {
-      color: theme.colors.text.inverse,
+      color: theme.colors.reverse,
       fontSize: 16,
       fontWeight: '600',
     },
@@ -454,7 +454,7 @@ const LeaderboardScreen = () => {
             <Text style={styles.emptyTitle}>{t('points.noActions')}</Text>
             <Text style={styles.emptySubtitle}>{t('points.noActionsSubtitle')}</Text>
             <TouchableOpacity style={styles.addActionButton} onPress={handleAddAction}>
-              <MaterialIcons name="add" size={20} color={theme.colors.text.inverse} />
+              <MaterialIcons name="add" size={20} color={theme.colors.reverse} />
               <Text style={styles.addActionButtonText}>{t('points.addAction')}</Text>
             </TouchableOpacity>
           </View>
@@ -552,7 +552,7 @@ const LeaderboardScreen = () => {
                       <Text style={styles.petName}>{entry.pet_name}</Text>
                       <Text style={styles.petOwner}>{entry.owner_name}</Text>
                       <Text style={styles.petSpecies}>
-                        {getLocalizedSpecies(entry.species)}
+                        {getLocalizedSpecies(entry.species, t)}
                       </Text>
                     </View>
 
@@ -574,7 +574,7 @@ const LeaderboardScreen = () => {
 
       {currentLeaderboard.length > 0 && (
         <TouchableOpacity style={styles.fabButton} onPress={handleAddAction}>
-          <MaterialIcons name="add" size={24} color={theme.colors.text.inverse} />
+          <MaterialIcons name="add" size={24} color={theme.colors.reverse} />
         </TouchableOpacity>
       )}
     </SafeAreaView>

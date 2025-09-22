@@ -15,7 +15,6 @@ export const useBadgeProgress = () => {
     const earnedBadges = useSelector(selectEarnedBadges);
 
     useEffect(() => {
-        // Calculer la progression pour tous les pets
         const badgeEngine = new BadgeEngine(earnedBadges, dailyActions);
         const allProgress: any[] = [];
 
@@ -24,12 +23,10 @@ export const useBadgeProgress = () => {
             allProgress.push(...petProgress);
         });
 
-        // Mettre à jour le store avec les nouveaux progrès
         dispatch(updateBadgeProgress(allProgress));
     }, [pets, dailyActions, earnedBadges, dispatch]);
 
     return {
-        // Hook peut retourner des utilitaires si nécessaire
         refreshProgress: () => {
             const badgeEngine = new BadgeEngine(earnedBadges, dailyActions);
             const allProgress: any[] = [];
