@@ -1,0 +1,525 @@
+openapi: 3.0.3
+info:
+  title: Pet Notebook API
+  version: 1.0.0
+  description: API for managing pet notebooks and entries
+
+paths:
+  /api/pets/{petId}/notebook:
+    get:
+      summary: Get pet notebook with all entries
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: entry_type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [medical, diet, habits, commands]
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        '200':
+          description: Pet notebook data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/NotebookResponse'
+        '404':
+          description: Pet not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not authorized to view this pet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/pets/{petId}/notebook/entries:
+    post:
+      summary: Add new notebook entry
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotebookEntryInput'
+      responses:
+        '201':
+          description: Notebook entry created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/NotebookEntry'
+        '400':
+          description: Invalid input data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not authorized to modify this pet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/pets/{petId}/notebook/entries/{entryId}:
+    put:
+      summary: Update notebook entry
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: entryId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotebookEntryInput'
+      responses:
+        '200':
+          description: Notebook entry updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/NotebookEntry'
+        '404':
+          description: Entry not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not authorized to modify this entry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete notebook entry
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: entryId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Notebook entry deleted
+        '404':
+          description: Entry not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not authorized to delete this entry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/pets/{petId}/notebook/share:
+    get:
+      summary: Get current sharing permissions for notebook
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Sharing permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/NotebookShare'
+        '403':
+          description: Only pet owners can view sharing permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Grant notebook access to a user
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_email:
+                  type: string
+                  format: email
+                permission_level:
+                  type: string
+                  enum: [read_only]
+                  default: read_only
+              required:
+                - user_email
+      responses:
+        '201':
+          description: Access granted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/NotebookShare'
+        '400':
+          description: Invalid user email or already shared
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Only pet owners can grant access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/pets/{petId}/notebook/share/{userId}:
+    delete:
+      summary: Revoke notebook access from a user
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Access revoked
+        '404':
+          description: Share not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Only pet owners can revoke access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/users/shared-notebooks:
+    get:
+      summary: Get notebooks shared with current user
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 20
+            default: 10
+      responses:
+        '200':
+          description: Shared notebooks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SharedNotebookInfo'
+                  pagination:
+                    $ref: '#/components/schemas/PaginationInfo'
+
+components:
+  schemas:
+    NotebookResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        pet_id:
+          type: string
+          format: uuid
+        pet_name:
+          type: string
+        entry_count:
+          type: integer
+        last_entry_date:
+          type: string
+          format: date-time
+          nullable: true
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotebookEntry'
+        pagination:
+          $ref: '#/components/schemas/PaginationInfo'
+        can_edit:
+          type: boolean
+          description: Whether current user can add/edit entries
+        can_share:
+          type: boolean
+          description: Whether current user can manage sharing
+
+    NotebookEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        entry_type:
+          type: string
+          enum: [medical, diet, habits, commands]
+        title:
+          type: string
+          maxLength: 200
+        content:
+          type: string
+        date_occurred:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        author:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            first_name:
+              type: string
+            last_name:
+              type: string
+        tags:
+          type: array
+          items:
+            type: string
+        specialized_data:
+          type: object
+          description: Type-specific data (medical, diet, habits, commands)
+          nullable: true
+
+    NotebookEntryInput:
+      type: object
+      properties:
+        entry_type:
+          type: string
+          enum: [medical, diet, habits, commands]
+        title:
+          type: string
+          maxLength: 200
+        content:
+          type: string
+          maxLength: 10000
+        date_occurred:
+          type: string
+          format: date
+        tags:
+          type: array
+          items:
+            type: string
+          maxItems: 10
+        specialized_data:
+          type: object
+          description: Type-specific data based on entry_type
+          nullable: true
+      required:
+        - entry_type
+        - title
+        - content
+        - date_occurred
+
+    NotebookShare:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        shared_with_user:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            first_name:
+              type: string
+            last_name:
+              type: string
+            email:
+              type: string
+        permission_level:
+          type: string
+          enum: [read_only]
+        granted_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [active, revoked]
+
+    SharedNotebookInfo:
+      type: object
+      properties:
+        notebook_id:
+          type: string
+          format: uuid
+        pet:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+            photo_url:
+              type: string
+              nullable: true
+        owner:
+          type: object
+          properties:
+            first_name:
+              type: string
+            last_name:
+              type: string
+        shared_at:
+          type: string
+          format: date-time
+        entry_count:
+          type: integer
+        last_entry_date:
+          type: string
+          format: date-time
+          nullable: true
+
+    PaginationInfo:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        has_next:
+          type: boolean
+        has_prev:
+          type: boolean
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+        details:
+          type: object
+          nullable: true
+      required:
+        - success
+        - error

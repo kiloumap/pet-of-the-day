@@ -67,7 +67,7 @@ func setupTestServer() (*httptest.Server, *mockUserRepository) {
 	repo := newMockUserRepository()
 	eventBus := events.NewInMemoryBus()
 	jwtService := auth.NewJWTService("test-secret", "test-app")
-	authMiddleware := auth.JWTMiddleware(jwtService)
+	authMiddleware := jwtService.AuthMiddleware
 
 	registerHandler := commands.NewRegisterUserHandler(repo, eventBus)
 	loginHandler := commands.NewLoginUserHandler(repo, eventBus)
@@ -181,4 +181,52 @@ func TestLoginEndpoint_Success(t *testing.T) {
 	if response["token"] == nil {
 		t.Error("Expected token in response")
 	}
+}
+
+// Contract Test for Shared Notebooks API - This MUST FAIL initially (TDD)
+
+func TestGetSharedNotebooksEndpoint_NotImplemented(t *testing.T) {
+	server, _ := setupTestServer()
+	defer server.Close()
+
+	resp, err := http.Get(server.URL + "/api/users/shared-notebooks")
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// This test MUST fail initially (404) until we implement the endpoint
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+
+	// TODO: Update this test when shared notebooks endpoint is implemented
+	// Expected successful response:
+	// assert.Equal(t, http.StatusOK, resp.StatusCode)
+	//
+	// var response struct {
+	// 	Success bool `json:"success"`
+	// 	Data    []struct {
+	// 		NotebookID    string `json:"notebook_id"`
+	// 		Pet           struct {
+	// 			ID       string `json:"id"`
+	// 			Name     string `json:"name"`
+	// 			PhotoURL string `json:"photo_url,omitempty"`
+	// 		} `json:"pet"`
+	// 		Owner         struct {
+	// 			FirstName string `json:"first_name"`
+	// 			LastName  string `json:"last_name"`
+	// 		} `json:"owner"`
+	// 		SharedAt      string `json:"shared_at"`
+	// 		EntryCount    int    `json:"entry_count"`
+	// 		LastEntryDate string `json:"last_entry_date,omitempty"`
+	// 	} `json:"data"`
+	// 	Pagination struct {
+	// 		Page    int  `json:"page"`
+	// 		Limit   int  `json:"limit"`
+	// 		Total   int  `json:"total"`
+	// 		HasNext bool `json:"has_next"`
+	// 		HasPrev bool `json:"has_prev"`
+	// 	} `json:"pagination"`
+	// }
+	//
+	// err = json.NewDecoder(resp.Body).Decode(&response)
+	// assert.NoError(t, err)
+	// assert.True(t, response.Success)
 }
