@@ -22,6 +22,8 @@ type ScoreEventRepository interface {
 	GetTotalPointsByPetAndGroup(ctx context.Context, petID, groupID uuid.UUID) (int, error)
 	GetLeaderboardData(ctx context.Context, groupID uuid.UUID, startDate, endDate time.Time) ([]LeaderboardEntry, error)
 	Delete(ctx context.Context, id uuid.UUID) error
+	DeleteByGroupID(ctx context.Context, groupID uuid.UUID) error
+	GetRecentActivitiesForUser(ctx context.Context, userID uuid.UUID, limit int) ([]ActivityItem, error)
 }
 
 // Authorization services that points context depends on

@@ -17,7 +17,9 @@ import { useAppDispatch, useAppSelector } from '../../hooks';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useTheme } from '../../theme/ThemeContext';
 import { acceptInvitation, clearError } from '../../store/groupSlice';
+import { fetchPets } from '../../store/petSlice';
 import { AcceptInvitationRequest } from '../../types/api';
+import PetCheckboxSelector from '../../components/PetCheckboxSelector';
 
 const JoinGroupScreen = () => {
   const { t } = useTranslation();
@@ -26,14 +28,23 @@ const JoinGroupScreen = () => {
   const dispatch = useAppDispatch();
 
   const { isJoining, error } = useAppSelector((state) => state.groups);
+  const { pets } = useAppSelector((state) => state.pets);
 
   const [inviteCode, setInviteCode] = useState('');
+  const [selectedPetIds, setSelectedPetIds] = useState<string[]>([]);
   const [codeError, setCodeError] = useState<string>('');
+  const [petsError, setPetsError] = useState<string>('');
+
+  useEffect(() => {
+    dispatch(fetchPets());
+  }, [dispatch]);
 
   useEffect(() => {
     if (error) {
       if (error.field === 'invite_code') {
         setCodeError(error.message);
+      } else if (error.field === 'pet_ids') {
+        setPetsError(error.message);
       } else {
         Alert.alert(t('common.error'), error.message);
       }
@@ -42,18 +53,26 @@ const JoinGroupScreen = () => {
   }, [error, dispatch, t]);
 
   const validateForm = (): boolean => {
+    let isValid = true;
+
     if (!inviteCode.trim()) {
       setCodeError(t('groups.validations.codeRequired'));
-      return false;
-    }
-
-    if (inviteCode.length < 6) {
+      isValid = false;
+    } else if (inviteCode.length < 6) {
       setCodeError('Invite code must be at least 6 characters');
-      return false;
+      isValid = false;
+    } else {
+      setCodeError('');
     }
 
-    setCodeError('');
-    return true;
+    if (selectedPetIds.length === 0) {
+      setPetsError(t('groups.validations.petsRequired'));
+      isValid = false;
+    } else {
+      setPetsError('');
+    }
+
+    return isValid;
   };
 
   const handleSubmit = async () => {
@@ -62,6 +81,7 @@ const JoinGroupScreen = () => {
     try {
       const requestData: AcceptInvitationRequest = {
         invite_code: inviteCode.trim().toUpperCase(),
+        pet_ids: selectedPetIds,
       };
 
       const result = await dispatch(acceptInvitation(requestData)).unwrap();
@@ -89,6 +109,13 @@ const JoinGroupScreen = () => {
     setInviteCode(formatted);
     if (codeError) {
       setCodeError('');
+    }
+  };
+
+  const handlePetSelectionChange = (petIds: string[]) => {
+    setSelectedPetIds(petIds);
+    if (petsError && petIds.length > 0) {
+      setPetsError('');
     }
   };
 
@@ -184,6 +211,51 @@ const JoinGroupScreen = () => {
       textAlign: 'center',
       lineHeight: 20,
     },
+    petsSection: {
+      marginBottom: 32,
+    },
+    petsSectionTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: theme.colors.text.primary,
+      marginBottom: 8,
+    },
+    petsSectionSubtitle: {
+      fontSize: 14,
+      color: theme.colors.text.secondary,
+      marginBottom: 16,
+    },
+    petsContainer: {
+      backgroundColor: theme.colors.background.secondary,
+      borderRadius: 8,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    petsError: {
+      color: theme.colors.error,
+      fontSize: 14,
+      marginTop: 8,
+      textAlign: 'center',
+    },
+    emptyPetsContainer: {
+      alignItems: 'center',
+      padding: 24,
+      backgroundColor: theme.colors.background.tertiary,
+      borderRadius: 8,
+      marginTop: 16,
+    },
+    emptyPetsText: {
+      fontSize: 16,
+      color: theme.colors.text.secondary,
+      textAlign: 'center',
+      marginBottom: 4,
+    },
+    emptyPetsSubtext: {
+      fontSize: 14,
+      color: theme.colors.text.tertiary,
+      textAlign: 'center',
+    },
     infoBox: {
       backgroundColor: theme.colors.background.secondary,
       borderRadius: 8,
@@ -276,11 +348,42 @@ const JoinGroupScreen = () => {
               )}
             </View>
 
+            <View style={styles.petsSection}>
+              <Text style={styles.petsSectionTitle}>{t('groups.selectYourPets')}</Text>
+              <Text style={styles.petsSectionSubtitle}>
+                {t('groups.selectPetsToJoinGroup')}
+              </Text>
+
+              {pets.length > 0 ? (
+                <View style={styles.petsContainer}>
+                  <PetCheckboxSelector
+                    pets={pets}
+                    selectedPetIds={selectedPetIds}
+                    onSelectionChange={handlePetSelectionChange}
+                    title=""
+                    disabled={isJoining}
+                  />
+                  {petsError ? (
+                    <Text style={styles.petsError}>{petsError}</Text>
+                  ) : null}
+                </View>
+              ) : (
+                <View style={styles.emptyPetsContainer}>
+                  <Text style={styles.emptyPetsText}>
+                    {t('groups.noPetsAvailable')}
+                  </Text>
+                  <Text style={styles.emptyPetsSubtext}>
+                    {t('groups.addPetsBeforeJoining')}
+                  </Text>
+                </View>
+              )}
+            </View>
+
             <View style={styles.infoBox}>
               <Text style={styles.infoTitle}>How to join a group</Text>
               <Text style={styles.infoText}>
                 Ask a group member or administrator to share their group's invitation code with you.
-                Enter the code above to join the group and start sharing your pets!
+                Enter the code above and select your pets to join the group!
               </Text>
             </View>
           </View>
@@ -290,10 +393,10 @@ const JoinGroupScreen = () => {
           <TouchableOpacity
             style={[
               styles.submitButton,
-              (isJoining || !inviteCode.trim()) && styles.submitButtonDisabled,
+              (isJoining || !inviteCode.trim() || selectedPetIds.length === 0 || pets.length === 0) && styles.submitButtonDisabled,
             ]}
             onPress={handleSubmit}
-            disabled={isJoining || !inviteCode.trim()}
+            disabled={isJoining || !inviteCode.trim() || selectedPetIds.length === 0 || pets.length === 0}
           >
             <Text style={styles.submitButtonText}>
               {isJoining ? t('common.loading') : t('groups.joinGroup')}

@@ -39,13 +39,19 @@ func (r *EntGroupRepository) Save(ctx context.Context, domainGroup *domain.Group
 			SetUpdatedAt(domainGroup.UpdatedAt()).
 			Exec(ctx)
 	} else {
+		// Get user first for the relation
+		creator, err := r.client.User.Get(ctx, domainGroup.CreatorID())
+		if err != nil {
+			return err
+		}
+
 		// Create new group
-		_, err := r.client.Group.Create().
+		_, err = r.client.Group.Create().
 			SetID(domainGroup.ID()).
 			SetName(domainGroup.Name()).
 			SetDescription(domainGroup.Description()).
 			SetPrivacy(group.Privacy(domainGroup.Privacy())).
-			SetCreatorID(domainGroup.CreatorID()).
+			SetCreator(creator).
 			SetCreatedAt(domainGroup.CreatedAt()).
 			SetUpdatedAt(domainGroup.UpdatedAt()).
 			Save(ctx)

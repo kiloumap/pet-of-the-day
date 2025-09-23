@@ -63,6 +63,8 @@ export interface Pet {
   co_owner_ids?: string[];
   created_at: string;
   updated_at?: string;
+  // Points field for local state (not from API)
+  points?: number;
 }
 
 export interface AddPetRequest {

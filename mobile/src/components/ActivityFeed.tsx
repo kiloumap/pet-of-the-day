@@ -21,9 +21,8 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ onRefresh, onActionPress })
   const loadActivities = async () => {
     try {
       setIsLoading(true);
-      // Temporarily show empty state since the endpoint doesn't exist yet
-      // TODO: Implement proper activity feed endpoint in backend
-      setActivities([]);
+      const response = await apiService.getRecentActivities(20);
+      setActivities(response.activities || []);
     } catch (error) {
       console.error('Failed to load activities:', error);
       setActivities([]);

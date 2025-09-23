@@ -84,14 +84,21 @@ func (h *CommunityHandlers) GetGroupMembers(w http.ResponseWriter, r *http.Reque
 	if result.Invitations != nil {
 		invitations := make([]interface{}, len(result.Invitations))
 		for i, invitation := range result.Invitations {
-			invitations[i] = map[string]interface{}{
-				"id":           invitation.ID(),
-				"invite_type":  invitation.InviteType(),
+			invitationData := map[string]interface{}{
+				"id":            invitation.ID(),
+				"invite_type":   invitation.InviteType(),
 				"invitee_email": invitation.InviteeEmail(),
-				"status":       invitation.Status(),
-				"expires_at":   invitation.ExpiresAt(),
-				"created_at":   invitation.CreatedAt(),
+				"status":        invitation.Status(),
+				"expires_at":    invitation.ExpiresAt(),
+				"created_at":    invitation.CreatedAt(),
 			}
+
+			// Only include invite code for code invitations
+			if invitation.InviteType() == "code" {
+				invitationData["invite_code"] = invitation.InviteCode()
+			}
+
+			invitations[i] = invitationData
 		}
 		response["invitations"] = invitations
 	}

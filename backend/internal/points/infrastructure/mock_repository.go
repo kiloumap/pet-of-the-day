@@ -158,6 +158,46 @@ func (r *MockScoreEventRepository) Delete(ctx context.Context, id uuid.UUID) err
 	return nil
 }
 
+// DeleteByGroupID deletes all score events for a specific group
+func (r *MockScoreEventRepository) DeleteByGroupID(ctx context.Context, groupID uuid.UUID) error {
+	for id, event := range r.events {
+		if event.GroupID == groupID {
+			delete(r.events, id)
+		}
+	}
+	return nil
+}
+
+// GetRecentActivitiesForUser returns recent activities for groups the user is a member of
+func (r *MockScoreEventRepository) GetRecentActivitiesForUser(ctx context.Context, userID uuid.UUID, limit int) ([]domain.ActivityItem, error) {
+	var activities []domain.ActivityItem
+
+	// For mock, return some dummy activities
+	for _, event := range r.events {
+		if len(activities) >= limit {
+			break
+		}
+
+		activity := domain.ActivityItem{
+			ID:           event.ID,
+			PetID:        event.PetID,
+			PetName:      "MockPet",
+			BehaviorID:   event.BehaviorID,
+			BehaviorName: "MockBehavior",
+			GroupID:      event.GroupID,
+			GroupName:    "MockGroup",
+			Points:       event.Points,
+			Comment:      event.Comment,
+			RecordedAt:   event.RecordedAt,
+			ActionDate:   event.ActionDate,
+			RecordedBy:   event.RecordedByID,
+		}
+		activities = append(activities, activity)
+	}
+
+	return activities, nil
+}
+
 // MockPetAccessChecker is a mock implementation of domain.PetAccessChecker
 type MockPetAccessChecker struct {
 	accessMap map[string]bool // key: userID-petID

@@ -126,8 +126,13 @@
     "validations": {
       "nameRequired": "Group name is required",
       "descriptionRequired": "Description is required",
-      "codeRequired": "Invite code is required"
+      "codeRequired": "Invite code is required",
+      "petsRequired": "Please select at least one pet"
     },
+    "selectYourPets": "Select Your Pets",
+    "selectPetsToJoinGroup": "Choose which pets to include in this group",
+    "noPetsAvailable": "No pets available",
+    "addPetsBeforeJoining": "Add pets to your account before joining a group",
     "privacy": {
       "title": "Privacy",
       "private": "Private",
@@ -138,7 +143,53 @@
     "editGroup": "Edit Group",
     "deleteConfirmTitle": "Delete Group",
     "deleteConfirmMessage": "Are you sure you want to delete {{name}}? This action cannot be undone.",
-    "basicInfo": "Basic Information"
+    "basicInfo": "Basic Information",
+    "copyCode": "Copy Code",
+    "shareCode": "Share Code",
+    "inviteCodeCopied": "Invite code copied to clipboard!",
+    "shareInviteTitle": "Join my group!",
+    "shareInviteMessage": "Join my group '{groupName}' using this invite code: {inviteCode}"
+  },
+  "invitations": {
+    "inviteToGroup": "Invite to Group",
+    "joinGroup": "Join Group",
+    "chooseMethod": "Choose Invitation Method",
+    "sendByEmail": "Send by Email",
+    "emailDescription": "Send an invitation email directly to someone",
+    "generateCode": "Generate Invite Code",
+    "codeDescription": "Create a code that can be shared manually",
+    "recipientEmail": "Recipient Email",
+    "invitationCode": "Invitation Code",
+    "enterCode": "Enter Invitation Code",
+    "selectPets": "Select Your Pets",
+    "sendInvitation": "Send Invitation",
+    "generateNewCode": "Generate New Code",
+    "copyCode": "Copy Code",
+    "existingCode": "Existing Invite Code",
+    "welcomeTitle": "You're Invited!",
+    "welcomeSubtitle": "Join a group and share your pets with friends and family",
+    "choosePetsTitle": "Choose Your Pets",
+    "choosePetsSubtitle": "Select which pets you'd like to include in this group",
+    "emailInfo": "An invitation email will be sent to this address with instructions to join \"{groupName}\"",
+    "codeInfo": "Share this code with someone you want to invite to the group",
+    "noPetsAvailable": "No pets available",
+    "addPetsFirst": "Add pets to your account first, then come back to join groups",
+    "placeholders": {
+      "email": "friend@example.com",
+      "code": "ABC123"
+    },
+    "validations": {
+      "emailRequired": "Email address is required",
+      "emailInvalid": "Please enter a valid email address",
+      "codeRequired": "Invitation code is required",
+      "petsRequired": "Please select at least one pet to join the group"
+    },
+    "success": {
+      "emailSent": "Invitation email sent to {email}",
+      "codeGenerated": "Invite code generated successfully",
+      "codeCopied": "Invite code copied to clipboard",
+      "invitationAccepted": "Successfully joined the group!"
+    }
   },
   "navigation": {
     "home": "Home",

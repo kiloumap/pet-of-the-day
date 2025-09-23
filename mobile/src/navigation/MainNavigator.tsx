@@ -15,6 +15,7 @@ import GroupsScreen from '../screens/groups/GroupsScreen';
 import CreateGroupScreen from '../screens/groups/CreateGroupScreen';
 import JoinGroupScreen from '../screens/groups/JoinGroupScreen';
 import GroupDetailScreen from '../screens/groups/GroupDetailScreen';
+import InviteToGroupScreen from '../screens/groups/InviteToGroupScreen';
 import AddActionScreen from '../screens/points/AddActionScreen';
 import LeaderboardScreen from '../screens/points/LeaderboardScreen';
 import HomeScreen from '../screens/home/HomeScreen';
@@ -54,6 +55,7 @@ export type GroupsStackParamList = {
   CreateGroup: undefined;
   JoinGroup: undefined;
   GroupDetail: { groupId: string };
+  InviteToGroup: { groupId: string; groupName: string };
   AddAction: { groupId: string; petId?: string };
   Leaderboard: { groupId: string };
 };
@@ -119,6 +121,13 @@ const GroupsStackNavigator: React.FC = () => {
       <GroupsStack.Screen
         name="GroupDetail"
         component={GroupDetailScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <GroupsStack.Screen
+        name="InviteToGroup"
+        component={InviteToGroupScreen}
         options={{
           headerShown: false,
         }}

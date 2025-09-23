@@ -21,7 +21,7 @@ import {
   setBehaviorCategory,
   clearError,
 } from '@store/pointsSlice';
-import { fetchPets } from '@store/petSlice';
+import { fetchPets, updatePetPoints } from '@store/petSlice';
 import { Pet, Behavior } from '@/types/api';
 import { useTheme } from '@/theme';
 
@@ -148,6 +148,12 @@ const ModernActionModal: React.FC<ModernActionModalProps> = ({
       });
 
       await Promise.all(eventPromises);
+
+      // Update pet points in local state
+      dispatch(updatePetPoints({
+        petId: selectedPet,
+        points: behavior.points
+      }));
 
       Alert.alert(
         t('common.success'),

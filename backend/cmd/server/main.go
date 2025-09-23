@@ -1,10 +1,12 @@
 package main
 
 import (
-	"github.com/rs/cors"
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 
 	"pet-of-the-day/internal/community"
 	communityhttp "pet-of-the-day/internal/community/interfaces/http"
@@ -21,8 +23,6 @@ import (
 	usersCommands "pet-of-the-day/internal/user/application/commands"
 	userQueries "pet-of-the-day/internal/user/application/queries"
 	userhttp "pet-of-the-day/internal/user/interfaces/http"
-
-	"github.com/gorilla/mux"
 )
 
 func main() {
@@ -83,6 +83,7 @@ func main() {
 	)
 	getPetScoreEventsHandler := pointsQueries.NewGetPetScoreEventsHandler(scoreEventRepo)
 	getGroupLeaderboardHandler := pointsQueries.NewGetGroupLeaderboardHandler(scoreEventRepo)
+	getRecentActivitiesHandler := pointsQueries.NewGetRecentActivitiesHandler(scoreEventRepo)
 
 	pointsController := pointshttp.NewController(
 		getBehaviorsHandler,
@@ -90,9 +91,10 @@ func main() {
 		deleteScoreEventHandler,
 		getPetScoreEventsHandler,
 		getGroupLeaderboardHandler,
+		getRecentActivitiesHandler,
 	)
 
-	communityService := community.NewCommunityService(eventBus, jwtService, repoFactory)
+	communityService := community.NewCommunityService(eventBus, jwtService, repoFactory, scoreEventRepo)
 
 	router := mux.NewRouter()
 

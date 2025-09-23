@@ -7,8 +7,11 @@ import (
 
 	"github.com/google/uuid"
 	"pet-of-the-day/ent"
+	"pet-of-the-day/ent/group"
+	"pet-of-the-day/ent/membership"
 	"pet-of-the-day/ent/pet"
 	"pet-of-the-day/ent/scoreevent"
+	"pet-of-the-day/ent/user"
 	"pet-of-the-day/internal/points/domain"
 )
 
@@ -176,6 +179,75 @@ func (r *ScoreEventRepository) GetLeaderboardData(ctx context.Context, groupID u
 // Delete deletes a score event by ID
 func (r *ScoreEventRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return r.client.ScoreEvent.DeleteOneID(id).Exec(ctx)
+}
+
+// DeleteByGroupID deletes all score events for a specific group
+func (r *ScoreEventRepository) DeleteByGroupID(ctx context.Context, groupID uuid.UUID) error {
+	_, err := r.client.ScoreEvent.Delete().
+		Where(scoreevent.GroupID(groupID)).
+		Exec(ctx)
+	return err
+}
+
+// GetRecentActivitiesForUser returns recent activities for groups the user is a member of
+func (r *ScoreEventRepository) GetRecentActivitiesForUser(ctx context.Context, userID uuid.UUID, limit int) ([]domain.ActivityItem, error) {
+	// First, get groups where the user is a member or creator
+	groups, err := r.client.Group.Query().
+		Where(
+			group.Or(
+				group.HasCreatorWith(user.ID(userID)),
+				group.HasMembershipsWith(membership.HasUserWith(user.ID(userID))),
+			),
+		).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(groups) == 0 {
+		return []domain.ActivityItem{}, nil
+	}
+
+	// Extract group IDs
+	groupIDs := make([]uuid.UUID, len(groups))
+	for i, g := range groups {
+		groupIDs[i] = g.ID
+	}
+
+	// Query score events for these groups
+	events, err := r.client.ScoreEvent.Query().
+		Where(scoreevent.GroupIDIn(groupIDs...)).
+		WithPet().
+		WithBehavior().
+		WithRecordedBy().
+		WithGroup().
+		Order(ent.Desc(scoreevent.FieldRecordedAt)).
+		Limit(limit).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var activities []domain.ActivityItem
+	for _, event := range events {
+		activity := domain.ActivityItem{
+			ID:           event.ID,
+			PetID:        event.Edges.Pet.ID,
+			PetName:      event.Edges.Pet.Name,
+			BehaviorID:   event.Edges.Behavior.ID,
+			BehaviorName: event.Edges.Behavior.Name,
+			GroupID:      event.Edges.Group.ID,
+			GroupName:    event.Edges.Group.Name,
+			Points:       event.Points,
+			Comment:      event.Comment,
+			RecordedAt:   event.RecordedAt,
+			ActionDate:   event.ActionDate,
+			RecordedBy:   event.Edges.RecordedBy.ID,
+		}
+		activities = append(activities, activity)
+	}
+
+	return activities, nil
 }
 
 // toDomainScoreEvent converts an ent.ScoreEvent to domain.ScoreEvent

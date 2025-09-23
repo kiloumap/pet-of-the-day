@@ -251,6 +251,20 @@ const groupSlice = createSlice({
         state.createdGroups.push(newGroup);
         state.groups.push(newGroup);
 
+        // Store the invite code created automatically
+        if (action.payload.invite_code) {
+          const newInvitation: Invitation = {
+            id: 'auto-generated',
+            group_id: action.payload.id,
+            invite_type: 'code',
+            invite_code: action.payload.invite_code,
+            status: 'pending',
+            expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+            created_at: action.payload.created_at,
+          };
+          state.currentGroupInvitations.push(newInvitation);
+        }
+
         // Creator automatically becomes a member
         if (action.payload.membership) {
           const membership: Membership = {

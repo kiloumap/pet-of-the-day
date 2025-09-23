@@ -8,26 +8,34 @@ import (
 	"github.com/google/uuid"
 )
 
+// ScoreEventRepository interface needed for deleting score events
+type ScoreEventRepository interface {
+	DeleteByGroupID(ctx context.Context, groupID uuid.UUID) error
+}
+
 type DeleteGroupCommand struct {
 	GroupID uuid.UUID
 	UserID  uuid.UUID
 }
 
 type DeleteGroupHandler struct {
-	groupRepo      domain.GroupRepository
-	membershipRepo domain.MembershipRepository
-	invitationRepo domain.InvitationRepository
+	groupRepo        domain.GroupRepository
+	membershipRepo   domain.MembershipRepository
+	invitationRepo   domain.InvitationRepository
+	scoreEventRepo   ScoreEventRepository
 }
 
 func NewDeleteGroupHandler(
 	groupRepo domain.GroupRepository,
 	membershipRepo domain.MembershipRepository,
 	invitationRepo domain.InvitationRepository,
+	scoreEventRepo ScoreEventRepository,
 ) *DeleteGroupHandler {
 	return &DeleteGroupHandler{
-		groupRepo:      groupRepo,
-		membershipRepo: membershipRepo,
-		invitationRepo: invitationRepo,
+		groupRepo:        groupRepo,
+		membershipRepo:   membershipRepo,
+		invitationRepo:   invitationRepo,
+		scoreEventRepo:   scoreEventRepo,
 	}
 }
 
@@ -59,6 +67,11 @@ func (h *DeleteGroupHandler) Handle(ctx context.Context, cmd DeleteGroupCommand)
 		if err := h.invitationRepo.Delete(ctx, invitation.ID()); err != nil {
 			return fmt.Errorf("failed to delete invitation %s: %w", invitation.ID(), err)
 		}
+	}
+
+	// Delete all score events for this group
+	if err := h.scoreEventRepo.DeleteByGroupID(ctx, cmd.GroupID); err != nil {
+		return fmt.Errorf("failed to delete score events for group: %w", err)
 	}
 
 	if err := h.groupRepo.Delete(ctx, cmd.GroupID); err != nil {

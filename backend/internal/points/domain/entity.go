@@ -41,6 +41,22 @@ type LeaderboardEntry struct {
 	Rank        int
 }
 
+// ActivityItem represents an activity in the user's feed with full context
+type ActivityItem struct {
+	ID           uuid.UUID
+	PetID        uuid.UUID
+	PetName      string
+	BehaviorID   uuid.UUID
+	BehaviorName string
+	GroupID      uuid.UUID
+	GroupName    string
+	Points       int
+	Comment      string
+	RecordedAt   time.Time
+	ActionDate   time.Time
+	RecordedBy   uuid.UUID
+}
+
 // Species represents the species a behavior applies to
 type Species string
 

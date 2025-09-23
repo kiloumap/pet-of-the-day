@@ -9,11 +9,13 @@ import {
   RefreshControl,
   KeyboardAvoidingView,
   Platform,
+  Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { ArrowLeft, Edit3, Trash2 } from 'lucide-react-native';
+import { ArrowLeft, Edit3, Trash2, Copy, Share as ShareIcon } from 'lucide-react-native';
+import * as Clipboard from 'expo-clipboard';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useTheme } from '../../theme/ThemeContext';
@@ -50,6 +52,7 @@ const GroupDetailScreen = () => {
   const {
     currentGroup,
     currentGroupMembers,
+    currentGroupInvitations,
     isCreator,
     userMembership,
     isLoading,
@@ -284,6 +287,32 @@ const GroupDetailScreen = () => {
 
   const handleAddAction = () => {
     navigation.navigate('AddAction' as never, { groupId } as never);
+  };
+
+  const handleCopyInviteCode = async () => {
+    const codeInvitation = currentGroupInvitations.find(inv => inv.invite_type === 'code');
+    if (codeInvitation?.invite_code) {
+      await Clipboard.setStringAsync(codeInvitation.invite_code);
+      Alert.alert(t('common.success'), t('groups.inviteCodeCopied'));
+    }
+  };
+
+  const handleShareInviteCode = async () => {
+    const codeInvitation = currentGroupInvitations.find(inv => inv.invite_type === 'code');
+    if (codeInvitation?.invite_code) {
+      try {
+        await Share.share({
+          message: t('groups.shareInviteMessage', {
+            groupName: currentGroup?.name,
+            inviteCode: codeInvitation.invite_code
+          }),
+          title: t('groups.shareInviteTitle'),
+        });
+      } catch (error) {
+        console.error('Error sharing invite code:', error);
+        Alert.alert(t('common.error'), t('common.genericError'));
+      }
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -586,6 +615,58 @@ const GroupDetailScreen = () => {
       textAlign: 'center',
       marginTop: 4,
     },
+    inviteSection: {
+      backgroundColor: theme.colors.background.secondary,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 24,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    inviteCodeContainer: {
+      backgroundColor: theme.colors.background.tertiary,
+      borderRadius: 8,
+      padding: 12,
+      marginBottom: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    inviteCodeText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: theme.colors.text.primary,
+      flex: 1,
+      fontFamily: 'monospace',
+      letterSpacing: 2,
+    },
+    inviteActions: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    inviteButton: {
+      flex: 1,
+      backgroundColor: theme.colors.primary,
+      borderRadius: 8,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+    },
+    inviteButtonSecondary: {
+      backgroundColor: theme.colors.background.secondary,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    inviteButtonText: {
+      color: theme.colors.reverse,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    inviteButtonTextSecondary: {
+      color: theme.colors.text.primary,
+    },
   });
 
   if (!currentGroup) {
@@ -619,6 +700,12 @@ const GroupDetailScreen = () => {
         </Text>
         {isCreator && (
           <View style={styles.headerActions}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => navigation.navigate('InviteToGroup' as never, { groupId, groupName: currentGroup.name } as never)}
+            >
+              <MaterialIcons name="person-add" size={20} color={theme.colors.success} />
+            </TouchableOpacity>
             <TouchableOpacity style={styles.actionButton} onPress={handleEditToggle}>
               <Edit3 size={20} color={theme.colors.primary} />
             </TouchableOpacity>
@@ -729,6 +816,43 @@ const GroupDetailScreen = () => {
               </View>
             )}
           </View>
+
+          {currentGroupInvitations.length > 0 && (
+            <View style={styles.inviteSection}>
+              <Text style={styles.sectionTitle}>{t('groups.inviteCode')}</Text>
+              {currentGroupInvitations
+                .filter(inv => inv.invite_type === 'code')
+                .map((invitation) => (
+                  <View key={invitation.id}>
+                    <View style={styles.inviteCodeContainer}>
+                      <Text style={styles.inviteCodeText}>
+                        {invitation.invite_code}
+                      </Text>
+                    </View>
+                    <View style={styles.inviteActions}>
+                      <TouchableOpacity
+                        style={[styles.inviteButton, styles.inviteButtonSecondary]}
+                        onPress={handleCopyInviteCode}
+                      >
+                        <Copy size={16} color={theme.colors.text.primary} />
+                        <Text style={[styles.inviteButtonText, styles.inviteButtonTextSecondary]}>
+                          {t('groups.copyCode')}
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.inviteButton}
+                        onPress={handleShareInviteCode}
+                      >
+                        <ShareIcon size={16} color={theme.colors.reverse} />
+                        <Text style={styles.inviteButtonText}>
+                          {t('groups.shareCode')}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))}
+            </View>
+          )}
 
         {userMembership && (
           <View style={styles.section}>

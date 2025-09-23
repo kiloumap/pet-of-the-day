@@ -21,6 +21,7 @@ type Controller struct {
 	deleteScoreEventHandler    *commands.DeleteScoreEventHandler
 	getPetScoreEventsHandler   *queries.GetPetScoreEventsHandler
 	getGroupLeaderboardHandler *queries.GetGroupLeaderboardHandler
+	getRecentActivitiesHandler *queries.GetRecentActivitiesHandler
 }
 
 func NewController(
@@ -29,6 +30,7 @@ func NewController(
 	deleteScoreEventHandler *commands.DeleteScoreEventHandler,
 	getPetScoreEventsHandler *queries.GetPetScoreEventsHandler,
 	getGroupLeaderboardHandler *queries.GetGroupLeaderboardHandler,
+	getRecentActivitiesHandler *queries.GetRecentActivitiesHandler,
 ) *Controller {
 	return &Controller{
 		getBehaviorsHandler:        getBehaviorsHandler,
@@ -36,6 +38,7 @@ func NewController(
 		deleteScoreEventHandler:    deleteScoreEventHandler,
 		getPetScoreEventsHandler:   getPetScoreEventsHandler,
 		getGroupLeaderboardHandler: getGroupLeaderboardHandler,
+		getRecentActivitiesHandler: getRecentActivitiesHandler,
 	}
 }
 
@@ -369,6 +372,58 @@ func (c *Controller) DeleteScoreEvent(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// GetRecentActivities returns recent activities for the authenticated user
+func (c *Controller) GetRecentActivities(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	userUUID, err := auth.GetUserIDFromContext(ctx)
+	if err != nil {
+		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeUnauthorized, "User not authenticated", http.StatusUnauthorized)
+		return
+	}
+
+	limitStr := r.URL.Query().Get("limit")
+	limit := 20 // default
+	if limitStr != "" {
+		if parsedLimit, err := strconv.Atoi(limitStr); err == nil && parsedLimit > 0 && parsedLimit <= 100 {
+			limit = parsedLimit
+		}
+	}
+
+	// Use application layer to get recent activities
+	activities, err := c.getRecentActivitiesHandler.Handle(ctx, userUUID, limit)
+	if err != nil {
+		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInternalServer, "Failed to fetch recent activities", http.StatusInternalServerError)
+		return
+	}
+
+	// Format activities for response
+	var formattedActivities []map[string]interface{}
+	for _, activity := range activities {
+		formattedActivity := map[string]interface{}{
+			"id":            activity.ID.String(),
+			"pet_id":        activity.PetID.String(),
+			"pet_name":      activity.PetName,
+			"behavior_id":   activity.BehaviorID.String(),
+			"behavior_name": activity.BehaviorName,
+			"group_id":      activity.GroupID.String(),
+			"group_name":    activity.GroupName,
+			"points":        activity.Points,
+			"comment":       activity.Comment,
+			"recorded_at":   activity.RecordedAt.Format(time.RFC3339),
+			"action_date":   activity.ActionDate.Format("2006-01-02"),
+			"recorded_by":   activity.RecordedBy.String(),
+		}
+		formattedActivities = append(formattedActivities, formattedActivity)
+	}
+
+	response := map[string]interface{}{
+		"activities": formattedActivities,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
 // RegisterRoutes registers all points-related routes
 func (c *Controller) RegisterRoutes(router *mux.Router, authMiddleware func(http.Handler) http.Handler) {
 	// Behaviors routes (public for authenticated users)
@@ -383,4 +438,7 @@ func (c *Controller) RegisterRoutes(router *mux.Router, authMiddleware func(http
 
 	// Group leaderboard
 	router.Handle("/groups/{groupId}/leaderboard", authMiddleware(http.HandlerFunc(c.GetGroupLeaderboard))).Methods("GET")
+
+	// Recent activities
+	router.Handle("/activities/recent", authMiddleware(http.HandlerFunc(c.GetRecentActivities))).Methods("GET")
 }

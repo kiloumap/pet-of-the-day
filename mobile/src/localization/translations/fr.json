@@ -126,8 +126,13 @@
     "validations": {
       "nameRequired": "Le nom du groupe est requis",
       "descriptionRequired": "La description est requise",
-      "codeRequired": "Le code d'invitation est requis"
+      "codeRequired": "Le code d'invitation est requis",
+      "petsRequired": "Veuillez sélectionner au moins un animal"
     },
+    "selectYourPets": "Sélectionnez Vos Animaux",
+    "selectPetsToJoinGroup": "Choisissez quels animaux inclure dans ce groupe",
+    "noPetsAvailable": "Aucun animal disponible",
+    "addPetsBeforeJoining": "Ajoutez des animaux à votre compte avant de rejoindre un groupe",
     "privacy": {
       "title": "Confidentialité",
       "private": "Privé",
@@ -138,7 +143,53 @@
     "editGroup": "Modifier le Groupe",
     "deleteConfirmTitle": "Supprimer le Groupe",
     "deleteConfirmMessage": "Êtes-vous sûr de vouloir supprimer {{name}} ? Cette action est irréversible.",
-    "basicInfo": "Informations de Base"
+    "basicInfo": "Informations de Base",
+    "copyCode": "Copier le Code",
+    "shareCode": "Partager le Code",
+    "inviteCodeCopied": "Code d'invitation copié dans le presse-papiers !",
+    "shareInviteTitle": "Rejoignez mon groupe !",
+    "shareInviteMessage": "Rejoignez mon groupe '{groupName}' avec ce code d'invitation : {inviteCode}"
+  },
+  "invitations": {
+    "inviteToGroup": "Inviter au Groupe",
+    "joinGroup": "Rejoindre le Groupe",
+    "chooseMethod": "Choisissez la Méthode d'Invitation",
+    "sendByEmail": "Envoyer par Email",
+    "emailDescription": "Envoyer une invitation directement à quelqu'un par email",
+    "generateCode": "Générer un Code d'Invitation",
+    "codeDescription": "Créer un code qui peut être partagé manuellement",
+    "recipientEmail": "Email du Destinataire",
+    "invitationCode": "Code d'Invitation",
+    "enterCode": "Entrez le Code d'Invitation",
+    "selectPets": "Sélectionnez Vos Animaux",
+    "sendInvitation": "Envoyer l'Invitation",
+    "generateNewCode": "Générer un Nouveau Code",
+    "copyCode": "Copier le Code",
+    "existingCode": "Code d'Invitation Existant",
+    "welcomeTitle": "Vous Êtes Invité !",
+    "welcomeSubtitle": "Rejoignez un groupe et partagez vos animaux avec vos amis et votre famille",
+    "choosePetsTitle": "Choisissez Vos Animaux",
+    "choosePetsSubtitle": "Sélectionnez quels animaux vous souhaitez inclure dans ce groupe",
+    "emailInfo": "Un email d'invitation sera envoyé à cette adresse avec les instructions pour rejoindre \"{groupName}\"",
+    "codeInfo": "Partagez ce code avec quelqu'un que vous voulez inviter au groupe",
+    "noPetsAvailable": "Aucun animal disponible",
+    "addPetsFirst": "Ajoutez d'abord des animaux à votre compte, puis revenez pour rejoindre des groupes",
+    "placeholders": {
+      "email": "ami@exemple.com",
+      "code": "ABC123"
+    },
+    "validations": {
+      "emailRequired": "L'adresse email est requise",
+      "emailInvalid": "Veuillez entrer une adresse email valide",
+      "codeRequired": "Le code d'invitation est requis",
+      "petsRequired": "Veuillez sélectionner au moins un animal pour rejoindre le groupe"
+    },
+    "success": {
+      "emailSent": "Email d'invitation envoyé à {email}",
+      "codeGenerated": "Code d'invitation généré avec succès",
+      "codeCopied": "Code d'invitation copié dans le presse-papiers",
+      "invitationAccepted": "Vous avez rejoint le groupe avec succès !"
+    }
   },
   "navigation": {
     "home": "Accueil",

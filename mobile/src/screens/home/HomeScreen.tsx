@@ -13,7 +13,8 @@ import ModernActionModal from '../../components/ModernActionModal';
 import BadgeCelebrationModal from '../../shared/modals/BadgeCelebrationModal';
 import BadgeProgressWidget from '../../shared/widgets/BadgeProgressWidget';
 import ActivityFeed from '../../components/ActivityFeed';
-import { selectPets, selectTodaysWinner, fetchPets } from '../../store/petSlice';
+import { selectPets, selectTodaysWinner, fetchPets, initializePetPoints } from '../../store/petSlice';
+import { fetchUserGroups } from '../../store/groupSlice';
 import { useBadgeProgress } from '../../hooks/useBadgeProgress';
 import { useTranslation } from '../../hooks';
 
@@ -26,14 +27,20 @@ const HomeScreen: React.FC = () => {
 
     const pets = useSelector(selectPets);
     const todaysWinner = useSelector(selectTodaysWinner);
+    const { user } = useSelector((state: any) => state.auth);
 
     // Hook pour calculer automatiquement la progression des badges
     useBadgeProgress();
 
-    // Load pets on mount
+    // Load pets and groups on mount
     useEffect(() => {
-        dispatch(fetchPets());
-    }, [dispatch]);
+        dispatch(fetchPets()).then(() => {
+            dispatch(initializePetPoints());
+        });
+        if (user?.id) {
+            dispatch(fetchUserGroups(user.id));
+        }
+    }, [dispatch, user?.id]);
 
     const handleNoteAction = () => {
         setShowActionModal(true);

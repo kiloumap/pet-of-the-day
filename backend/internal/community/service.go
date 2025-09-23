@@ -1,6 +1,9 @@
 package community
 
 import (
+	"context"
+
+	"github.com/google/uuid"
 	"pet-of-the-day/internal/community/application/commands"
 	"pet-of-the-day/internal/community/application/queries"
 	"pet-of-the-day/internal/community/domain"
@@ -41,8 +44,13 @@ type CommunityService struct {
 	HTTPHandlers *http.CommunityHandlers
 }
 
+// ScoreEventRepository interface for dependency injection
+type ScoreEventRepository interface {
+	DeleteByGroupID(ctx context.Context, groupID uuid.UUID) error
+}
+
 // NewCommunityService creates a new Community service with all dependencies
-func NewCommunityService(eventBus events.EventBus, jwtService auth.JWTService, repoFactory *database.RepositoryFactory) *CommunityService {
+func NewCommunityService(eventBus events.EventBus, jwtService auth.JWTService, repoFactory *database.RepositoryFactory, scoreEventRepo ScoreEventRepository) *CommunityService {
 	// Initialize real Ent repositories
 	groupRepo := ent.NewEntGroupRepository(repoFactory.GetEntClient())
 	membershipRepo := ent.NewEntMembershipRepository(repoFactory.GetEntClient())
@@ -56,7 +64,7 @@ func NewCommunityService(eventBus events.EventBus, jwtService auth.JWTService, r
 	// Initialize command handlers
 	createGroupHandler := commands.NewCreateGroupHandler(groupRepo, membershipRepo, invitationRepo, eventBus, validationService)
 	updateGroupHandler := commands.NewUpdateGroupHandler(groupRepo)
-	deleteGroupHandler := commands.NewDeleteGroupHandler(groupRepo, membershipRepo, invitationRepo)
+	deleteGroupHandler := commands.NewDeleteGroupHandler(groupRepo, membershipRepo, invitationRepo, scoreEventRepo)
 	joinGroupHandler := commands.NewJoinGroupHandler(groupRepo, membershipRepo, eventBus, validationService)
 	leaveGroupHandler := commands.NewLeaveGroupHandler(groupRepo, membershipRepo, eventBus)
 	inviteToGroupHandler := commands.NewInviteToGroupHandler(groupRepo, membershipRepo, invitationRepo, eventBus)
@@ -154,7 +162,6 @@ func (s *CommunityService) GetUpdatePetsHandler() *commands.UpdateMembershipPets
 	return s.UpdatePetsHandler
 }
 
-// Query handlers access methods - fix method name conflicts
 func (s *CommunityService) GetGroupQueryHandler() *queries.GetGroupHandler {
 	return s.GetGroupHandler
 }

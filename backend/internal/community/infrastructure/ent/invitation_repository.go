@@ -3,8 +3,8 @@ package ent
 import (
 	"context"
 	"pet-of-the-day/ent"
-	"pet-of-the-day/ent/invitation"
 	"pet-of-the-day/ent/group"
+	"pet-of-the-day/ent/invitation"
 	"pet-of-the-day/internal/community/domain"
 
 	"github.com/google/uuid"
@@ -222,8 +222,46 @@ func (r *EntInvitationRepository) FindByGroupID(ctx context.Context, groupID uui
 }
 
 func (r *EntInvitationRepository) FindPendingByGroupID(ctx context.Context, groupID uuid.UUID) ([]*domain.Invitation, error) {
-	// TODO: Implement with Ent
-	panic("not implemented - requires Ent schema update")
+	entInvitations, err := r.client.Invitation.Query().
+		Where(
+			invitation.HasGroupWith(group.IDEQ(groupID)),
+			invitation.StatusEQ(invitation.StatusPending),
+		).
+		WithGroup().
+		WithInviter().
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var domainInvitations []*domain.Invitation
+	for _, entInvitation := range entInvitations {
+		inviteType := domain.InvitationType(entInvitation.InviteType.String())
+		if err != nil {
+			return nil, err
+		}
+
+		status := domain.InvitationStatus(entInvitation.Status.String())
+		if err != nil {
+			return nil, err
+		}
+
+		domainInvitation := domain.ReconstructInvitation(
+			entInvitation.ID,
+			entInvitation.Edges.Group.ID,
+			entInvitation.Edges.Inviter.ID,
+			entInvitation.InviteeEmail,
+			entInvitation.InviteCode,
+			inviteType,
+			status,
+			entInvitation.ExpiresAt,
+			entInvitation.CreatedAt,
+			entInvitation.UpdatedAt,
+		)
+		domainInvitations = append(domainInvitations, domainInvitation)
+	}
+
+	return domainInvitations, nil
 }
 
 func (r *EntInvitationRepository) Delete(ctx context.Context, id uuid.UUID) error {

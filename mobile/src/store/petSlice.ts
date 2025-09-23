@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import apiService from '../services/api';
 import { Pet, AddPetRequest, UpdatePetRequest, ApiError } from '../types/api';
 
@@ -105,6 +105,19 @@ const petSlice = createSlice({
       state.selectedPet = null;
     },
     resetPets: () => initialState,
+    updatePetPoints: (state, action: PayloadAction<{ petId: string; points: number }>) => {
+      const pet = state.pets.find(p => p.id === action.payload.petId);
+      if (pet) {
+        pet.points = (pet.points || 0) + action.payload.points;
+      }
+    },
+    initializePetPoints: (state) => {
+      state.pets.forEach(pet => {
+        if (pet.points === undefined) {
+          pet.points = 0;
+        }
+      });
+    },
   },
   extraReducers: (builder) => {
     // Fetch pets
@@ -188,7 +201,7 @@ const petSlice = createSlice({
   },
 });
 
-export const { clearError, clearSelectedPet, resetPets } = petSlice.actions;
+export const { clearError, clearSelectedPet, resetPets, updatePetPoints, initializePetPoints } = petSlice.actions;
 
 // Selectors
 export const selectPets = (state: any) => state.pets.pets;

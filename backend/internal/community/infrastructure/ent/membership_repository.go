@@ -220,8 +220,38 @@ func (r *EntMembershipRepository) FindActiveByUserID(ctx context.Context, userID
 }
 
 func (r *EntMembershipRepository) FindActiveByGroupID(ctx context.Context, groupID uuid.UUID) ([]*domain.Membership, error) {
-	// TODO: Implement with Ent
-	panic("not implemented - requires Ent schema update")
+	entMemberships, err := r.client.Membership.Query().
+		Where(
+			membership.HasGroupWith(group.IDEQ(groupID)),
+			membership.StatusEQ(membership.StatusActive),
+		).
+		WithGroup().
+		WithUser().
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var domainMemberships []*domain.Membership
+	for _, entMembership := range entMemberships {
+		status := domain.MembershipStatus(entMembership.Status.String())
+		if err != nil {
+			return nil, err
+		}
+
+		domainMembership := domain.ReconstructMembership(
+			entMembership.ID,
+			entMembership.Edges.Group.ID,
+			entMembership.Edges.User.ID,
+			entMembership.PetIds,
+			status,
+			entMembership.CreatedAt,
+			entMembership.UpdatedAt,
+		)
+		domainMemberships = append(domainMemberships, domainMembership)
+	}
+
+	return domainMemberships, nil
 }
 
 func (r *EntMembershipRepository) Delete(ctx context.Context, id uuid.UUID) error {
