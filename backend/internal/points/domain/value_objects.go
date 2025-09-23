@@ -69,7 +69,7 @@ func (r LeaderboardRequest) GetDateRange() (time.Time, time.Time) {
 		if weekday == 0 {
 			weekday = 7 // Sunday = 7
 		}
-		startDate = now.AddDate(0, 0, -(weekday-1))
+		startDate = now.AddDate(0, 0, -(weekday - 1))
 		startDate = time.Date(startDate.Year(), startDate.Month(), startDate.Day(), 0, 0, 0, 0, startDate.Location())
 		endDate = startDate.Add(7 * 24 * time.Hour)
 	}

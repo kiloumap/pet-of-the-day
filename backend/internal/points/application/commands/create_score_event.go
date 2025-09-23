@@ -11,11 +11,11 @@ import (
 
 // CreateScoreEventHandler handles the creation of score events
 type CreateScoreEventHandler struct {
-	behaviorRepo            domain.BehaviorRepository
-	scoreEventRepo          domain.ScoreEventRepository
-	petAccessChecker        domain.PetAccessChecker
-	groupMembershipChecker  domain.GroupMembershipChecker
-	eventBus                events.Bus
+	behaviorRepo           domain.BehaviorRepository
+	scoreEventRepo         domain.ScoreEventRepository
+	petAccessChecker       domain.PetAccessChecker
+	groupMembershipChecker domain.GroupMembershipChecker
+	eventBus               events.Bus
 }
 
 // NewCreateScoreEventHandler creates a new CreateScoreEventHandler
@@ -58,13 +58,13 @@ func (h *CreateScoreEventHandler) Handle(ctx context.Context, req domain.CreateS
 
 	// Optional group membership check (commented out for better UX)
 	/*
-	isMember, err := h.groupMembershipChecker.IsGroupMember(ctx, req.UserID, req.GroupID)
-	if err != nil {
-		return nil, err
-	}
-	if !isMember {
-		return nil, &AuthorizationError{Message: "You are not a member of this group. Please join the group first to record scores."}
-	}
+		isMember, err := h.groupMembershipChecker.IsGroupMember(ctx, req.UserID, req.GroupID)
+		if err != nil {
+			return nil, err
+		}
+		if !isMember {
+			return nil, &AuthorizationError{Message: "You are not a member of this group. Please join the group first to record scores."}
+		}
 	*/
 
 	// Get behavior to verify it exists and get points

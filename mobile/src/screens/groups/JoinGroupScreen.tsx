@@ -196,10 +196,10 @@ const JoinGroupScreen = () => {
       letterSpacing: 2,
     },
     inputError: {
-      borderColor: theme.colors.error,
+      borderColor: theme.colors.status.error,
     },
     errorText: {
-      color: theme.colors.error,
+      color: theme.colors.status.error,
       fontSize: 14,
       marginTop: 8,
       textAlign: 'center',
@@ -233,7 +233,7 @@ const JoinGroupScreen = () => {
       borderColor: theme.colors.border,
     },
     petsError: {
-      color: theme.colors.error,
+      color: theme.colors.status.error,
       fontSize: 14,
       marginTop: 8,
       textAlign: 'center',

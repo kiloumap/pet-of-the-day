@@ -234,11 +234,11 @@ func (h *CommunityHandlers) InviteToGroup(w http.ResponseWriter, r *http.Request
 	}
 
 	response := map[string]interface{}{
-		"id":           invitation.ID(),
-		"group_id":     invitation.GroupID(),
-		"invite_type":  invitation.InviteType(),
-		"expires_at":   invitation.ExpiresAt(),
-		"created_at":   invitation.CreatedAt(),
+		"id":          invitation.ID(),
+		"group_id":    invitation.GroupID(),
+		"invite_type": invitation.InviteType(),
+		"expires_at":  invitation.ExpiresAt(),
+		"created_at":  invitation.CreatedAt(),
 	}
 
 	// Only include invite code for code invitations
@@ -253,9 +253,9 @@ func (h *CommunityHandlers) InviteToGroup(w http.ResponseWriter, r *http.Request
 // POST /invitations/accept
 func (h *CommunityHandlers) AcceptInvitation(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		InvitationID *uuid.UUID  `json:"invitation_id,omitempty"`
-		InviteCode   string      `json:"invite_code,omitempty"`
-		PetIDs       []uuid.UUID `json:"pet_ids"`
+		InvitationID *uuid.UUID `json:"invitation_id,omitempty"`
+		InviteCode   string     `json:"invite_code,omitempty"`
+		PetIDs       []string   `json:"pet_ids"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -268,9 +268,20 @@ func (h *CommunityHandlers) AcceptInvitation(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	// Convert string pet IDs to UUIDs
+	var petIDs []uuid.UUID
+	for _, petIDStr := range req.PetIDs {
+		petID, err := uuid.Parse(petIDStr)
+		if err != nil {
+			http.Error(w, "Invalid pet ID format", http.StatusBadRequest)
+			return
+		}
+		petIDs = append(petIDs, petID)
+	}
+
 	cmd := commands.AcceptInvitationCommand{
 		UserID:     userID,
-		PetIDs:     req.PetIDs,
+		PetIDs:     petIDs,
 		InviteCode: req.InviteCode,
 	}
 
@@ -335,9 +346,9 @@ func (h *CommunityHandlers) GetGroup(w http.ResponseWriter, r *http.Request) {
 
 	if result.Membership != nil {
 		response["membership"] = map[string]interface{}{
-			"id":       result.Membership.ID(),
-			"pet_ids":  result.Membership.PetIDs(),
-			"status":   result.Membership.Status(),
+			"id":        result.Membership.ID(),
+			"pet_ids":   result.Membership.PetIDs(),
+			"status":    result.Membership.Status(),
 			"joined_at": result.Membership.CreatedAt(),
 		}
 	}

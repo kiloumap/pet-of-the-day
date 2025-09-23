@@ -4,6 +4,7 @@ import (
 	"context"
 	"pet-of-the-day/internal/community/domain"
 	"pet-of-the-day/internal/shared/events"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -44,7 +45,9 @@ func (h *AcceptInvitationHandler) Handle(ctx context.Context, cmd AcceptInvitati
 	if cmd.InvitationID != uuid.Nil {
 		invitation, err = h.invitationRepo.FindByID(ctx, cmd.InvitationID)
 	} else if cmd.InviteCode != "" {
-		invitation, err = h.invitationRepo.FindByCode(ctx, cmd.InviteCode)
+		// Normalize invite code to lowercase to match backend generation
+		normalizedCode := strings.ToLower(strings.TrimSpace(cmd.InviteCode))
+		invitation, err = h.invitationRepo.FindByCode(ctx, normalizedCode)
 	} else {
 		return nil, domain.ErrInvitationInvalid
 	}

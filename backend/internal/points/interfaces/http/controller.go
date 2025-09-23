@@ -84,11 +84,11 @@ func (c *Controller) CreateScoreEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		PetID      string    `json:"pet_id"`
-		BehaviorID string    `json:"behavior_id"`
-		GroupID    string    `json:"group_id"`
-		Comment    *string   `json:"comment,omitempty"`
-		ActionDate *string   `json:"action_date,omitempty"`
+		PetID      string  `json:"pet_id"`
+		BehaviorID string  `json:"behavior_id"`
+		GroupID    string  `json:"group_id"`
+		Comment    *string `json:"comment,omitempty"`
+		ActionDate *string `json:"action_date,omitempty"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

@@ -14,10 +14,10 @@ import (
 
 func TestGetUserGroupsHandler_Handle(t *testing.T) {
 	tests := []struct {
-		name       string
-		setupMocks func(*infrastructure.MockGroupRepository, *infrastructure.MockMembershipRepository, uuid.UUID) queries.GetUserGroupsQuery
+		name        string
+		setupMocks  func(*infrastructure.MockGroupRepository, *infrastructure.MockMembershipRepository, uuid.UUID) queries.GetUserGroupsQuery
 		checkResult func(*testing.T, *queries.UserGroupsResult, uuid.UUID)
-		wantErr    error
+		wantErr     error
 	}{
 		{
 			name: "user with created and joined groups",

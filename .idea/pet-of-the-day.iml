@@ -6,6 +6,13 @@
       <excludeFolder url="file://$MODULE_DIR$/.tmp" />
       <excludeFolder url="file://$MODULE_DIR$/temp" />
       <excludeFolder url="file://$MODULE_DIR$/tmp" />
+      <excludeFolder url="file://$MODULE_DIR$/.idea/inspectionProfiles" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/.idea" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/ent/migrate" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/ent/predicate" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/ent/runtime" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/tmp" />
+      <excludeFolder url="file://$MODULE_DIR$/mobile/.expo" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

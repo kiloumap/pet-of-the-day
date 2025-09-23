@@ -3,8 +3,8 @@ package ent
 import (
 	"context"
 	"pet-of-the-day/ent"
-	"pet-of-the-day/ent/membership"
 	"pet-of-the-day/ent/group"
+	"pet-of-the-day/ent/membership"
 	"pet-of-the-day/ent/user"
 	"pet-of-the-day/internal/community/domain"
 

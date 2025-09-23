@@ -14,9 +14,9 @@ import (
 
 func TestGetGroupHandler_Handle(t *testing.T) {
 	tests := []struct {
-		name       string
-		setupMocks func(*infrastructure.MockGroupRepository, *infrastructure.MockMembershipRepository) (queries.GetGroupQuery, *domain.Group)
-		wantErr    error
+		name        string
+		setupMocks  func(*infrastructure.MockGroupRepository, *infrastructure.MockMembershipRepository) (queries.GetGroupQuery, *domain.Group)
+		wantErr     error
 		checkResult func(*testing.T, *queries.GroupWithMembership, *domain.Group)
 	}{
 		{

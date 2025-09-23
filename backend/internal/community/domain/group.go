@@ -108,10 +108,10 @@ func (g *Group) ClearEvents() {
 }
 
 // Getters
-func (g *Group) ID() uuid.UUID        { return g.id }
-func (g *Group) Name() string         { return g.name }
-func (g *Group) Description() string  { return g.description }
+func (g *Group) ID() uuid.UUID         { return g.id }
+func (g *Group) Name() string          { return g.name }
+func (g *Group) Description() string   { return g.description }
 func (g *Group) Privacy() GroupPrivacy { return g.privacy }
-func (g *Group) CreatorID() uuid.UUID { return g.creatorID }
-func (g *Group) CreatedAt() time.Time { return g.createdAt }
-func (g *Group) UpdatedAt() time.Time { return g.updatedAt }
+func (g *Group) CreatorID() uuid.UUID  { return g.creatorID }
+func (g *Group) CreatedAt() time.Time  { return g.createdAt }
+func (g *Group) UpdatedAt() time.Time  { return g.updatedAt }

@@ -55,6 +55,14 @@ func (r *MockGroupRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
+func (r *MockGroupRepository) GetAll() []*domain.Group {
+	var groups []*domain.Group
+	for _, group := range r.groups {
+		groups = append(groups, group)
+	}
+	return groups
+}
+
 // MockMembershipRepository provides in-memory implementation for testing
 type MockMembershipRepository struct {
 	memberships map[uuid.UUID]*domain.Membership
@@ -133,6 +141,14 @@ func (r *MockMembershipRepository) Delete(ctx context.Context, id uuid.UUID) err
 	return nil
 }
 
+func (r *MockMembershipRepository) GetAll() []*domain.Membership {
+	var memberships []*domain.Membership
+	for _, membership := range r.memberships {
+		memberships = append(memberships, membership)
+	}
+	return memberships
+}
+
 // MockInvitationRepository provides in-memory implementation for testing
 type MockInvitationRepository struct {
 	invitations map[uuid.UUID]*domain.Invitation
@@ -206,6 +222,14 @@ func (r *MockInvitationRepository) Delete(ctx context.Context, id uuid.UUID) err
 	}
 	delete(r.invitations, id)
 	return nil
+}
+
+func (r *MockInvitationRepository) GetAll() []*domain.Invitation {
+	var invitations []*domain.Invitation
+	for _, invitation := range r.invitations {
+		invitations = append(invitations, invitation)
+	}
+	return invitations
 }
 
 // Mock validation adapters for testing

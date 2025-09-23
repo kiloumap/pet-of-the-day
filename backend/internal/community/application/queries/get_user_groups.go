@@ -12,8 +12,8 @@ type GetUserGroupsQuery struct {
 }
 
 type UserGroupsResult struct {
-	CreatedGroups []*domain.Group      `json:"created_groups"`
-	JoinedGroups  []*GroupMembership   `json:"joined_groups"`
+	CreatedGroups []*domain.Group    `json:"created_groups"`
+	JoinedGroups  []*GroupMembership `json:"joined_groups"`
 }
 
 type GroupMembership struct {

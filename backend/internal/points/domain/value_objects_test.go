@@ -120,7 +120,7 @@ func TestLeaderboardRequest_GetDateRange(t *testing.T) {
 		if weekday == 0 {
 			weekday = 7 // Sunday = 7
 		}
-		expectedStart := now.AddDate(0, 0, -(weekday-1))
+		expectedStart := now.AddDate(0, 0, -(weekday - 1))
 		expectedStart = time.Date(expectedStart.Year(), expectedStart.Month(), expectedStart.Day(), 0, 0, 0, 0, expectedStart.Location())
 		expectedEnd := expectedStart.Add(7 * 24 * time.Hour)
 

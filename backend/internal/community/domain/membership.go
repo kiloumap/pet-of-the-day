@@ -153,10 +153,10 @@ func (m *Membership) ClearEvents() {
 }
 
 // Getters
-func (m *Membership) ID() uuid.UUID           { return m.id }
-func (m *Membership) GroupID() uuid.UUID      { return m.groupID }
-func (m *Membership) UserID() uuid.UUID       { return m.userID }
-func (m *Membership) PetIDs() []uuid.UUID     { return m.petIDs }
+func (m *Membership) ID() uuid.UUID            { return m.id }
+func (m *Membership) GroupID() uuid.UUID       { return m.groupID }
+func (m *Membership) UserID() uuid.UUID        { return m.userID }
+func (m *Membership) PetIDs() []uuid.UUID      { return m.petIDs }
 func (m *Membership) Status() MembershipStatus { return m.status }
-func (m *Membership) CreatedAt() time.Time    { return m.createdAt }
-func (m *Membership) UpdatedAt() time.Time    { return m.updatedAt }
+func (m *Membership) CreatedAt() time.Time     { return m.createdAt }
+func (m *Membership) UpdatedAt() time.Time     { return m.updatedAt }

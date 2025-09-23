@@ -120,8 +120,8 @@ func (r *MockScoreEventRepository) GetLeaderboardData(ctx context.Context, group
 
 	for _, event := range r.events {
 		if event.GroupID == groupID &&
-		   event.ActionDate.After(startDate) &&
-		   event.ActionDate.Before(endDate) {
+			event.ActionDate.After(startDate) &&
+			event.ActionDate.Before(endDate) {
 
 			if stats, exists := petStats[event.PetID]; exists {
 				stats.TotalPoints += event.Points

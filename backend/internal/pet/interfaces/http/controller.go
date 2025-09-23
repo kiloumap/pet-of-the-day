@@ -247,15 +247,15 @@ func (c *Controller) UpdatePet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]interface{}{
-		"id":           result.Pet.ID(),
-		"name":         result.Pet.Name(),
-		"species":      result.Pet.Species(),
-		"breed":        result.Pet.Breed(),
-		"birth_date":   result.Pet.BirthDate(),
-		"photo_url":    result.Pet.PhotoURL(),
-		"created_at":   result.Pet.CreatedAt(),
-		"updated_at":   result.Pet.UpdatedAt(),
-		"owner_id":     result.Pet.OwnerID(),
+		"id":         result.Pet.ID(),
+		"name":       result.Pet.Name(),
+		"species":    result.Pet.Species(),
+		"breed":      result.Pet.Breed(),
+		"birth_date": result.Pet.BirthDate(),
+		"photo_url":  result.Pet.PhotoURL(),
+		"created_at": result.Pet.CreatedAt(),
+		"updated_at": result.Pet.UpdatedAt(),
+		"owner_id":   result.Pet.OwnerID(),
 	}
 
 	w.Header().Set("Content-Type", "application/json")

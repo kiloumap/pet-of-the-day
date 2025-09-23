@@ -10,7 +10,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-
 // RegisterCommunityRoutes registers all community-related HTTP routes with authentication
 func RegisterCommunityRoutes(router *mux.Router, handlers *CommunityHandlers, jwtService auth.JWTService) {
 	// Protected routes that require authentication

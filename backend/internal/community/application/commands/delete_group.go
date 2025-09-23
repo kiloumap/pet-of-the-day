@@ -19,10 +19,10 @@ type DeleteGroupCommand struct {
 }
 
 type DeleteGroupHandler struct {
-	groupRepo        domain.GroupRepository
-	membershipRepo   domain.MembershipRepository
-	invitationRepo   domain.InvitationRepository
-	scoreEventRepo   ScoreEventRepository
+	groupRepo      domain.GroupRepository
+	membershipRepo domain.MembershipRepository
+	invitationRepo domain.InvitationRepository
+	scoreEventRepo ScoreEventRepository
 }
 
 func NewDeleteGroupHandler(
@@ -32,10 +32,10 @@ func NewDeleteGroupHandler(
 	scoreEventRepo ScoreEventRepository,
 ) *DeleteGroupHandler {
 	return &DeleteGroupHandler{
-		groupRepo:        groupRepo,
-		membershipRepo:   membershipRepo,
-		invitationRepo:   invitationRepo,
-		scoreEventRepo:   scoreEventRepo,
+		groupRepo:      groupRepo,
+		membershipRepo: membershipRepo,
+		invitationRepo: invitationRepo,
+		scoreEventRepo: scoreEventRepo,
 	}
 }
 

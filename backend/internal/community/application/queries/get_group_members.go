@@ -13,9 +13,9 @@ type GetGroupMembersQuery struct {
 }
 
 type GroupMembersResult struct {
-	Group       *domain.Group           `json:"group"`
-	Members     []*domain.Membership    `json:"members"`
-	Invitations []*domain.Invitation    `json:"invitations,omitempty"` // Only for creators
+	Group       *domain.Group        `json:"group"`
+	Members     []*domain.Membership `json:"members"`
+	Invitations []*domain.Invitation `json:"invitations,omitempty"` // Only for creators
 }
 
 type GetGroupMembersHandler struct {

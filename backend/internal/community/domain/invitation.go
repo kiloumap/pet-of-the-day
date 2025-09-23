@@ -172,13 +172,13 @@ func (i *Invitation) ClearEvents() {
 }
 
 // Getters
-func (i *Invitation) ID() uuid.UUID             { return i.id }
-func (i *Invitation) GroupID() uuid.UUID        { return i.groupID }
-func (i *Invitation) InviterID() uuid.UUID      { return i.inviterID }
-func (i *Invitation) InviteeEmail() string      { return i.inviteeEmail }
-func (i *Invitation) InviteCode() string        { return i.inviteCode }
+func (i *Invitation) ID() uuid.UUID              { return i.id }
+func (i *Invitation) GroupID() uuid.UUID         { return i.groupID }
+func (i *Invitation) InviterID() uuid.UUID       { return i.inviterID }
+func (i *Invitation) InviteeEmail() string       { return i.inviteeEmail }
+func (i *Invitation) InviteCode() string         { return i.inviteCode }
 func (i *Invitation) InviteType() InvitationType { return i.inviteType }
-func (i *Invitation) Status() InvitationStatus  { return i.status }
-func (i *Invitation) ExpiresAt() time.Time      { return i.expiresAt }
-func (i *Invitation) CreatedAt() time.Time      { return i.createdAt }
-func (i *Invitation) UpdatedAt() time.Time      { return i.updatedAt }
+func (i *Invitation) Status() InvitationStatus   { return i.status }
+func (i *Invitation) ExpiresAt() time.Time       { return i.expiresAt }
+func (i *Invitation) CreatedAt() time.Time       { return i.createdAt }
+func (i *Invitation) UpdatedAt() time.Time       { return i.updatedAt }

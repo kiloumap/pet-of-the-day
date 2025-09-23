@@ -9,28 +9,28 @@ import (
 
 type GroupCreatedEvent struct {
 	events.BaseEvent
-	GroupID     uuid.UUID `json:"group_id"`
-	GroupName   string    `json:"group_name"`
-	CreatorID   uuid.UUID `json:"creator_id"`
-	CreatedAt   time.Time `json:"created_at"`
+	GroupID   uuid.UUID `json:"group_id"`
+	GroupName string    `json:"group_name"`
+	CreatorID uuid.UUID `json:"creator_id"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 func NewGroupCreatedEvent(groupID uuid.UUID, groupName string, creatorID uuid.UUID) *GroupCreatedEvent {
 	return &GroupCreatedEvent{
-		BaseEvent:   events.NewBaseEvent("community.group.created", groupID),
-		GroupID:     groupID,
-		GroupName:   groupName,
-		CreatorID:   creatorID,
-		CreatedAt:   time.Now(),
+		BaseEvent: events.NewBaseEvent("community.group.created", groupID),
+		GroupID:   groupID,
+		GroupName: groupName,
+		CreatorID: creatorID,
+		CreatedAt: time.Now(),
 	}
 }
 
 type MembershipRequestedEvent struct {
 	events.BaseEvent
-	GroupID   uuid.UUID   `json:"group_id"`
-	UserID    uuid.UUID   `json:"user_id"`
-	PetIDs    []uuid.UUID `json:"pet_ids"`
-	RequestedAt time.Time `json:"requested_at"`
+	GroupID     uuid.UUID   `json:"group_id"`
+	UserID      uuid.UUID   `json:"user_id"`
+	PetIDs      []uuid.UUID `json:"pet_ids"`
+	RequestedAt time.Time   `json:"requested_at"`
 }
 
 func NewMembershipRequestedEvent(groupID, userID uuid.UUID, petIDs []uuid.UUID) *MembershipRequestedEvent {

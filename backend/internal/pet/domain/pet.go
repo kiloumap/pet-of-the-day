@@ -97,7 +97,7 @@ func (p *Pet) PhotoUrl() string     { return p.photoUrl }
 func (p *Pet) BirthDate() time.Time { return p.birthDate }
 func (p *Pet) CreatedAt() time.Time { return p.createdAt }
 func (p *Pet) UpdatedAt() time.Time { return p.updatedAt }
-func (p *Pet) PhotoURL() string   { return p.photoUrl }
+func (p *Pet) PhotoURL() string     { return p.photoUrl }
 
 // Update methods
 func (p *Pet) UpdateName(name string) error {

@@ -10,24 +10,24 @@ type ErrorCode string
 
 const (
 	// Authentication errors
-	ErrCodeUnauthorized     ErrorCode = "UNAUTHORIZED"
+	ErrCodeUnauthorized       ErrorCode = "UNAUTHORIZED"
 	ErrCodeInvalidCredentials ErrorCode = "INVALID_CREDENTIALS"
-	ErrCodeTokenExpired     ErrorCode = "TOKEN_EXPIRED"
+	ErrCodeTokenExpired       ErrorCode = "TOKEN_EXPIRED"
 
 	// Validation errors
-	ErrCodeValidationFailed  ErrorCode = "VALIDATION_FAILED"
-	ErrCodeInvalidInput      ErrorCode = "INVALID_INPUT"
-	ErrCodeMissingField      ErrorCode = "MISSING_FIELD"
-	ErrCodeInvalidFormat     ErrorCode = "INVALID_FORMAT"
+	ErrCodeValidationFailed ErrorCode = "VALIDATION_FAILED"
+	ErrCodeInvalidInput     ErrorCode = "INVALID_INPUT"
+	ErrCodeMissingField     ErrorCode = "MISSING_FIELD"
+	ErrCodeInvalidFormat    ErrorCode = "INVALID_FORMAT"
 
 	// Business logic errors
 	ErrCodeEmailAlreadyExists ErrorCode = "EMAIL_ALREADY_EXISTS"
-	ErrCodeUserNotFound      ErrorCode = "USER_NOT_FOUND"
-	ErrCodePetNotFound       ErrorCode = "PET_NOT_FOUND"
-	ErrCodePetAlreadyExists  ErrorCode = "PET_ALREADY_EXISTS"
+	ErrCodeUserNotFound       ErrorCode = "USER_NOT_FOUND"
+	ErrCodePetNotFound        ErrorCode = "PET_NOT_FOUND"
+	ErrCodePetAlreadyExists   ErrorCode = "PET_ALREADY_EXISTS"
 
 	// Server errors
-	ErrCodeInternalServer    ErrorCode = "INTERNAL_SERVER_ERROR"
+	ErrCodeInternalServer     ErrorCode = "INTERNAL_SERVER_ERROR"
 	ErrCodeServiceUnavailable ErrorCode = "SERVICE_UNAVAILABLE"
 )
 
@@ -46,16 +46,16 @@ func (e APIError) Error() string {
 
 // ValidationError represents a field-specific validation error
 type ValidationError struct {
-	Field   string `json:"field"`
+	Field   string    `json:"field"`
 	Code    ErrorCode `json:"code"`
-	Message string `json:"message"`
+	Message string    `json:"message"`
 }
 
 // ValidationErrors represents multiple validation errors
 type ValidationErrors struct {
-	Code   ErrorCode         `json:"code"`
-	Message string           `json:"message"`
-	Errors []ValidationError `json:"errors"`
+	Code    ErrorCode         `json:"code"`
+	Message string            `json:"message"`
+	Errors  []ValidationError `json:"errors"`
 }
 
 // Error implements the error interface
