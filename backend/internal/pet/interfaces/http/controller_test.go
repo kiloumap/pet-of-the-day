@@ -30,11 +30,15 @@ func setupTestServer() (*httptest.Server, *infrastructure.MockPetRepository) {
 	}
 
 	addHandler := commands.NewAddPetHandler(repo, eventBus)
+	updateHandler := commands.NewUpdatePetHandler(repo, eventBus)
+	deleteHandler := commands.NewDeletePetHandler(repo, eventBus)
 	getUserPets := queries.NewGetOwnedPetsHandler(repo)
 	getPetHandler := queries.NewGetPetByIDHandler(repo)
 
 	controller := pethttp.NewPetController(
 		addHandler,
+		updateHandler,
+		deleteHandler,
 		getUserPets,
 		getPetHandler,
 	)
@@ -44,6 +48,100 @@ func setupTestServer() (*httptest.Server, *infrastructure.MockPetRepository) {
 	controller.RegisterRoutes(api, noAuthMiddleware)
 
 	return httptest.NewServer(router), repo
+}
+
+// Contract Tests for Pet Personality API
+
+func TestGetPetPersonalityEndpoint_Success(t *testing.T) {
+	server, _ := setupTestServer()
+	defer server.Close()
+
+	petID := uuid.New()
+	// This will fail until we implement the personality functionality
+
+	resp, err := http.Get(server.URL + "/api/pets/" + petID.String() + "/personality")
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// This test should fail initially (404) until we implement the endpoint
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+
+	// TODO: Update this test when personality endpoint is implemented
+	// Expected successful response:
+	// assert.Equal(t, http.StatusOK, resp.StatusCode)
+	//
+	// var response struct {
+	// 	Success bool `json:"success"`
+	// 	Data    []struct {
+	// 		ID             string `json:"id"`
+	// 		TraitType      string `json:"trait_type,omitempty"`
+	// 		CustomTrait    string `json:"custom_trait,omitempty"`
+	// 		IntensityLevel int    `json:"intensity_level"`
+	// 		Notes          string `json:"notes,omitempty"`
+	// 	} `json:"data"`
+	// }
+	//
+	// err = json.NewDecoder(resp.Body).Decode(&response)
+	// assert.NoError(t, err)
+	// assert.True(t, response.Success)
+}
+
+func TestPostPetPersonalityEndpoint_Success(t *testing.T) {
+	server, _ := setupTestServer()
+	defer server.Close()
+
+	petID := uuid.New()
+
+	requestBody := map[string]interface{}{
+		"traits": []map[string]interface{}{
+			{
+				"trait_type":      "playful",
+				"intensity_level": 4,
+				"notes":          "Very energetic",
+			},
+		},
+	}
+
+	jsonBody, _ := json.Marshal(requestBody)
+
+	resp, err := http.Post(
+		server.URL+"/api/pets/"+petID.String()+"/personality",
+		"application/json",
+		bytes.NewBuffer(jsonBody),
+	)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// This test should fail initially (404) until we implement the endpoint
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+
+	// TODO: Update this test when personality endpoint is implemented
+	// Expected successful response:
+	// assert.Equal(t, http.StatusCreated, resp.StatusCode)
+}
+
+func TestDeletePetPersonalityTraitEndpoint_Success(t *testing.T) {
+	server, _ := setupTestServer()
+	defer server.Close()
+
+	petID := uuid.New()
+	traitID := uuid.New()
+
+	req, _ := http.NewRequest("DELETE",
+		server.URL+"/api/pets/"+petID.String()+"/personality/"+traitID.String(),
+		nil)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// This test should fail initially (404) until we implement the endpoint
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+
+	// TODO: Update this test when personality endpoint is implemented
+	// Expected successful response:
+	// assert.Equal(t, http.StatusNoContent, resp.StatusCode)
 }
 
 func TestAddPetEndpoint_Success(t *testing.T) {

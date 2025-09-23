@@ -1,0 +1,199 @@
+openapi: 3.0.3
+info:
+  title: Pet Personality API
+  version: 1.0.0
+  description: API for managing pet personality traits
+
+paths:
+  /api/pets/{petId}/personality:
+    get:
+      summary: Get personality traits for a pet
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Pet personality traits
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PersonalityTrait'
+        '404':
+          description: Pet not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not authorized to view this pet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Add or update personality traits for a pet
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                traits:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/PersonalityTraitInput'
+                  maxItems: 10
+              required:
+                - traits
+      responses:
+        '201':
+          description: Personality traits updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PersonalityTrait'
+        '400':
+          description: Invalid input data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not authorized to modify this pet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/pets/{petId}/personality/{traitId}:
+    delete:
+      summary: Remove a personality trait
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: traitId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Personality trait removed
+        '404':
+          description: Pet or trait not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not authorized to modify this pet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    PersonalityTrait:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        trait_type:
+          type: string
+          enum: [playful, calm, energetic, shy, aggressive, friendly, anxious, confident, social, independent]
+          nullable: true
+        custom_trait:
+          type: string
+          maxLength: 100
+          nullable: true
+        intensity_level:
+          type: integer
+          minimum: 1
+          maximum: 5
+        notes:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - intensity_level
+        - created_at
+        - updated_at
+
+    PersonalityTraitInput:
+      type: object
+      properties:
+        trait_type:
+          type: string
+          enum: [playful, calm, energetic, shy, aggressive, friendly, anxious, confident, social, independent]
+          nullable: true
+        custom_trait:
+          type: string
+          maxLength: 100
+          nullable: true
+        intensity_level:
+          type: integer
+          minimum: 1
+          maximum: 5
+        notes:
+          type: string
+          nullable: true
+      required:
+        - intensity_level
+      oneOf:
+        - required: [trait_type]
+        - required: [custom_trait]
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+        details:
+          type: object
+          nullable: true
+      required:
+        - success
+        - error
