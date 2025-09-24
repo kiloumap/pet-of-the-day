@@ -26,6 +26,9 @@ const (
 	ErrCodePetNotFound        ErrorCode = "PET_NOT_FOUND"
 	ErrCodePetAlreadyExists   ErrorCode = "PET_ALREADY_EXISTS"
 
+	// Rate limiting errors
+	ErrCodeRateLimited        ErrorCode = "RATE_LIMITED"
+
 	// Server errors
 	ErrCodeInternalServer     ErrorCode = "INTERNAL_SERVER_ERROR"
 	ErrCodeServiceUnavailable ErrorCode = "SERVICE_UNAVAILABLE"

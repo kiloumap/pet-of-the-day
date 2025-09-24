@@ -1,0 +1,1132 @@
+openapi: 3.0.3
+info:
+  title: Pet of the Day - User Integration API
+  description: Complete user integration system with pet management, personality traits, notebook system, and sharing
+  version: 1.0.0
+  contact:
+    name: Pet of the Day Team
+
+servers:
+  - url: http://localhost:8080/api
+    description: Development server
+
+paths:
+  # Authentication Endpoints
+  /auth/register:
+    post:
+      summary: Register new user account
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User successfully registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      summary: Authenticate user
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/password-reset:
+    post:
+      summary: Request password reset
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+              required: [email]
+      responses:
+        '200':
+          description: Password reset email sent
+        '404':
+          description: Email not found
+
+  # Pet Management Endpoints
+  /pets:
+    get:
+      summary: Get user's pets
+      tags: [Pets]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of user's pets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pets:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Pet'
+    post:
+      summary: Register new pet
+      tags: [Pets]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePetRequest'
+      responses:
+        '201':
+          description: Pet successfully registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+        '400':
+          description: Validation error
+
+  /pets/{petId}:
+    get:
+      summary: Get pet details
+      tags: [Pets]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Pet details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+        '404':
+          description: Pet not found
+    put:
+      summary: Update pet information
+      tags: [Pets]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePetRequest'
+      responses:
+        '200':
+          description: Pet updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+
+  # Personality Traits Endpoints
+  /pets/{petId}/personality:
+    get:
+      summary: Get pet's personality traits
+      tags: [Personality]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of personality traits
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  traits:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PersonalityTrait'
+                  total:
+                    type: integer
+    post:
+      summary: Add personality trait
+      tags: [Personality]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePersonalityTraitRequest'
+      responses:
+        '201':
+          description: Personality trait added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonalityTrait'
+
+  /pets/{petId}/personality/{traitId}:
+    put:
+      summary: Update personality trait
+      tags: [Personality]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: traitId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePersonalityTraitRequest'
+      responses:
+        '200':
+          description: Personality trait updated
+    delete:
+      summary: Remove personality trait
+      tags: [Personality]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: traitId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Personality trait removed
+
+  # Notebook Endpoints
+  /pets/{petId}/notebook:
+    get:
+      summary: Get notebook entries
+      tags: [Notebook]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [medical, diet, habits, commands]
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+            maximum: 50
+      responses:
+        '200':
+          description: List of notebook entries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotebookEntriesResponse'
+    post:
+      summary: Create notebook entry
+      tags: [Notebook]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateNotebookEntryRequest'
+      responses:
+        '201':
+          description: Notebook entry created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotebookEntry'
+
+  /pets/{petId}/notebook/{entryId}:
+    get:
+      summary: Get specific notebook entry
+      tags: [Notebook]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: entryId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Notebook entry details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotebookEntry'
+    put:
+      summary: Update notebook entry
+      tags: [Notebook]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: entryId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateNotebookEntryRequest'
+      responses:
+        '200':
+          description: Notebook entry updated
+    delete:
+      summary: Delete notebook entry
+      tags: [Notebook]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: entryId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Notebook entry deleted
+
+  # Sharing Endpoints
+  /pets/{petId}/notebook/sharing:
+    get:
+      summary: Get notebook sharing permissions
+      tags: [Sharing]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of sharing permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  shares:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/NotebookShare'
+    post:
+      summary: Share notebook with user
+      tags: [Sharing]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateShareRequest'
+      responses:
+        '201':
+          description: Notebook shared successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotebookShare'
+
+  /pets/{petId}/notebook/sharing/{shareId}:
+    delete:
+      summary: Revoke notebook sharing
+      tags: [Sharing]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: shareId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Sharing revoked
+
+  /users/shared-notebooks:
+    get:
+      summary: Get notebooks shared with current user
+      tags: [Sharing]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+            maximum: 50
+      responses:
+        '200':
+          description: List of shared notebooks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SharedNotebooksResponse'
+
+  # Co-ownership Endpoints
+  /pets/{petId}/co-owners:
+    get:
+      summary: Get pet's co-owners
+      tags: [Co-ownership]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of co-owners
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  co_owners:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CoOwner'
+    post:
+      summary: Add co-owner
+      tags: [Co-ownership]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+              required: [email]
+      responses:
+        '201':
+          description: Co-owner added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoOwner'
+
+  /pets/{petId}/co-owners/{coOwnerId}:
+    delete:
+      summary: Remove co-owner
+      tags: [Co-ownership]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: coOwnerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Co-owner removed
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # Authentication Schemas
+    RegisterRequest:
+      type: object
+      required: [email, password, first_name, last_name]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        first_name:
+          type: string
+          minLength: 1
+        last_name:
+          type: string
+          minLength: 1
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    # Pet Schemas
+    Pet:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        breed:
+          type: string
+        birth_date:
+          type: string
+          format: date
+        photo_url:
+          type: string
+          format: uri
+        primary_owner_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreatePetRequest:
+      type: object
+      required: [name, breed, birth_date]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        breed:
+          type: string
+          minLength: 1
+        birth_date:
+          type: string
+          format: date
+        photo_url:
+          type: string
+          format: uri
+
+    UpdatePetRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        breed:
+          type: string
+        birth_date:
+          type: string
+          format: date
+        photo_url:
+          type: string
+          format: uri
+
+    # Personality Schemas
+    PersonalityTrait:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        trait_type:
+          type: string
+          enum: [playful, calm, energetic, shy, aggressive, friendly, anxious, confident, social, independent]
+        custom_trait:
+          type: string
+          maxLength: 100
+        intensity_level:
+          type: integer
+          minimum: 1
+          maximum: 5
+        notes:
+          type: string
+        added_by:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreatePersonalityTraitRequest:
+      type: object
+      required: [intensity_level]
+      properties:
+        trait_type:
+          type: string
+          enum: [playful, calm, energetic, shy, aggressive, friendly, anxious, confident, social, independent]
+        custom_trait:
+          type: string
+          maxLength: 100
+        intensity_level:
+          type: integer
+          minimum: 1
+          maximum: 5
+        notes:
+          type: string
+
+    UpdatePersonalityTraitRequest:
+      type: object
+      properties:
+        intensity_level:
+          type: integer
+          minimum: 1
+          maximum: 5
+        notes:
+          type: string
+
+    # Notebook Schemas
+    NotebookEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        entry_type:
+          type: string
+          enum: [medical, diet, habits, commands]
+        title:
+          type: string
+        content:
+          type: string
+        date_occurred:
+          type: string
+          format: date-time
+        tags:
+          type: array
+          items:
+            type: string
+          maxItems: 10
+        author_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        medical:
+          $ref: '#/components/schemas/MedicalData'
+        diet:
+          $ref: '#/components/schemas/DietData'
+        habit:
+          $ref: '#/components/schemas/HabitData'
+        command:
+          $ref: '#/components/schemas/CommandData'
+
+    CreateNotebookEntryRequest:
+      type: object
+      required: [entry_type, title, content, date_occurred]
+      properties:
+        entry_type:
+          type: string
+          enum: [medical, diet, habits, commands]
+        title:
+          type: string
+          maxLength: 200
+        content:
+          type: string
+          maxLength: 10000
+        date_occurred:
+          type: string
+          format: date-time
+        tags:
+          type: array
+          items:
+            type: string
+          maxItems: 10
+        medical:
+          $ref: '#/components/schemas/CreateMedicalData'
+        diet:
+          $ref: '#/components/schemas/CreateDietData'
+        habit:
+          $ref: '#/components/schemas/CreateHabitData'
+        command:
+          $ref: '#/components/schemas/CreateCommandData'
+
+    UpdateNotebookEntryRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        content:
+          type: string
+          maxLength: 10000
+        date_occurred:
+          type: string
+          format: date-time
+        tags:
+          type: array
+          items:
+            type: string
+          maxItems: 10
+        medical:
+          $ref: '#/components/schemas/CreateMedicalData'
+        diet:
+          $ref: '#/components/schemas/CreateDietData'
+        habit:
+          $ref: '#/components/schemas/CreateHabitData'
+        command:
+          $ref: '#/components/schemas/CreateCommandData'
+
+    NotebookEntriesResponse:
+      type: object
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotebookEntry'
+        total:
+          type: integer
+        page:
+          type: integer
+        per_page:
+          type: integer
+
+    # Specialized Entry Data
+    MedicalData:
+      type: object
+      properties:
+        veterinarian_name:
+          type: string
+        treatment_type:
+          type: string
+        medications:
+          type: string
+        follow_up_date:
+          type: string
+          format: date-time
+        cost:
+          type: number
+          minimum: 0
+        attachments:
+          type: array
+          items:
+            type: string
+            format: uri
+          maxItems: 5
+
+    CreateMedicalData:
+      type: object
+      properties:
+        veterinarian_name:
+          type: string
+        treatment_type:
+          type: string
+        medications:
+          type: string
+        follow_up_date:
+          type: string
+          format: date-time
+        cost:
+          type: number
+          minimum: 0
+        attachments:
+          type: array
+          items:
+            type: string
+            format: uri
+          maxItems: 5
+
+    DietData:
+      type: object
+      properties:
+        food_type:
+          type: string
+        quantity:
+          type: string
+        feeding_schedule:
+          type: string
+        dietary_restrictions:
+          type: string
+        reaction_notes:
+          type: string
+
+    CreateDietData:
+      type: object
+      properties:
+        food_type:
+          type: string
+        quantity:
+          type: string
+        feeding_schedule:
+          type: string
+        dietary_restrictions:
+          type: string
+        reaction_notes:
+          type: string
+
+    HabitData:
+      type: object
+      properties:
+        behavior_pattern:
+          type: string
+        triggers:
+          type: string
+        frequency:
+          type: string
+        location:
+          type: string
+        severity:
+          type: integer
+          minimum: 1
+          maximum: 5
+
+    CreateHabitData:
+      type: object
+      required: [behavior_pattern, severity]
+      properties:
+        behavior_pattern:
+          type: string
+        triggers:
+          type: string
+        frequency:
+          type: string
+        location:
+          type: string
+        severity:
+          type: integer
+          minimum: 1
+          maximum: 5
+
+    CommandData:
+      type: object
+      properties:
+        command_name:
+          type: string
+        training_status:
+          type: string
+        success_rate:
+          type: integer
+          minimum: 0
+          maximum: 100
+        training_method:
+          type: string
+        last_practiced:
+          type: string
+          format: date-time
+
+    CreateCommandData:
+      type: object
+      required: [command_name]
+      properties:
+        command_name:
+          type: string
+        training_status:
+          type: string
+        success_rate:
+          type: integer
+          minimum: 0
+          maximum: 100
+        training_method:
+          type: string
+        last_practiced:
+          type: string
+          format: date-time
+
+    # Sharing Schemas
+    NotebookShare:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        shared_with:
+          type: string
+          format: email
+        shared_by:
+          type: string
+          format: uuid
+        read_only:
+          type: boolean
+        granted_at:
+          type: string
+          format: date-time
+        revoked_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+    CreateShareRequest:
+      type: object
+      required: [shared_with]
+      properties:
+        shared_with:
+          type: string
+          format: email
+
+    SharedNotebooksResponse:
+      type: object
+      properties:
+        notebooks:
+          type: array
+          items:
+            $ref: '#/components/schemas/SharedNotebook'
+        total:
+          type: integer
+        page:
+          type: integer
+        per_page:
+          type: integer
+
+    SharedNotebook:
+      type: object
+      properties:
+        notebook_id:
+          type: string
+          format: uuid
+        pet_id:
+          type: string
+          format: uuid
+        pet_name:
+          type: string
+        owner_name:
+          type: string
+        shared_at:
+          type: string
+          format: date-time
+        share:
+          $ref: '#/components/schemas/NotebookShare'
+
+    # Co-ownership Schemas
+    CoOwner:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        granted_at:
+          type: string
+          format: date-time
+
+    # Error Schema
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        field:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              code:
+                type: string
+              message:
+                type: string

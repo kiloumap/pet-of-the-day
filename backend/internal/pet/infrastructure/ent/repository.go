@@ -36,23 +36,23 @@ func (r *EntPetRepository) Save(ctx context.Context, domainPet *domain.Pet, owne
 	return err
 }
 
+// TODO: Implement when co-ownership schema is ready
 func (r *EntPetRepository) AddCoOwner(ctx context.Context, petID uuid.UUID, userID uuid.UUID) error {
-	user, err := r.client.User.Get(ctx, userID)
-	if err != nil {
-		return err
-	}
-
-	err = r.client.Pet.UpdateOneID(petID).
-		AddCoOwners(user).
-		Exec(ctx)
-
-	if err != nil {
-		if ent.IsNotFound(err) {
-			return domain.ErrPetNotFound
-		}
-	}
-
-	return nil
+	// user, err := r.client.User.Get(ctx, userID)
+	// if err != nil {
+	//     return err
+	// }
+	//
+	// err = r.client.Pet.UpdateOneID(petID).
+	//     AddCoOwners(user).
+	//     Exec(ctx)
+	//
+	// if err != nil {
+	//     if ent.IsNotFound(err) {
+	//         return domain.ErrPetNotFound
+	//     }
+	// }
+	return nil // Mock implementation until schema is ready
 }
 
 func (r *EntPetRepository) FindByID(ctx context.Context, id uuid.UUID) (*domain.Pet, error) {
@@ -60,7 +60,7 @@ func (r *EntPetRepository) FindByID(ctx context.Context, id uuid.UUID) (*domain.
 		Query().
 		Where(pet.ID(id)).
 		WithOwner().
-		WithCoOwners().
+		// TODO: Add WithCoOwners() when schema is ready
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -107,20 +107,22 @@ func (r *EntPetRepository) FindAllPetsByOwnerId(ctx context.Context, ownerID uui
 	return r.entToDomains(entPets)
 }
 
+// TODO: Implement when co-ownership schema is ready
 func (r *EntPetRepository) FindAllPetsByCoOwnerID(ctx context.Context, ownerID uuid.UUID) ([]*domain.Pet, error) {
-	entPets, err := r.client.Pet.
-		Query().
-		Where(
-			pet.HasCoOwnersWith(user.ID(ownerID)),
-		).
-		WithOwner().
-		All(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return r.entToDomains(entPets)
+	// entPets, err := r.client.Pet.
+	//     Query().
+	//     Where(
+	//         pet.HasCoOwnersWith(user.ID(ownerID)),
+	//     ).
+	//     WithOwner().
+	//     All(ctx)
+	//
+	// if err != nil {
+	//     return nil, err
+	// }
+	//
+	// return r.entToDomains(entPets)
+	return []*domain.Pet{}, nil // Mock implementation until schema is ready
 }
 
 func (r *EntPetRepository) ExistsByOwnerId(ctx context.Context, ownerID uuid.UUID, name string) (bool, error) {
@@ -133,23 +135,25 @@ func (r *EntPetRepository) ExistsByOwnerId(ctx context.Context, ownerID uuid.UUI
 		Exist(ctx)
 }
 
+// TODO: Implement when co-ownership schema is ready
 func (r *EntPetRepository) GetCoOwnersByPetID(ctx context.Context, petID uuid.UUID) ([]uuid.UUID, error) {
-	pet, err := r.client.Pet.
-		Query().
-		Where(pet.ID(petID)).
-		WithCoOwners().
-		Only(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-
-	coOwnerIDs := make([]uuid.UUID, len(pet.Edges.CoOwners))
-	for i, coOwner := range pet.Edges.CoOwners {
-		coOwnerIDs[i] = coOwner.ID
-	}
-
-	return coOwnerIDs, nil
+	// pet, err := r.client.Pet.
+	//     Query().
+	//     Where(pet.ID(petID)).
+	//     WithCoOwners().
+	//     Only(ctx)
+	//
+	// if err != nil {
+	//     return nil, err
+	// }
+	//
+	// coOwnerIDs := make([]uuid.UUID, len(pet.Edges.CoOwners))
+	// for i, coOwner := range pet.Edges.CoOwners {
+	//     coOwnerIDs[i] = coOwner.ID
+	// }
+	//
+	// return coOwnerIDs, nil
+	return []uuid.UUID{}, nil // Mock implementation until schema is ready
 }
 
 func (r *EntPetRepository) Update(ctx context.Context, domainPet *domain.Pet) (*domain.Pet, error) {

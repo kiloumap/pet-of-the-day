@@ -39,7 +39,14 @@
       "firstNameRequired": "Le prénom est requis",
       "lastNameRequired": "Le nom est requis",
       "confirmPasswordRequired": "Veuillez confirmer le mot de passe"
-    }
+    },
+    "resetPassword": "Réinitialiser le mot de passe",
+    "resetPasswordDescription": "Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.",
+    "sendResetLink": "Envoyer le lien de réinitialisation",
+    "backToLogin": "Retour à la connexion",
+    "resetEmailSent": "Email envoyé",
+    "emailSent": "Email envoyé",
+    "resetEmailSentDescription": "Nous avons envoyé des instructions de réinitialisation de mot de passe à {{email}}. Veuillez vérifier votre email et suivre le lien pour réinitialiser votre mot de passe."
   },
   "pets": {
     "myPets": "Mes animaux",
@@ -72,6 +79,33 @@
     "deletePet": "Supprimer l'animal",
     "deleteConfirmTitle": "Supprimer l'animal",
     "deleteConfirmMessage": "Êtes-vous sûr de vouloir supprimer {{name}} ? Cette action est irréversible.",
+    "permissions": {
+      "cameraTitle": "Permission de caméra requise",
+      "cameraMessage": "Cette application a besoin d'accéder à la caméra pour prendre des photos d'animaux. Veuillez activer les permissions de caméra dans les paramètres de votre appareil.",
+      "galleryTitle": "Permission de galerie photo requise",
+      "galleryMessage": "Cette application a besoin d'accéder à la galerie photo pour sélectionner des photos d'animaux. Veuillez activer les permissions de galerie photo dans les paramètres de votre appareil."
+    },
+    "upload": {
+      "addPhoto": "Ajouter une photo",
+      "selectPhoto": "Sélectionner une photo",
+      "selectPhotoMessage": "Choisissez comment vous souhaitez ajouter une photo",
+      "camera": "Appareil photo",
+      "gallery": "Galerie",
+      "removePhoto": "Supprimer la photo",
+      "removePhotoMessage": "Êtes-vous sûr de vouloir supprimer cette photo ?",
+      "uploading": "Téléchargement...",
+      "fileTooLarge": "Fichier trop volumineux",
+      "fileTooLargeMessage": "L'image sélectionnée est trop volumineuse. La taille maximale autorisée est de {{maxSize}}MB.",
+      "invalidFormat": "Format invalide",
+      "invalidFormatMessage": "Veuillez sélectionner un fichier image valide (JPG, PNG, WebP, ou GIF).",
+      "uploadError": "Erreur de téléchargement",
+      "uploadErrorMessage": "Impossible de traiter l'image. Veuillez réessayer.",
+      "cameraError": "Erreur d'appareil photo",
+      "cameraErrorMessage": "Impossible de prendre la photo. Veuillez réessayer.",
+      "galleryError": "Erreur de galerie",
+      "galleryErrorMessage": "Impossible de sélectionner la photo. Veuillez réessayer.",
+      "sizeHint": "Taille maximale du fichier : {{maxSize}}MB"
+    },
     "validations": {
       "nameRequired": "Le nom de l'animal est requis",
       "speciesRequired": "L'espèce de l'animal est requise",
@@ -219,13 +253,46 @@
     "forbidden": "Accès refusé"
   },
   "settings": {
-    "appearance": "Apparence",
-    "theme": "Thème",
-    "themeDescription": "Choisissez entre le mode clair et sombre",
-    "light": "Clair",
-    "dark": "Sombre",
-    "language": "Langue",
-    "languageDescription": "Choisissez votre langue préférée"
+    "sections": {
+      "account": "Compte",
+      "appearance": "Apparence",
+      "support": "Support"
+    },
+    "profile": {
+      "guest": "Utilisateur invité",
+      "editProfile": "Modifier le profil",
+      "editProfileDescription": "Mettez à jour vos informations personnelles"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Gérez vos préférences de notification"
+    },
+    "theme": {
+      "title": "Thème",
+      "description": "Choisissez entre le mode clair et sombre",
+      "light": "Mode clair",
+      "dark": "Mode sombre"
+    },
+    "language": {
+      "title": "Langue",
+      "description": "Choisissez votre langue préférée",
+      "current": "Langue actuelle"
+    },
+    "privacy": {
+      "title": "Politique de confidentialité",
+      "description": "Consultez notre politique de confidentialité"
+    },
+    "help": {
+      "title": "Aide et support",
+      "description": "Obtenez de l'aide et contactez le support"
+    },
+    "logout": {
+      "title": "Se déconnecter",
+      "confirm": {
+        "title": "Se déconnecter",
+        "message": "Êtes-vous sûr de vouloir vous déconnecter ?"
+      }
+    }
   },
   "points": {
     "title": "Points & Classement",
@@ -298,6 +365,412 @@
       "noGroupsFound": "Aucun groupe trouvé pour cet animal"
     }
   },
+  "validation": {
+    "required": "{{field}} est requis",
+    "invalidEmail": "Format d'email invalide"
+  },
+  "personality": {
+    "title": "Traits de Personnalité",
+    "addTrait": "Ajouter un Trait de Personnalité",
+    "searchTraits": "Rechercher des traits...",
+    "noTraitsFound": "Aucun trait trouvé correspondant à votre recherche",
+    "allTraitsAdded": "Tous les traits disponibles ont été ajoutés à cet animal",
+    "notes": "Notes",
+    "notesPlaceholder": "Ajoutez des notes spécifiques sur ce trait pour votre animal...",
+    "categories": {
+      "title": "Catégories",
+      "all": "Tous",
+      "energy": "Énergie",
+      "sociability": "Sociabilité",
+      "training": "Dressage",
+      "behavior": "Comportement",
+      "care": "Soins"
+    },
+    "intensity": {
+      "title": "Niveau d'Intensité",
+      "low": "Faible",
+      "medium": "Moyen",
+      "high": "Élevé"
+    },
+    "success": {
+      "traitAdded": "Trait Ajouté",
+      "traitAddedMessage": "{{traitName}} a été ajouté au profil de personnalité de votre animal",
+      "traitUpdated": "Trait Mis à Jour",
+      "traitUpdatedMessage": "{{traitName}} a été mis à jour avec succès",
+      "traitRemoved": "Trait Supprimé",
+      "traitRemovedMessage": "{{traitName}} a été supprimé du profil de votre animal"
+    },
+    "confirmRemove": {
+      "title": "Supprimer le Trait",
+      "message": "Êtes-vous sûr de vouloir supprimer {{traitName}} du profil de personnalité de votre animal ?"
+    },
+    "noTraits": "Aucun Trait de Personnalité",
+    "noTraitsDescription": "Ajoutez des traits de personnalité pour mieux comprendre le comportement et les caractéristiques de votre animal.",
+    "addFirstTrait": "Ajouter le Premier Trait",
+    "stats": {
+      "totalTraits": "Traits Totaux",
+      "categories": "Catégories",
+      "dominantCategory": "Catégorie Principale"
+    }
+  },
+  "notebook": {
+    "title": "Carnet de l'Animal",
+    "types": {
+      "all": "Tous",
+      "medical": "Médical",
+      "diet": "Alimentation",
+      "habit": "Habitudes",
+      "command": "Dressage"
+    },
+    "searchEntries": "Rechercher des entrées...",
+    "addFirstEntry": "Ajouter la Première Entrée",
+    "entriesWillAppearHere": "Les entrées apparaîtront ici",
+    "stats": {
+      "totalEntries": "Entrées Totales",
+      "lastEntry": "Dernière Entrée",
+      "categories": "Catégories"
+    },
+    "empty": {
+      "noEntries": "Aucune Entrée de Carnet",
+      "noEntriesType": "Aucune Entrée {{type}}",
+      "description": "Commencez à documenter la santé, l'alimentation, les habitudes et les progrès de dressage de votre animal."
+    },
+    "success": {
+      "title": "Succès",
+      "entryCreated": "L'entrée a été créée avec succès",
+      "entryUpdated": "L'entrée a été mise à jour avec succès",
+      "entryDeleted": "L'entrée a été supprimée avec succès"
+    },
+    "medical": {
+      "basicInfo": "Informations de Base",
+      "title": "Titre",
+      "titlePlaceholder": "ex: Contrôle annuel, Vaccination",
+      "description": "Description",
+      "descriptionPlaceholder": "Détails supplémentaires sur la visite",
+      "date": "Date",
+      "vetName": "Vétérinaire",
+      "vetNamePlaceholder": "Dr. Martin",
+      "symptoms": "Symptômes",
+      "symptomPlaceholder": "Décrivez le symptôme observé",
+      "addSymptom": "Ajouter un Symptôme",
+      "diagnosisTreatment": "Diagnostic et Traitement",
+      "diagnosis": "Diagnostic",
+      "diagnosisPlaceholder": "Diagnostic du vétérinaire",
+      "treatment": "Traitement",
+      "treatmentPlaceholder": "Plan de traitement prescrit",
+      "medications": "Médicaments",
+      "medication": "Médicament",
+      "medicationName": "Nom",
+      "medicationNamePlaceholder": "ex: Antibiotiques",
+      "dosage": "Dosage",
+      "dosagePlaceholder": "ex: 50mg",
+      "frequency": "Fréquence",
+      "frequencyPlaceholder": "ex: Deux fois par jour",
+      "startDate": "Date de Début",
+      "endDate": "Date de Fin",
+      "addMedication": "Ajouter un Médicament",
+      "severity": {
+        "title": "Gravité",
+        "low": "Faible",
+        "medium": "Moyenne",
+        "high": "Élevée"
+      },
+      "status": {
+        "title": "Statut",
+        "ongoing": "En cours",
+        "resolved": "Résolu",
+        "monitoring": "Surveillance"
+      },
+      "additionalInfo": "Informations Supplémentaires",
+      "nextAppointment": "Prochain Rendez-vous",
+      "validation": {
+        "symptomsRequired": "Veuillez ajouter au moins un symptôme"
+      }
+    },
+    "diet": {
+      "basicInfo": "Informations de Base",
+      "title": "Titre",
+      "titlePlaceholder": "ex: Repas du matin, Friandise spéciale",
+      "description": "Description",
+      "descriptionPlaceholder": "Détails supplémentaires sur la nourriture",
+      "date": "Date",
+      "mealTime": {
+        "title": "Heure du Repas",
+        "breakfast": "Petit-déjeuner",
+        "lunch": "Déjeuner",
+        "dinner": "Dîner",
+        "snack": "Collation"
+      },
+      "foodDetails": "Détails de la Nourriture",
+      "foodBrand": "Marque",
+      "foodBrandPlaceholder": "ex: Royal Canin",
+      "foodType": "Type",
+      "foodTypePlaceholder": "ex: Croquettes, Pâtée",
+      "quantityNutrition": "Quantité et Nutrition",
+      "quantityUnit": "Quantité",
+      "quantity": "Quantité",
+      "quantityPlaceholder": "150",
+      "unit": "Unité",
+      "units": {
+        "cups": "tasses",
+        "pieces": "pièces"
+      },
+      "calories": "Calories",
+      "caloriesPlaceholder": "450",
+      "ingredients": "Ingrédients",
+      "ingredientPlaceholder": "ex: Poulet, Riz",
+      "addIngredient": "Ajouter un Ingrédient",
+      "allergies": "Allergies Connues",
+      "allergyPlaceholder": "ex: Blé, Produits laitiers",
+      "addAllergy": "Ajouter une Allergie",
+      "additionalNotes": "Notes Supplémentaires",
+      "notes": "Notes",
+      "notesPlaceholder": "Toute observation supplémentaire sur les habitudes alimentaires, les préférences, etc.",
+      "validation": {
+        "quantityMustBeNumber": "La quantité doit être un nombre valide",
+        "quantityMustBePositive": "La quantité doit être supérieure à 0",
+        "caloriesMustBeNumber": "Les calories doivent être un nombre valide"
+      }
+    },
+    "habit": {
+      "basicInfo": "Informations de Base",
+      "title": "Titre",
+      "titlePlaceholder": "ex: Aboiements nocturnes, Bon comportement en promenade",
+      "description": "Description",
+      "descriptionPlaceholder": "Description détaillée de l'habitude ou du comportement",
+      "date": "Date",
+      "behaviorType": {
+        "title": "Type de Comportement",
+        "positive": "Positif",
+        "neutral": "Neutre",
+        "negative": "Négatif"
+      },
+      "frequency": {
+        "title": "Fréquence",
+        "daily": "Quotidienne",
+        "weekly": "Hebdomadaire",
+        "rarely": "Rarement",
+        "occasionally": "Occasionnellement"
+      },
+      "context": {
+        "title": "Contexte",
+        "home": "À la Maison",
+        "outdoors": "À l'Extérieur",
+        "withOthers": "Avec d'Autres Animaux",
+        "training": "Pendant le Dressage",
+        "feeding": "Pendant les Repas",
+        "play": "Pendant le Jeu"
+      },
+      "triggers": "Déclencheurs",
+      "triggerPlaceholder": "ex: Bruits forts, Étrangers",
+      "addTrigger": "Ajouter un Déclencheur",
+      "severity": {
+        "title": "Gravité",
+        "low": "Faible",
+        "medium": "Moyenne",
+        "high": "Élevée"
+      },
+      "improvement": {
+        "title": "Amélioration",
+        "improving": "En amélioration",
+        "stable": "Stable",
+        "worsening": "En dégradation"
+      },
+      "additionalNotes": "Notes Supplémentaires",
+      "notes": "Notes",
+      "notesPlaceholder": "Toute observation supplémentaire, méthodes de dressage utilisées, etc."
+    },
+    "command": {
+      "basicInfo": "Informations de Base",
+      "title": "Titre",
+      "titlePlaceholder": "ex: Entraînement commande assis, Pratique du rappel",
+      "description": "Description",
+      "descriptionPlaceholder": "Détails sur la séance d'entraînement",
+      "date": "Date",
+      "commandDetails": "Détails de la Commande",
+      "command": "Commande",
+      "commandPlaceholder": "ex: Assis, Reste, Viens",
+      "success": "Exécution réussie",
+      "attempts": "Tentatives",
+      "duration": "Durée (secondes)",
+      "durationPlaceholder": "30",
+      "trainingDetails": "Détails de l'Entraînement",
+      "trainingMethod": "Méthode d'Entraînement",
+      "trainingMethodPlaceholder": "ex: Renforcement positif, Clicker training",
+      "reward": "Récompense Utilisée",
+      "rewardPlaceholder": "ex: Friandises, Félicitations, Jouets",
+      "difficulty": {
+        "title": "Niveau de Difficulté",
+        "easy": "Facile",
+        "medium": "Moyen",
+        "hard": "Difficile"
+      },
+      "environment": "Environnement d'Entraînement",
+      "environmentPlaceholder": "ex: À la maison, Au parc, Avec distractions",
+      "additionalNotes": "Notes Supplémentaires",
+      "notes": "Notes",
+      "notesPlaceholder": "Observations de progrès, prochaines étapes, améliorations nécessaires, etc.",
+      "validation": {
+        "attemptsMustBePositive": "Le nombre de tentatives doit être supérieur à 0",
+        "durationMustBeNumber": "La durée doit être un nombre valide"
+      }
+    },
+    "common": {
+      "tags": "Étiquettes",
+      "tagPlaceholder": "ex: urgent, routine",
+      "addTag": "Ajouter une Étiquette"
+    }
+  },
+  "sharing": {
+    "shareNotebook": "Partager le Carnet",
+    "sharingNotebookFor": "Partage du carnet pour {{petName}}",
+    "userEmail": "Email de l'Utilisateur",
+    "userEmailDescription": "Entrez l'adresse email de la personne avec qui vous souhaitez partager ce carnet",
+    "selectPermission": "Sélectionnez le Niveau d'Autorisation",
+    "permissionDescription": "Choisissez le niveau d'accès que cette personne aura au carnet",
+    "message": "Message Personnel",
+    "messageDescription": "Ajoutez un message personnel à inclure avec l'invitation de partage",
+    "currentShares": "Actuellement Partagé Avec",
+    "permissions": {
+      "viewOnly": {
+        "title": "Lecture Seule",
+        "description": "Peut voir toutes les entrées mais ne peut pas ajouter, modifier ou supprimer"
+      },
+      "edit": {
+        "title": "Accès Modification",
+        "description": "Peut voir, ajouter et modifier les entrées mais ne peut pas supprimer ou partager"
+      },
+      "admin": {
+        "title": "Accès Complet",
+        "description": "Peut voir, ajouter, modifier, supprimer les entrées et gérer le partage"
+      }
+    },
+    "placeholders": {
+      "userEmail": "ami@exemple.com",
+      "message": "Salut ! J'aimerais partager le carnet de mon animal avec toi..."
+    },
+    "success": {
+      "notebookShared": "Carnet partagé avec succès avec {{email}}",
+      "coOwnerInvited": "Invitation de co-propriétaire envoyée à {{email}}",
+      "inviteAccepted": "Invitation de co-propriétaire acceptée",
+      "inviteRejected": "Invitation de co-propriétaire refusée",
+      "shareRevoked": "Accès de partage révoqué",
+      "relationshipRevoked": "Relation de co-propriétaire révoquée"
+    },
+    "errors": {
+      "userAlreadyShared": "Ce carnet est déjà partagé avec cet utilisateur",
+      "userAlreadyCoOwner": "Cet utilisateur est déjà co-propriétaire de cet animal",
+      "cannotShareWithSelf": "Vous ne pouvez pas partager avec vous-même",
+      "invalidEmail": "Veuillez entrer une adresse email valide"
+    },
+    "coOwnership": {
+      "inviteCoOwner": "Inviter un Co-Propriétaire",
+      "invitingCoOwnerFor": "Invitation de co-propriétaire pour {{petName}}",
+      "relationshipType": "Type de Relation",
+      "relationshipDescription": "Choisissez le type de relation que cette personne aura avec votre animal",
+      "types": {
+        "coOwner": {
+          "title": "Co-Propriétaire",
+          "description": "Droits de propriété complets incluant les décisions médicales et le partage"
+        },
+        "viewer": {
+          "title": "Observateur",
+          "description": "Peut voir les informations de l'animal et les entrées du carnet uniquement"
+        },
+        "caretaker": {
+          "title": "Gardien",
+          "description": "Peut ajouter des entrées et gérer les activités de soins quotidiens"
+        }
+      },
+      "pendingInvites": "Invitations en Attente",
+      "myCoOwnedPets": "Animaux que je co-possède",
+      "managePet": "Gérer {{petName}}",
+      "acceptInvite": "Accepter",
+      "rejectInvite": "Décliner",
+      "revokeAccess": "Révoquer l'Accès",
+      "confirmRevoke": "Êtes-vous sûr de vouloir révoquer l'accès co-propriétaire pour {{name}} ?",
+      "inviteFrom": "Invitation de",
+      "invitedOn": "Invité le",
+      "coOwners": "Co-Propriétaires",
+      "invite": "Inviter",
+      "noCoOwners": "Aucun Co-Propriétaire",
+      "noCoOwnersDescription": "Invitez quelqu'un à co-posséder {{petName}} et partager les responsabilités de soins.",
+      "userEmailDescription": "Entrez l'adresse email de la personne que vous souhaitez inviter comme co-propriétaire",
+      "messageDescription": "Ajoutez un message personnel à inclure avec l'invitation de co-propriétaire",
+      "messagePlaceholder": "Salut ! J'aimerais t'inviter à être co-propriétaire de {{petName}}...",
+      "sendInvite": "Envoyer l'Invitation",
+      "permissionsIncluded": "Ce niveau d'accès inclut :",
+      "permissions": {
+        "viewer": {
+          "viewPetInfo": "Voir les informations et photos de l'animal",
+          "viewNotebook": "Voir toutes les entrées du carnet",
+          "noEdit": "Ne peut pas ajouter ou modifier les entrées"
+        },
+        "caretaker": {
+          "viewPetInfo": "Voir les informations et photos de l'animal",
+          "addEntries": "Ajouter des entrées de soins quotidiens (alimentation, habitudes)",
+          "editBasicInfo": "Modifier les informations de base de l'animal",
+          "noMedical": "Ne peut pas prendre de décisions médicales"
+        },
+        "coOwner": {
+          "fullAccess": "Accès complet à toutes les informations de l'animal",
+          "medicalDecisions": "Peut prendre des décisions médicales",
+          "shareNotebook": "Peut partager le carnet avec d'autres",
+          "inviteOthers": "Peut inviter d'autres co-propriétaires"
+        }
+      }
+    },
+    "sharedNotebooks": "Carnets Partagés",
+    "searchPlaceholder": "Rechercher des carnets...",
+    "tabs": {
+      "shared": "Partagés",
+      "pending": "En attente",
+      "coOwned": "Co-possédés"
+    },
+    "entries": "entrées",
+    "shared": "partagé",
+    "sharedWith": "Partagé avec",
+    "person": "personne",
+    "people": "personnes",
+    "empty": {
+      "noSharedNotebooks": "Aucun Carnet Partagé",
+      "noSharedNotebooksDescription": "Lorsque d'autres personnes partageront leurs carnets d'animaux avec vous, ils apparaîtront ici.",
+      "noPendingInvites": "Aucune Invitation en Attente",
+      "noPendingInvitesDescription": "Les invitations de co-propriétaire d'autres propriétaires d'animaux apparaîtront ici.",
+      "noCoOwnedPets": "Aucun Animal Co-possédé",
+      "noCoOwnedPetsDescription": "Les animaux que vous co-possédez avec d'autres utilisateurs apparaîtront ici."
+    },
+    "status": {
+      "pending": "En attente",
+      "accepted": "Accepté",
+      "rejected": "Refusé",
+      "revoked": "Révoqué"
+    }
+  },
+  "home": {
+    "welcome": "Bon retour, {{name}} !",
+    "subtitle": "Suivez vos animaux et partagez leur parcours avec d'autres",
+    "petOfTheDay": "Animal du Jour",
+    "noPets": "Aucun Animal",
+    "noPetsDescription": "Commencez votre parcours de soins en ajoutant votre premier compagnon",
+    "stats": {
+      "pets": "Animaux",
+      "points": "Points",
+      "shared": "Partagés",
+      "invites": "Invitations"
+    },
+    "notifications": {
+      "pendingInvites": "{{count}} invitation(s) en attente",
+      "pendingInvitesDescription": "Vous avez des invitations de co-propriétaire en attente de réponse"
+    },
+    "quickActions": {
+      "title": "Actions Rapides",
+      "addEntry": "Ajouter Entrée",
+      "schedule": "Planifier",
+      "shareNotebook": "Partager Carnet",
+      "viewStats": "Voir Stats"
+    }
+  },
   "common": {
     "ok": "OK",
     "cancel": "Annuler",
@@ -322,6 +795,8 @@
     "hoursAgo": "{{count}}h",
     "daysAgo": "{{count}}j",
     "recentActivity": "Activité Récente",
-    "viewAll": "Voir Tout"
+    "viewAll": "Voir Tout",
+    "lastUpdated": "Dernière mise à jour",
+    "accepted": "accepté"
   }
 }
