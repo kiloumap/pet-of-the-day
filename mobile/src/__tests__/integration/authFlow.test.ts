@@ -1,9 +1,10 @@
-import { configureStore } from '@reduxjs/toolkit';
+import { configureStore, Store } from '@reduxjs/toolkit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import authSlice, { loginUser as login, registerUser as register, logoutUser as logout } from '../../store/authSlice';
 import groupSlice, { resetGroupState } from '../../store/groupSlice';
 import petSlice, { resetPets } from '../../store/petSlice';
 import apiService from '../../services/api';
+import { RootState } from '../../types/store';
 
 // Mock the API service
 jest.mock('../../services/api');
@@ -14,7 +15,7 @@ jest.mock('@react-native-async-storage/async-storage');
 const mockedAsyncStorage = AsyncStorage as jest.Mocked<typeof AsyncStorage>;
 
 describe('Authentication Flow Integration', () => {
-  let store: ReturnType<typeof configureStore>;
+  let store: Store<RootState>;
 
   beforeEach(() => {
     store = configureStore({
@@ -256,7 +257,13 @@ describe('Authentication Flow Integration', () => {
       const loginResponse = {
         token: 'jwt-token-789',
         user_id: 'user-789',
-        user: { id: 'user-789', email: 'test@example.com' },
+        user: {
+          id: 'user-789',
+          email: 'test@example.com',
+          first_name: 'Test',
+          last_name: 'User',
+          created_at: new Date().toISOString()
+        },
       };
 
       mockedApiService.login.mockResolvedValueOnce(loginResponse);

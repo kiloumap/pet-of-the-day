@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
-import { Action } from '../../types';
+import { Action } from '@/types';
 
 interface ActionButtonProps {
   action: Action;

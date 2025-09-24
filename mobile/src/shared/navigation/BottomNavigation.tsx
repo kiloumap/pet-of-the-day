@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { Home, Users, Trophy, Settings } from 'lucide-react-native';
-import { Screen } from '../../../types';
+import { Screen } from '@/types';
 
 interface BottomNavigationProps {
     currentScreen: Screen;

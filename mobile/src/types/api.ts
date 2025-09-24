@@ -59,6 +59,7 @@ export interface Pet {
   breed?: string;
   birth_date?: string;
   photo_url?: string;
+  image?: string; // Alias for photo_url for backward compatibility
   owner_id: string;
   co_owner_ids?: string[];
   created_at: string;
@@ -88,8 +89,8 @@ export interface AddPetResponse {
 
 export interface UpdatePetRequest {
   petId: string;
-  name: string;
-  species: string;
+  name?: string;
+  species?: string;
   breed?: string;
   birth_date?: string;
   photo_url?: string;

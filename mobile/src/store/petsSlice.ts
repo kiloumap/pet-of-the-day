@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Pet, Group } from '../../types';
-import { EarnedBadge, BadgeProgress } from '../../types/badges';
+import { Pet, Group } from '@/types';
+import { EarnedBadge, BadgeProgress } from '@/types/badges';
 
 interface PetAction {
     petId: number;
@@ -42,7 +42,7 @@ const petsSlice = createSlice({
         setGroups: (state, action: PayloadAction<Group[]>) => {
             state.groups = action.payload;
         },
-        updatePetPoints: (state, action: PayloadAction<{ petId: number; points: number }>) => {
+        updatePetPoints: (state, action: PayloadAction<{ petId: string; points: number }>) => {
             const pet = state.pets.find(p => p.id === action.payload.petId);
             if (pet) {
                 pet.points += action.payload.points;
@@ -57,7 +57,7 @@ const petsSlice = createSlice({
             }
         },
         resetDailyPoints: (state) => {
-            state.pets.forEach(pet => {
+            state.pets.forEach((pet: Pet) => {
                 pet.points = 0;
             });
             state.dailyActions = [];
@@ -70,13 +70,13 @@ const petsSlice = createSlice({
             state.groups.push(action.payload);
         },
         updateGroup: (state, action: PayloadAction<Group>) => {
-            const index = state.groups.findIndex(g => g.id === action.payload.id);
+            const index = state.groups.findIndex((g: Group) => g.id === action.payload.id);
             if (index !== -1) {
                 state.groups[index] = action.payload;
             }
         },
-        removeGroup: (state, action: PayloadAction<number>) => {
-            state.groups = state.groups.filter(g => g.id !== action.payload);
+        removeGroup: (state, action: PayloadAction<string>) => {
+            state.groups = state.groups.filter((g: Group) => g.id !== action.payload);
         },
         // Actions pour les badges
         addEarnedBadge: (state, action: PayloadAction<EarnedBadge>) => {

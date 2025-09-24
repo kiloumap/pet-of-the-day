@@ -11,9 +11,9 @@ import {
 import { X } from 'lucide-react-native';
 import { useDispatch, useSelector } from 'react-redux';
 
-import PetSelector from '../PetSelector';
-import ActionButton from '../ActionButton';
-import { Pet, Action, Multiplier } from '../../../types';
+import PetSelector from '@/shared/PetSelector';
+import ActionButton from '@/shared/ActionButton';
+import { Pet, Action, Multiplier } from '@/types';
 import { getActionsByAge, calculatePoints, getAgeGroup, multipliers } from '@/constants/dogRewardsSystem';
 import { addAction, addMultipleBadges, selectDailyActions, selectEarnedBadges } from '@/store/petsSlice';
 import { BadgeEngine } from '@/utils/badgeEngine';
