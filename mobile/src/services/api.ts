@@ -1,6 +1,12 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_CONFIG } from '../config/api';
+
+// API Configuration
+export const API_CONFIG = {
+  BASE_URL: __DEV__ ? 'http://localhost:8080' : 'https://api.petoftheday.com',
+  TIMEOUT: 15000,
+};
+
 import {
   ApiError,
   RegisterRequest,
@@ -379,6 +385,153 @@ class ApiService {
   async updateMembershipPets(data: UpdateMembershipPetsRequest): Promise<void> {
     const { groupId, ...updateData } = data;
     await this.client.put(`/api/groups/${groupId}/pets`, updateData);
+  }
+
+  // Notebook methods
+  async getPetNotebooks(petId: string): Promise<any> {
+    const response: AxiosResponse<any> = await this.client.get(`/api/pets/${petId}/notebooks`);
+    return response.data;
+  }
+
+  async getNotebook(petId: string, notebookId: string): Promise<any> {
+    const response: AxiosResponse<any> = await this.client.get(`/api/pets/${petId}/notebooks/${notebookId}`);
+    return response.data;
+  }
+
+  async createNotebook(petId: string, data: any): Promise<any> {
+    const response: AxiosResponse<any> = await this.client.post(`/api/pets/${petId}/notebooks`, data);
+    return response.data;
+  }
+
+  async updateNotebook(petId: string, notebookId: string, data: any): Promise<any> {
+    const response: AxiosResponse<any> = await this.client.put(`/api/pets/${petId}/notebooks/${notebookId}`, data);
+    return response.data;
+  }
+
+  async deleteNotebook(petId: string, notebookId: string): Promise<void> {
+    await this.client.delete(`/api/pets/${petId}/notebooks/${notebookId}`);
+  }
+
+  // Notebook entries
+  async getNotebookEntries(petId: string, notebookId: string): Promise<any> {
+    const response: AxiosResponse<any> = await this.client.get(`/api/pets/${petId}/notebooks/${notebookId}/entries`);
+    return response.data;
+  }
+
+  async createNotebookEntry(petId: string, notebookId: string, data: any): Promise<any> {
+    const response: AxiosResponse<any> = await this.client.post(`/api/pets/${petId}/notebooks/${notebookId}/entries`, data);
+    return response.data;
+  }
+
+  async updateNotebookEntry(petId: string, notebookId: string, entryId: string, data: any): Promise<any> {
+    const response: AxiosResponse<any> = await this.client.put(`/api/pets/${petId}/notebooks/${notebookId}/entries/${entryId}`, data);
+    return response.data;
+  }
+
+  async deleteNotebookEntry(petId: string, notebookId: string, entryId: string): Promise<void> {
+    await this.client.delete(`/api/pets/${petId}/notebooks/${notebookId}/entries/${entryId}`);
+  }
+
+  // Sharing methods
+  async getSharedNotebooks(): Promise<any> {
+    const response: AxiosResponse<any> = await this.client.get('/api/sharing/notebooks');
+    return response.data;
+  }
+
+  async getNotebookShares(notebookId: string): Promise<any> {
+    const response: AxiosResponse<any> = await this.client.get(`/api/sharing/notebooks/${notebookId}/shares`);
+    return response.data;
+  }
+
+  async createNotebookShare(notebookId: string, data: any): Promise<any> {
+    const response: AxiosResponse<any> = await this.client.post(`/api/sharing/notebooks/${notebookId}/shares`, data);
+    return response.data;
+  }
+
+  async updateNotebookShare(notebookId: string, shareId: string, data: any): Promise<any> {
+    const response: AxiosResponse<any> = await this.client.put(`/api/sharing/notebooks/${notebookId}/shares/${shareId}`, data);
+    return response.data;
+  }
+
+  async deleteNotebookShare(notebookId: string, shareId: string): Promise<void> {
+    await this.client.delete(`/api/sharing/notebooks/${notebookId}/shares/${shareId}`);
+  }
+
+  // Invitation methods
+  async getPendingInvites(): Promise<any> {
+    const response: AxiosResponse<any> = await this.client.get('/api/sharing/invites/pending');
+    return response.data;
+  }
+
+  async getSentInvites(): Promise<any> {
+    const response: AxiosResponse<any> = await this.client.get('/api/sharing/invites/sent');
+    return response.data;
+  }
+
+  async acceptInvite(inviteId: string): Promise<any> {
+    const response: AxiosResponse<any> = await this.client.post(`/api/sharing/invites/${inviteId}/accept`);
+    return response.data;
+  }
+
+  async rejectInvite(inviteId: string): Promise<any> {
+    const response: AxiosResponse<any> = await this.client.post(`/api/sharing/invites/${inviteId}/reject`);
+    return response.data;
+  }
+
+  async cancelInvite(inviteId: string): Promise<any> {
+    const response: AxiosResponse<any> = await this.client.delete(`/api/sharing/invites/${inviteId}`);
+    return response.data;
+  }
+
+  // Co-owner methods
+  async getPetCoOwners(petId: string): Promise<any> {
+    const response: AxiosResponse<any> = await this.client.get(`/api/pets/${petId}/co-owners`);
+    return response.data;
+  }
+
+  async addCoOwner(petId: string, data: any): Promise<any> {
+    const response: AxiosResponse<any> = await this.client.post(`/api/pets/${petId}/co-owners`, data);
+    return response.data;
+  }
+
+  async removeCoOwner(petId: string, userId: string): Promise<void> {
+    await this.client.delete(`/api/pets/${petId}/co-owners/${userId}`);
+  }
+
+  // Pet personality methods
+  async getPetPersonality(petId: string): Promise<any> {
+    const response: AxiosResponse<any> = await this.client.get(`/api/pets/${petId}/personality`);
+    return response.data;
+  }
+
+  async updatePetPersonality(petId: string, data: any): Promise<any> {
+    const response: AxiosResponse<any> = await this.client.put(`/api/pets/${petId}/personality`, data);
+    return response.data;
+  }
+
+  // File upload methods
+  async uploadPetPhoto(petId: string, photoFile: any): Promise<any> {
+    const formData = new FormData();
+    formData.append('photo', photoFile);
+
+    const response: AxiosResponse<any> = await this.client.post(`/api/pets/${petId}/photo`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  }
+
+  async uploadUserAvatar(userId: string, avatarFile: any): Promise<any> {
+    const formData = new FormData();
+    formData.append('avatar', avatarFile);
+
+    const response: AxiosResponse<any> = await this.client.post(`/api/users/${userId}/avatar`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
   }
 }
 

@@ -420,7 +420,7 @@ const GroupDetailScreen = () => {
       marginTop: 2,
     },
     section: {
-      marginBottom: 24,
+      marginBottom: theme.spacing['2xl'],
     },
     sectionHeader: {
       flexDirection: 'row',
@@ -429,9 +429,9 @@ const GroupDetailScreen = () => {
       marginBottom: 16,
     },
     sectionTitle: {
-      fontSize: 20,
-      fontWeight: '600',
+      ...theme.typography.styles.h3,
       color: theme.colors.text.primary,
+      marginBottom: theme.spacing.lg,
     },
     saveButton: {
       backgroundColor: theme.colors.primary,
@@ -554,14 +554,6 @@ const GroupDetailScreen = () => {
     pointsButtonSubtitle: {
       fontSize: 14,
       color: theme.colors.text.secondary,
-    },
-    section: {
-      marginBottom: theme.spacing['2xl'],
-    },
-    sectionTitle: {
-      ...theme.typography.styles.h3,
-      color: theme.colors.text.primary,
-      marginBottom: theme.spacing.lg,
     },
     infoRow: {
       marginBottom: theme.spacing.lg,
@@ -1000,4 +992,5 @@ const GroupDetailScreen = () => {
   );
 };
 
+export { GroupDetailScreen };
 export default GroupDetailScreen;

@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	"pet-of-the-day/ent"
+	"pet-of-the-day/ent/pet"
 	"pet-of-the-day/ent/petnotebook"
 	"pet-of-the-day/internal/notebook/domain"
 )
@@ -75,7 +76,7 @@ func (r *EntNotebookRepository) FindByID(ctx context.Context, id uuid.UUID) (*do
 func (r *EntNotebookRepository) FindByPetID(ctx context.Context, petID uuid.UUID) (*domain.PetNotebook, error) {
 	entNotebook, err := r.client.PetNotebook.
 		Query().
-		Where(petnotebook.PetID(petID)).
+		Where(petnotebook.HasPetWith(pet.ID(petID))).
 		Only(ctx)
 
 	if err != nil {
@@ -95,7 +96,7 @@ func (r *EntNotebookRepository) CreateForPet(ctx context.Context, petID uuid.UUI
 	_, err := r.client.PetNotebook.
 		Create().
 		SetID(notebook.ID()).
-		SetPetID(notebook.PetID()).
+		SetPetID(petID).
 		SetCreatedAt(notebook.CreatedAt()).
 		SetUpdatedAt(notebook.UpdatedAt()).
 		Save(ctx)
@@ -122,5 +123,11 @@ func (r *EntNotebookRepository) Delete(ctx context.Context, id uuid.UUID) error 
 
 // entToDomain converts an Ent entity to a domain entity
 func (r *EntNotebookRepository) entToDomain(entNotebook *ent.PetNotebook) *domain.PetNotebook {
-	return domain.NewPetNotebook(entNotebook.PetID)
+	// Get pet ID from edge relationship
+	petID := uuid.Nil
+	if entNotebook.Edges.Pet != nil {
+		petID = entNotebook.Edges.Pet.ID
+	}
+
+	return domain.NewPetNotebook(petID)
 }

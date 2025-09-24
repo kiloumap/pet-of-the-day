@@ -414,4 +414,5 @@ const CreateGroupScreen = () => {
   );
 };
 
+export { CreateGroupScreen };
 export default CreateGroupScreen;

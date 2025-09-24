@@ -29,7 +29,7 @@ func (c *PetAccessChecker) HasPetAccess(ctx context.Context, userID, petID uuid.
 	petEntity, err := c.client.Pet.Query().
 		Where(pet.ID(petID)).
 		WithOwner().
-		WithCoOwners().
+		// TODO: Add WithCoOwners() when schema is ready
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -43,12 +43,12 @@ func (c *PetAccessChecker) HasPetAccess(ctx context.Context, userID, petID uuid.
 		return true, nil
 	}
 
-	// Check if user is co-owner
-	for _, coOwner := range petEntity.Edges.CoOwners {
-		if coOwner.ID == userID {
-			return true, nil
-		}
-	}
+	// TODO: Check co-owners when schema is ready
+	// for _, coOwner := range petEntity.Edges.CoOwners {
+	//     if coOwner.ID == userID {
+	//         return true, nil
+	//     }
+	// }
 
 	return false, nil
 }

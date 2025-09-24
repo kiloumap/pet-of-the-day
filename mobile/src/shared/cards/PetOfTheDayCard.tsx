@@ -2,16 +2,16 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../theme';
-import { Pet } from '../../../types';
+import { Pet } from '../../types/api';
 
 interface PetOfTheDayCardProps {
-  winner?: Pet;
+  pet?: Pet;
 }
 
-const PetOfTheDayCard: React.FC<PetOfTheDayCardProps> = ({ winner }) => {
+const PetOfTheDayCard: React.FC<PetOfTheDayCardProps> = ({ pet }) => {
   const { theme } = useTheme();
 
-  if (!winner) return null;
+  if (!pet) return null;
 
   const styles = StyleSheet.create({
     container: {
@@ -67,25 +67,27 @@ const PetOfTheDayCard: React.FC<PetOfTheDayCardProps> = ({ winner }) => {
   });
 
   return (
-      <View style={styles.container}>
-        <LinearGradient
-            colors={[theme.colors.background.primary, theme.colors.background.secondary]}
-            style={styles.gradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-        >
-          <View style={styles.content}>
-            <View style={styles.textContainer}>
-              <Text style={styles.title}>🏆 Pet of the Day</Text>
-              <Text style={styles.petInfo}>{winner.name} - {winner.points ?? 0} pts</Text>
-              <Text style={styles.breed}>{winner.breed}</Text>
-            </View>
-            <Text style={styles.emoji}>{winner.image}</Text>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={[theme.colors.background.primary, theme.colors.background.secondary]}
+        style={styles.gradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+      >
+        <View style={styles.content}>
+          <View style={styles.textContainer}>
+            <Text style={styles.title}>🏆 Pet of the Day</Text>
+            <Text style={styles.petInfo}>
+              {pet.name} - {pet.points ?? 0} pts
+            </Text>
+            <Text style={styles.breed}>{pet.breed}</Text>
           </View>
-          <Text style={styles.sparkle}>✨</Text>
-        </LinearGradient>
-      </View>
+          <Text style={styles.emoji}>🐕</Text>
+        </View>
+        <Text style={styles.sparkle}>✨</Text>
+      </LinearGradient>
+    </View>
   );
 };
 
-export default PetOfTheDayCard;
+export { PetOfTheDayCard };

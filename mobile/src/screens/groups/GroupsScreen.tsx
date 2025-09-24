@@ -340,4 +340,5 @@ const GroupsScreen = () => {
   );
 };
 
+export { GroupsScreen };
 export default GroupsScreen;

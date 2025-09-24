@@ -5,15 +5,20 @@ import (
 	"fmt"
 	"log"
 	"os"
-	userInfraEnt "pet-of-the-day/internal/user/infrastructure/ent"
 
 	_ "github.com/lib/pq"
 	"pet-of-the-day/ent"
+	// TODO: Re-enable when notebook system compilation issues are fixed
+	// notebookDomain "pet-of-the-day/internal/notebook/domain"
+	// notebookInfra "pet-of-the-day/internal/notebook/infrastructure"
 	petDomain "pet-of-the-day/internal/pet/domain"
 	petInfra "pet-of-the-day/internal/pet/infrastructure"
 	petInfraEnt "pet-of-the-day/internal/pet/infrastructure/ent"
+	sharingDomain "pet-of-the-day/internal/sharing/domain"
+	sharingInfra "pet-of-the-day/internal/sharing/infrastructure"
 	userDomain "pet-of-the-day/internal/user/domain"
 	userInfra "pet-of-the-day/internal/user/infrastructure"
+	userInfraEnt "pet-of-the-day/internal/user/infrastructure/ent"
 )
 
 type RepositoryFactory struct {
@@ -59,6 +64,36 @@ func (f *RepositoryFactory) CreatePetRepository() petDomain.Repository {
 		return petInfraEnt.NewEntPetRepository(f.entClient)
 	}
 	return petInfra.NewMockPetRepository()
+}
+
+func (f *RepositoryFactory) CreateCoOwnershipRepository() userDomain.CoOwnershipRepository {
+	// TODO: Implement Ent co-ownership repository when schema is ready
+	// if f.entClient != nil {
+	//     return userInfraEnt.NewEntCoOwnershipRepository(f.entClient)
+	// }
+	return userInfra.NewMockCoOwnershipRepository()
+}
+
+// TODO: Re-enable when notebook system compilation issues are fixed
+// func (f *RepositoryFactory) CreateNotebookRepository() notebookDomain.NotebookRepository {
+// 	if f.entClient != nil {
+// 		return notebookInfra.NewEntNotebookRepository(f.entClient)
+// 	}
+// 	return notebookInfra.NewMockNotebookRepository()
+// }
+
+// func (f *RepositoryFactory) CreateNotebookEntryRepository() notebookDomain.NotebookEntryRepository {
+// 	if f.entClient != nil {
+// 		return notebookInfra.NewEntNotebookEntryRepository(f.entClient)
+// 	}
+// 	return notebookInfra.NewMockNotebookEntryRepository()
+// }
+
+func (f *RepositoryFactory) CreateShareRepository() sharingDomain.ShareRepository {
+	if f.entClient != nil {
+		return sharingInfra.NewEntShareRepository(f.entClient)
+	}
+	return sharingInfra.NewMockShareRepository()
 }
 
 func (f *RepositoryFactory) GetEntClient() *ent.Client {

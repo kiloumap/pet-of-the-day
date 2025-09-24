@@ -11,26 +11,48 @@ import (
 	"pet-of-the-day/internal/user/domain"
 
 	"github.com/gorilla/mux"
+	"github.com/google/uuid"
 )
 
 type Controller struct {
-	registerHandler *commands.RegisterUserHandler
-	loginHandler    *commands.LoginUserHandler
-	getUserHandler  *queries.GetUserByIDHandler
-	jwtService      auth.JWTService
+	registerHandler            *commands.RegisterUserHandler
+	loginHandler               *commands.LoginUserHandler
+	getUserHandler             *queries.GetUserByIDHandler
+	grantCoOwnershipHandler    *commands.GrantCoOwnershipHandler
+	acceptCoOwnershipHandler   *commands.AcceptCoOwnershipHandler
+	rejectCoOwnershipHandler   *commands.RejectCoOwnershipHandler
+	revokeCoOwnershipHandler   *commands.RevokeCoOwnershipHandler
+	getCoOwnershipRequestsHandler *queries.GetCoOwnershipRequestsHandler
+	getPetCoOwnersHandler      *queries.GetPetCoOwnersHandler
+	getCoOwnershipRequestHandler *queries.GetCoOwnershipRequestHandler
+	jwtService                 auth.JWTService
 }
 
 func NewController(
 	registerHandler *commands.RegisterUserHandler,
 	loginHandler *commands.LoginUserHandler,
 	getUserHandler *queries.GetUserByIDHandler,
+	grantCoOwnershipHandler *commands.GrantCoOwnershipHandler,
+	acceptCoOwnershipHandler *commands.AcceptCoOwnershipHandler,
+	rejectCoOwnershipHandler *commands.RejectCoOwnershipHandler,
+	revokeCoOwnershipHandler *commands.RevokeCoOwnershipHandler,
+	getCoOwnershipRequestsHandler *queries.GetCoOwnershipRequestsHandler,
+	getPetCoOwnersHandler *queries.GetPetCoOwnersHandler,
+	getCoOwnershipRequestHandler *queries.GetCoOwnershipRequestHandler,
 	jwtService auth.JWTService,
 ) *Controller {
 	return &Controller{
-		registerHandler: registerHandler,
-		loginHandler:    loginHandler,
-		getUserHandler:  getUserHandler,
-		jwtService:      jwtService,
+		registerHandler:            registerHandler,
+		loginHandler:               loginHandler,
+		getUserHandler:             getUserHandler,
+		grantCoOwnershipHandler:    grantCoOwnershipHandler,
+		acceptCoOwnershipHandler:   acceptCoOwnershipHandler,
+		rejectCoOwnershipHandler:   rejectCoOwnershipHandler,
+		revokeCoOwnershipHandler:   revokeCoOwnershipHandler,
+		getCoOwnershipRequestsHandler: getCoOwnershipRequestsHandler,
+		getPetCoOwnersHandler:      getPetCoOwnersHandler,
+		getCoOwnershipRequestHandler: getCoOwnershipRequestHandler,
+		jwtService:                 jwtService,
 	}
 }
 
@@ -43,6 +65,15 @@ func (c *Controller) RegisterRoutes(router *mux.Router, authMiddleware func(http
 	protected := router.NewRoute().Subrouter()
 	protected.Use(authMiddleware)
 	protected.HandleFunc("/users/me", c.GetCurrentUser).Methods(http.MethodGet, http.MethodOptions)
+
+	// Co-ownership routes
+	protected.HandleFunc("/coownerships/grant", c.GrantCoOwnership).Methods(http.MethodPost, http.MethodOptions)
+	protected.HandleFunc("/coownerships/{requestID}/accept", c.AcceptCoOwnership).Methods(http.MethodPost, http.MethodOptions)
+	protected.HandleFunc("/coownerships/{requestID}/reject", c.RejectCoOwnership).Methods(http.MethodPost, http.MethodOptions)
+	protected.HandleFunc("/coownerships/{requestID}/revoke", c.RevokeCoOwnership).Methods(http.MethodPost, http.MethodOptions)
+	protected.HandleFunc("/coownerships/requests", c.GetCoOwnershipRequests).Methods(http.MethodGet, http.MethodOptions)
+	protected.HandleFunc("/coownerships/{requestID}", c.GetCoOwnershipRequest).Methods(http.MethodGet, http.MethodOptions)
+	protected.HandleFunc("/pets/{petID}/coowners", c.GetPetCoOwners).Methods(http.MethodGet, http.MethodOptions)
 }
 
 func (c *Controller) Register(w http.ResponseWriter, r *http.Request) {
@@ -193,5 +224,207 @@ func (c *Controller) handleError(w http.ResponseWriter, err error) {
 		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInvalidInput, "Invalid name", http.StatusBadRequest)
 	default:
 		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInternalServer, "Internal server error", http.StatusInternalServerError)
+	}
+}
+
+// Co-ownership handlers
+
+func (c *Controller) GrantCoOwnership(w http.ResponseWriter, r *http.Request) {
+	userID, err := auth.GetUserIDFromContext(r.Context())
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var cmd commands.GrantCoOwnershipCommand
+	if err := json.NewDecoder(r.Body).Decode(&cmd); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	cmd.OwnerID = userID // Set from context
+
+	result, err := c.grantCoOwnershipHandler.Handle(r.Context(), cmd)
+	if err != nil {
+		c.handleCoOwnershipError(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(result)
+}
+
+func (c *Controller) AcceptCoOwnership(w http.ResponseWriter, r *http.Request) {
+	userID, err := auth.GetUserIDFromContext(r.Context())
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	vars := mux.Vars(r)
+	requestID, err := uuid.Parse(vars["requestID"])
+	if err != nil {
+		http.Error(w, "Invalid request ID", http.StatusBadRequest)
+		return
+	}
+
+	cmd := commands.AcceptCoOwnershipCommand{
+		RequestID: requestID,
+		UserID:    userID,
+	}
+
+	result, err := c.acceptCoOwnershipHandler.Handle(r.Context(), cmd)
+	if err != nil {
+		c.handleCoOwnershipError(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(result)
+}
+
+func (c *Controller) RejectCoOwnership(w http.ResponseWriter, r *http.Request) {
+	userID, err := auth.GetUserIDFromContext(r.Context())
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	vars := mux.Vars(r)
+	requestID, err := uuid.Parse(vars["requestID"])
+	if err != nil {
+		http.Error(w, "Invalid request ID", http.StatusBadRequest)
+		return
+	}
+
+	cmd := commands.RejectCoOwnershipCommand{
+		RequestID: requestID,
+		UserID:    userID,
+	}
+
+	result, err := c.rejectCoOwnershipHandler.Handle(r.Context(), cmd)
+	if err != nil {
+		c.handleCoOwnershipError(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(result)
+}
+
+func (c *Controller) RevokeCoOwnership(w http.ResponseWriter, r *http.Request) {
+	userID, err := auth.GetUserIDFromContext(r.Context())
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	vars := mux.Vars(r)
+	requestID, err := uuid.Parse(vars["requestID"])
+	if err != nil {
+		http.Error(w, "Invalid request ID", http.StatusBadRequest)
+		return
+	}
+
+	cmd := commands.RevokeCoOwnershipCommand{
+		RequestID: requestID,
+		UserID:    userID,
+	}
+
+	result, err := c.revokeCoOwnershipHandler.Handle(r.Context(), cmd)
+	if err != nil {
+		c.handleCoOwnershipError(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(result)
+}
+
+func (c *Controller) GetCoOwnershipRequests(w http.ResponseWriter, r *http.Request) {
+	userID, err := auth.GetUserIDFromContext(r.Context())
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	query := queries.GetCoOwnershipRequestsQuery{UserID: userID}
+
+	result, err := c.getCoOwnershipRequestsHandler.Handle(r.Context(), query)
+	if err != nil {
+		c.handleCoOwnershipError(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(result)
+}
+
+func (c *Controller) GetCoOwnershipRequest(w http.ResponseWriter, r *http.Request) {
+	userID, err := auth.GetUserIDFromContext(r.Context())
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	vars := mux.Vars(r)
+	requestID, err := uuid.Parse(vars["requestID"])
+	if err != nil {
+		http.Error(w, "Invalid request ID", http.StatusBadRequest)
+		return
+	}
+
+	query := queries.GetCoOwnershipRequestQuery{
+		RequestID: requestID,
+		UserID:    userID,
+	}
+
+	result, err := c.getCoOwnershipRequestHandler.Handle(r.Context(), query)
+	if err != nil {
+		c.handleCoOwnershipError(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(result)
+}
+
+func (c *Controller) GetPetCoOwners(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	petID, err := uuid.Parse(vars["petID"])
+	if err != nil {
+		http.Error(w, "Invalid pet ID", http.StatusBadRequest)
+		return
+	}
+
+	query := queries.GetPetCoOwnersQuery{PetID: petID}
+
+	result, err := c.getPetCoOwnersHandler.Handle(r.Context(), query)
+	if err != nil {
+		c.handleCoOwnershipError(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(result)
+}
+
+func (c *Controller) handleCoOwnershipError(w http.ResponseWriter, err error) {
+	switch err {
+	case domain.ErrInvalidPetID, domain.ErrInvalidUserID, domain.ErrInvalidCoOwnerID:
+		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInvalidInput, err.Error(), http.StatusBadRequest)
+	case domain.ErrCannotCoOwnSelf:
+		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInvalidInput, err.Error(), http.StatusBadRequest)
+	case domain.ErrUserAlreadyCoOwner:
+		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInvalidInput, err.Error(), http.StatusConflict)
+	case domain.ErrCoOwnershipNotFound:
+		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeUserNotFound, err.Error(), http.StatusNotFound)
+	case domain.ErrCoOwnershipNotPending:
+		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInvalidInput, err.Error(), http.StatusBadRequest)
+	case domain.ErrNotAuthorized:
+		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeUnauthorized, err.Error(), http.StatusForbidden)
+	default:
+		c.handleError(w, err)
 	}
 }

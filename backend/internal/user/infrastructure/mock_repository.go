@@ -65,3 +65,102 @@ func (r *MockUserRepository) ExistsByEmail(ctx context.Context, email types.Emai
 	_, exists := r.emails[email.String()]
 	return exists, nil
 }
+
+// MockCoOwnershipRepository implements domain.CoOwnershipRepository for testing without Ent
+type MockCoOwnershipRepository struct {
+	mu        sync.RWMutex
+	requests  map[uuid.UUID]*domain.CoOwnershipRequest
+}
+
+func NewMockCoOwnershipRepository() *MockCoOwnershipRepository {
+	return &MockCoOwnershipRepository{
+		requests: make(map[uuid.UUID]*domain.CoOwnershipRequest),
+	}
+}
+
+func (r *MockCoOwnershipRepository) SaveCoOwnershipRequest(ctx context.Context, request *domain.CoOwnershipRequest) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	r.requests[request.ID()] = request
+	return nil
+}
+
+func (r *MockCoOwnershipRepository) FindCoOwnershipRequestByID(ctx context.Context, id uuid.UUID) (*domain.CoOwnershipRequest, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	request, exists := r.requests[id]
+	if !exists {
+		return nil, domain.ErrCoOwnershipNotFound
+	}
+
+	return request, nil
+}
+
+func (r *MockCoOwnershipRepository) FindCoOwnershipRequestsByPet(ctx context.Context, petID uuid.UUID) ([]*domain.CoOwnershipRequest, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	var requests []*domain.CoOwnershipRequest
+	for _, request := range r.requests {
+		if request.PetID() == petID {
+			requests = append(requests, request)
+		}
+	}
+
+	return requests, nil
+}
+
+func (r *MockCoOwnershipRepository) FindCoOwnershipRequestsByCoOwner(ctx context.Context, userID uuid.UUID) ([]*domain.CoOwnershipRequest, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	var requests []*domain.CoOwnershipRequest
+	for _, request := range r.requests {
+		if request.CoOwnerID() == userID {
+			requests = append(requests, request)
+		}
+	}
+
+	return requests, nil
+}
+
+func (r *MockCoOwnershipRepository) FindActiveCoOwnersByPet(ctx context.Context, petID uuid.UUID) ([]uuid.UUID, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	var coOwners []uuid.UUID
+	for _, request := range r.requests {
+		if request.PetID() == petID && request.Status() == domain.CoOwnershipStatusActive {
+			coOwners = append(coOwners, request.CoOwnerID())
+		}
+	}
+
+	return coOwners, nil
+}
+
+func (r *MockCoOwnershipRepository) HasActiveCoOwnership(ctx context.Context, petID, userID uuid.UUID) (bool, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	for _, request := range r.requests {
+		if request.PetID() == petID && request.CoOwnerID() == userID && request.Status() == domain.CoOwnershipStatusActive {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+func (r *MockCoOwnershipRepository) DeleteCoOwnershipRequest(ctx context.Context, id uuid.UUID) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if _, exists := r.requests[id]; !exists {
+		return domain.ErrCoOwnershipNotFound
+	}
+
+	delete(r.requests, id)
+	return nil
+}

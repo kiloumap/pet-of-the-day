@@ -27,6 +27,9 @@ linters:
     - unparam
     - unused
     - wastedassign
+    - gosec       # Security linter for new bounded contexts
+    - bodyclose   # Check for unclosed HTTP response bodies
+    - contextcheck # Check context propagation
   settings:
     govet:
       enable:

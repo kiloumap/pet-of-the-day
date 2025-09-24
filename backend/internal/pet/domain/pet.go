@@ -137,3 +137,28 @@ func (p *Pet) UpdatePhotoURL(photoUrl string) {
 	p.photoUrl = photoUrl
 	p.updatedAt = time.Now()
 }
+
+// Personality trait integration methods
+func (p *Pet) CanAddPersonalityTrait(userID uuid.UUID) bool {
+	// Pet owner can always add personality traits
+	// Co-owners should also be able to add traits (checked at application layer)
+	return p.ownerID == userID // Base validation, co-ownership checked in application layer
+}
+
+func (p *Pet) PersonalityTraitAdded(traitType string) {
+	// Record event when a personality trait is added
+	p.recordEvent(NewPersonalityTraitAddedEvent(p.id, traitType))
+	p.updatedAt = time.Now()
+}
+
+func (p *Pet) PersonalityTraitUpdated(traitID uuid.UUID) {
+	// Record event when a personality trait is updated
+	p.recordEvent(NewPersonalityTraitUpdatedEvent(p.id, traitID))
+	p.updatedAt = time.Now()
+}
+
+func (p *Pet) PersonalityTraitDeleted(traitID uuid.UUID) {
+	// Record event when a personality trait is deleted
+	p.recordEvent(NewPersonalityTraitDeletedEvent(p.id, traitID))
+	p.updatedAt = time.Now()
+}

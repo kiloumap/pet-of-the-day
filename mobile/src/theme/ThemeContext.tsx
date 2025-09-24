@@ -7,6 +7,7 @@ import { ColorScheme } from './colors';
 interface ThemeContextType {
   theme: Theme;
   colorScheme: ColorScheme;
+  isDarkMode: boolean;
   setColorScheme: (scheme: ColorScheme | 'auto') => void;
   toggleTheme: () => void;
 }
@@ -63,6 +64,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const value: ThemeContextType = {
     theme,
     colorScheme: actualColorScheme,
+    isDarkMode: actualColorScheme === 'dark',
     setColorScheme,
     toggleTheme,
   };

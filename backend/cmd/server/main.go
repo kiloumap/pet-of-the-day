@@ -20,6 +20,14 @@ import (
 	"pet-of-the-day/internal/shared/auth"
 	"pet-of-the-day/internal/shared/database"
 	"pet-of-the-day/internal/shared/events"
+	// TODO: Re-enable when notebook system compilation issues are fixed
+	// notebookCommands "pet-of-the-day/internal/notebook/application/commands"
+	// notebookQueries "pet-of-the-day/internal/notebook/application/queries"
+	// notebookhttp "pet-of-the-day/internal/notebook/interfaces/http"
+	sharingCommands "pet-of-the-day/internal/sharing/application/commands"
+	sharingQueries "pet-of-the-day/internal/sharing/application/queries"
+	sharingInfra "pet-of-the-day/internal/sharing/infrastructure"
+	sharinghttp "pet-of-the-day/internal/sharing/interfaces/http"
 	usersCommands "pet-of-the-day/internal/user/application/commands"
 	userQueries "pet-of-the-day/internal/user/application/queries"
 	userhttp "pet-of-the-day/internal/user/interfaces/http"
@@ -42,14 +50,34 @@ func main() {
 	authMiddleware := jwtService.AuthMiddleware
 
 	userRepo := repoFactory.CreateUserRepository()
+	coOwnershipRepo := repoFactory.CreateCoOwnershipRepository() // Will need to create this
+
 	registerHandler := usersCommands.NewRegisterUserHandler(userRepo, eventBus)
 	loginHandler := usersCommands.NewLoginUserHandler(userRepo, eventBus)
 	getUserHandler := userQueries.NewGetUserByIDHandler(userRepo)
+
+	// Co-ownership command handlers
+	grantCoOwnershipHandler := usersCommands.NewGrantCoOwnershipHandler(userRepo, coOwnershipRepo, eventBus)
+	acceptCoOwnershipHandler := usersCommands.NewAcceptCoOwnershipHandler(userRepo, coOwnershipRepo, eventBus)
+	rejectCoOwnershipHandler := usersCommands.NewRejectCoOwnershipHandler(userRepo, coOwnershipRepo, eventBus)
+	revokeCoOwnershipHandler := usersCommands.NewRevokeCoOwnershipHandler(userRepo, coOwnershipRepo, eventBus)
+
+	// Co-ownership query handlers
+	getCoOwnershipRequestsHandler := userQueries.NewGetCoOwnershipRequestsHandler(coOwnershipRepo)
+	getPetCoOwnersHandler := userQueries.NewGetPetCoOwnersHandler(coOwnershipRepo)
+	getCoOwnershipRequestHandler := userQueries.NewGetCoOwnershipRequestHandler(coOwnershipRepo)
 
 	userController := userhttp.NewController(
 		registerHandler,
 		loginHandler,
 		getUserHandler,
+		grantCoOwnershipHandler,
+		acceptCoOwnershipHandler,
+		rejectCoOwnershipHandler,
+		revokeCoOwnershipHandler,
+		getCoOwnershipRequestsHandler,
+		getPetCoOwnersHandler,
+		getCoOwnershipRequestHandler,
 		jwtService,
 	)
 
@@ -94,6 +122,50 @@ func main() {
 		getRecentActivitiesHandler,
 	)
 
+	// Sharing system setup
+	shareRepo := repoFactory.CreateShareRepository()
+	resourceService := sharingInfra.NewEntResourceService(repoFactory.GetEntClient())
+	createShareHandler := sharingCommands.NewCreateShareHandler(shareRepo, resourceService, eventBus)
+	updateShareHandler := sharingCommands.NewUpdateShareHandler(shareRepo, eventBus)
+	revokeShareHandler := sharingCommands.NewRevokeShareHandler(shareRepo, eventBus)
+	getUserSharesHandler := sharingQueries.NewGetUserSharesHandler(shareRepo)
+	getResourceSharesHandler := sharingQueries.NewGetResourceSharesHandler(shareRepo, resourceService)
+	checkAccessHandler := sharingQueries.NewCheckAccessHandler(shareRepo, resourceService)
+
+	sharingController := sharinghttp.NewSharingController(
+		createShareHandler,
+		updateShareHandler,
+		revokeShareHandler,
+		getUserSharesHandler,
+		getResourceSharesHandler,
+		checkAccessHandler,
+	)
+
+	// TODO: Notebook system setup - temporarily disabled due to compilation issues
+	// notebookRepo := repoFactory.CreateNotebookRepository()
+	// notebookEntryRepo := repoFactory.CreateNotebookEntryRepository()
+	// createEntryHandler := notebookCommands.NewCreateNotebookEntryHandler(notebookRepo, notebookEntryRepo, eventBus)
+	// updateEntryHandler := notebookCommands.NewUpdateNotebookEntryHandler(notebookEntryRepo, eventBus)
+	// deleteEntryHandler := notebookCommands.NewDeleteNotebookEntryHandler(notebookEntryRepo, eventBus)
+	// shareNotebookHandler := notebookCommands.NewShareNotebookHandler(shareRepo, notebookRepo, eventBus)
+	// revokeNotebookShareHandler := notebookCommands.NewRevokeNotebookShareHandler(shareRepo, eventBus)
+	// getEntriesHandler := notebookQueries.NewGetNotebookEntriesHandler(notebookEntryRepo)
+	// getEntryHandler := notebookQueries.NewGetNotebookEntryHandler(notebookEntryRepo)
+	// getSharedNotebooksHandler := notebookQueries.NewGetSharedNotebooksHandler(shareRepo, notebookRepo)
+	// getNotebookSharingHandler := notebookQueries.NewGetNotebookSharingHandler(shareRepo)
+
+	// notebookController := notebookhttp.NewNotebookController(
+	//     createEntryHandler,
+	//     updateEntryHandler,
+	//     deleteEntryHandler,
+	//     shareNotebookHandler,
+	//     revokeNotebookShareHandler,
+	//     getEntriesHandler,
+	//     getEntryHandler,
+	//     getSharedNotebooksHandler,
+	//     getNotebookSharingHandler,
+	// )
+
 	communityService := community.NewCommunityService(eventBus, jwtService, repoFactory, scoreEventRepo)
 
 	router := mux.NewRouter()
@@ -135,6 +207,9 @@ func main() {
 	userController.RegisterRoutes(api, authMiddleware)
 	petController.RegisterRoutes(api, authMiddleware)
 	pointsController.RegisterRoutes(api, authMiddleware)
+	// TODO: Re-enable when notebook system compilation issues are fixed
+	// notebookController.RegisterRoutes(api, authMiddleware)
+	sharingController.RegisterRoutes(api, authMiddleware)
 	communityhttp.RegisterCommunityRoutes(api, communityService.HTTPHandlers, jwtService)
 
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {

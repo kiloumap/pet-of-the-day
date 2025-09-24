@@ -155,6 +155,9 @@ export interface CreateGroupResponse {
     user_id: string;
     pet_ids: string[];
     status: string;
+    group_id: string;
+    joined_at: string;
+    created_at: string;
   };
 }
 
@@ -169,7 +172,7 @@ export interface UpdateGroupResponse {
   id: string;
   name: string;
   description: string;
-  privacy: string;
+  privacy: 'private' | 'public';
   creator_id: string;
   created_at: string;
   updated_at: string;
