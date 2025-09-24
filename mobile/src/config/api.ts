@@ -3,13 +3,15 @@ import Constants from 'expo-constants';
 
 // Environment configuration
 export const ENV = {
-  DEVELOPMENT: 'development',
-  STAGING: 'staging',
-  PRODUCTION: 'production',
+  DEVELOPMENT: 'DEVELOPMENT',
+  STAGING: 'STAGING',
+  PRODUCTION: 'PRODUCTION',
 } as const;
 
+type EnvironmentType = typeof ENV[keyof typeof ENV];
+
 // Get current environment
-export const getCurrentEnvironment = (): keyof typeof ENV => {
+export const getCurrentEnvironment = (): EnvironmentType => {
   if (__DEV__) {
     return ENV.DEVELOPMENT;
   }
@@ -66,7 +68,7 @@ const getApiUrl = (): string => {
     [ENV.PRODUCTION]: 'https://api.petoftheday.com',
   };
 
-  return envUrls[currentEnv];
+  return envUrls[currentEnv] || envUrls[ENV.DEVELOPMENT];
 };
 
 // Environment-specific configurations

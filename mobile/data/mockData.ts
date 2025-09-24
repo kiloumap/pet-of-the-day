@@ -17,7 +17,7 @@ export interface Action {
     text: string;
     points: number;
     icon: string;
-    category: string;
+    category: 'propreté' | 'comportement' | 'éducation' | 'social' | 'bonus';
     ageGroup?: 'chiot' | 'adulte' | 'senior' | 'all';
     isFirstTry?: boolean;
     hasWitnesses?: boolean;

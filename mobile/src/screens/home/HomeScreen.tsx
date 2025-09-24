@@ -12,6 +12,10 @@ import { useTheme } from '../../theme';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { fetchPets } from '../../store/petSlice';
 import { fetchPendingInvites, fetchSharedNotebooks } from '../../store/slices/sharingSlice';
+import { Pet } from '../../types/api';
+import { useNavigation } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { TabParamList } from '../../navigation/TabNavigator';
 
 interface QuickStatsProps {
   totalPets: number;
@@ -20,7 +24,12 @@ interface QuickStatsProps {
   pendingInvites: number;
 }
 
-const QuickStats: React.FC<QuickStatsProps> = ({ totalPets, totalPoints, sharedNotebooks, pendingInvites }) => {
+const QuickStats: React.FC<QuickStatsProps> = ({
+  totalPets,
+  totalPoints,
+  sharedNotebooks,
+  pendingInvites,
+}) => {
   const { t } = useTranslation();
   const { theme } = useTheme();
 
@@ -53,8 +62,18 @@ const QuickStats: React.FC<QuickStatsProps> = ({ totalPets, totalPoints, sharedN
   const stats = [
     { icon: Heart, value: totalPets, label: t('home.stats.pets'), color: theme.colors.error },
     { icon: Star, value: totalPoints, label: t('home.stats.points'), color: theme.colors.warning },
-    { icon: BookOpen, value: sharedNotebooks, label: t('home.stats.shared'), color: theme.colors.info },
-    { icon: Bell, value: pendingInvites, label: t('home.stats.invites'), color: theme.colors.success },
+    {
+      icon: BookOpen,
+      value: sharedNotebooks,
+      label: t('home.stats.shared'),
+      color: theme.colors.info,
+    },
+    {
+      icon: Bell,
+      value: pendingInvites,
+      label: t('home.stats.invites'),
+      color: theme.colors.success,
+    },
   ];
 
   return (
@@ -77,10 +96,11 @@ export const HomeScreen: React.FC = () => {
   const { t } = useTranslation();
   const { theme } = useTheme();
   const dispatch = useAppDispatch();
+  const navigation = useNavigation<BottomTabNavigationProp<TabParamList, 'Home'>>();
 
-  const { user } = useAppSelector((state) => state.auth);
-  const { pets, isLoading: petsLoading } = useAppSelector((state) => state.pet);
-  const { sharedNotebooks, pendingInvites, isLoading: sharingLoading } = useAppSelector((state) => state.sharing);
+  const { user } = useAppSelector(state => state.auth);
+  const { pets } = useAppSelector(state => state.pets);
+  const { sharedNotebooks, pendingInvites } = useAppSelector(state => state.sharing);
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -255,12 +275,11 @@ export const HomeScreen: React.FC = () => {
 
   const handleAddPet = () => {
     // Navigate to add pet screen
-    console.log('Navigate to add pet screen');
+    navigation.navigate('AddPet');
   };
 
   const handleViewAllPets = () => {
-    // Navigate to pets tab
-    console.log('Navigate to pets tab');
+    navigation.navigate('MyPets' as never);
   };
 
   const handleQuickAction = (action: string) => {
@@ -282,25 +301,25 @@ export const HomeScreen: React.FC = () => {
       icon: Plus,
       title: t('home.quickActions.addEntry'),
       color: theme.colors.primary,
-      action: 'addEntry'
+      action: 'addEntry',
     },
     {
       icon: Calendar,
       title: t('home.quickActions.schedule'),
       color: theme.colors.info,
-      action: 'schedule'
+      action: 'schedule',
     },
     {
       icon: Users,
       title: t('home.quickActions.shareNotebook'),
       color: theme.colors.success,
-      action: 'share'
+      action: 'share',
     },
     {
       icon: TrendingUp,
       title: t('home.quickActions.viewStats'),
       color: theme.colors.warning,
-      action: 'stats'
+      action: 'stats',
     },
   ];
 
@@ -321,11 +340,9 @@ export const HomeScreen: React.FC = () => {
         {/* Welcome Section */}
         <View style={styles.welcomeSection}>
           <Text style={styles.welcomeText}>
-            {t('home.welcome', { name: user?.firstName || 'User' })}
+            {t('home.welcome', { name: user?.first_name || 'User' })}
           </Text>
-          <Text style={styles.subtitleText}>
-            {t('home.subtitle')}
-          </Text>
+          <Text style={styles.subtitleText}>{t('home.subtitle')}</Text>
         </View>
 
         {/* Quick Stats */}
@@ -382,17 +399,9 @@ export const HomeScreen: React.FC = () => {
               <View style={styles.emptyStateIcon}>
                 <Heart size={48} color={theme.colors.text.secondary} />
               </View>
-              <Text style={styles.emptyStateTitle}>
-                {t('home.noPets')}
-              </Text>
-              <Text style={styles.emptyStateDescription}>
-                {t('home.noPetsDescription')}
-              </Text>
-              <Button
-                variant="primary"
-                onPress={handleAddPet}
-                style={styles.emptyStateButton}
-              >
+              <Text style={styles.emptyStateTitle}>{t('home.noPets')}</Text>
+              <Text style={styles.emptyStateDescription}>{t('home.noPetsDescription')}</Text>
+              <Button variant="primary" onPress={handleAddPet} style={styles.emptyStateButton}>
                 <Plus size={16} color={theme.colors.white} />
                 <Text style={{ marginLeft: theme.spacing.sm, color: theme.colors.white }}>
                   {t('pets.addPet')}
@@ -401,11 +410,10 @@ export const HomeScreen: React.FC = () => {
             </View>
           ) : (
             <ScrollView
-              horizontal
               showsHorizontalScrollIndicator={false}
               style={styles.petList}
             >
-              {pets.slice(0, 5).map((pet) => (
+              {pets.slice(0, 5).map((pet: Pet) => (
                 <View key={pet.id} style={styles.petCardContainer}>
                   <PetCard pet={pet} />
                 </View>

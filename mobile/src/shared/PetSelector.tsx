@@ -1,11 +1,11 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Pet } from '../../types';
+import { Pet } from '../types/api';
 
 interface PetSelectorProps {
     pets: Pet[];
-    selectedPet: number | null;
-    onPetSelect: (petId: number) => void;
+    selectedPet: string | null;
+    onPetSelect: (petId: string) => void;
 }
 
 const PetSelector: React.FC<PetSelectorProps> = ({ pets, selectedPet, onPetSelect }) => {

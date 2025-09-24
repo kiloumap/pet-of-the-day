@@ -337,7 +337,7 @@ export function withCache<T extends (...args: any[]) => Promise<any>>(
     const method = descriptor.value;
 
     descriptor.value = async function (...args: any[]) {
-      const key = typeof cacheKey === 'function' ? cacheKey(...args) : cacheKey;
+      const key = typeof cacheKey === 'function' ? cacheKey(...(args as Parameters<T>)) : cacheKey;
 
       return cachedApi.getCached(key, () => method.apply(this, args), ttl);
     };

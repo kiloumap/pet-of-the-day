@@ -63,7 +63,7 @@
     "addPetTitle": "Ajouter un animal",
     "addPetSubtitle": "Ajoutez votre compagnon à votre profil Pet of the Day",
     "name": "Nom",
-    "species": "Espèce",
+    "specie": "Espèce",
     "dog": "Chien",
     "cat": "Chat",
     "breed": "Race",
@@ -798,5 +798,20 @@
     "viewAll": "Voir Tout",
     "lastUpdated": "Dernière mise à jour",
     "accepted": "accepté"
+  },
+  "profile": {
+    "myPets": "Mes animaux",
+    "pointsToday": "Score aujourd'hui",
+    "actionsRecorded": "Actions enregistrées",
+    "totalPoints": "Score Total",
+    "generalSettings": "General",
+    "customizeApp": "Customisation",
+    "notifications": "Notifications",
+    "manageDailyAlerts": "Alerte et notifications",
+    "privacy": "Confidentialité",
+    "controlData": "Confidentialité",
+    "helpSupport": "Aide & Support",
+    "faqContact": "FAQ & Contact",
+    "logout": "Se deconecter",
   }
 }

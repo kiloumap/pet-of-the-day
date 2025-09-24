@@ -73,10 +73,8 @@ const ActionModal: React.FC<ActionModalProps> = ({
             actionText: action.text,
         };
 
-        // Ajouter l'action au store Redux
         dispatch(addAction(newAction));
 
-        // Vérifier les nouveaux badges
         const badgeEngine = new BadgeEngine(earnedBadges, [...dailyActions, newAction]);
         const newBadges = badgeEngine.detectNewBadges(pet, newAction);
 
@@ -84,10 +82,8 @@ const ActionModal: React.FC<ActionModalProps> = ({
             dispatch(addMultipleBadges(newBadges));
         }
 
-        // Callback pour le parent (optionnel, pour compatibilité)
         onSelectAction(action.id, selectedPet, finalPoints);
 
-        // Reset et fermer
         setSelectedPet(null);
         setSelectedMultipliers([]);
         onClose();
@@ -123,14 +119,12 @@ const ActionModal: React.FC<ActionModalProps> = ({
                 </View>
 
                 <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-                    {/* Sélection du pet */}
                     <PetSelector
                         pets={pets.filter(p => p.isOwn)}
                         selectedPet={selectedPet}
                         onPetSelect={setSelectedPet}
                     />
 
-                    {/* Multiplicateurs */}
                     {selectedPet && (
                         <View style={styles.section}>
                             <Text style={styles.sectionTitle}>Modificateurs (optionnel)</Text>
@@ -156,7 +150,6 @@ const ActionModal: React.FC<ActionModalProps> = ({
                         </View>
                     )}
 
-                    {/* Actions disponibles */}
                     {selectedPet && (
                         <View style={styles.section}>
                             <Text style={styles.sectionTitle}>Actions disponibles</Text>

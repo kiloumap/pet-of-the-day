@@ -11,7 +11,7 @@ import {
 import { Eye, EyeOff } from 'lucide-react-native';
 import { useTheme } from '../../theme';
 
-interface InputProps {
+export interface InputProps {
   label?: string;
   placeholder?: string;
   value: string;
@@ -20,12 +20,18 @@ interface InputProps {
   secureTextEntry?: boolean;
   keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  autoComplete?: string;
   autoCorrect?: boolean;
   editable?: boolean;
   multiline?: boolean;
   numberOfLines?: number;
+  maxLength?: number;
+  required?: boolean;
+  helpText?: string;
+  leftIcon?: React.ReactNode;
   style?: ViewStyle;
   inputStyle?: TextStyle;
+  testID?: string;
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -37,12 +43,18 @@ export const Input: React.FC<InputProps> = ({
   secureTextEntry = false,
   keyboardType = 'default',
   autoCapitalize = 'sentences',
+  autoComplete,
   autoCorrect = true,
   editable = true,
   multiline = false,
   numberOfLines = 1,
+  maxLength,
+  required = false,
+  helpText,
+  leftIcon,
   style,
   inputStyle,
+  testID,
 }) => {
   const { theme } = useTheme();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -97,9 +109,14 @@ export const Input: React.FC<InputProps> = ({
 
   return (
     <View style={[containerStyle, style]}>
-      {label && <Text style={labelStyle}>{label}</Text>}
+      {label && (
+        <Text style={labelStyle}>
+          {label}{required && <Text style={{ color: theme.colors.status.error }}> *</Text>}
+        </Text>
+      )}
 
       <View style={inputContainerStyle}>
+        {leftIcon && <View style={{ marginRight: theme.spacing.sm }}>{leftIcon}</View>}
         <TextInput
           style={[textInputStyle, inputStyle]}
           value={value}
@@ -109,12 +126,15 @@ export const Input: React.FC<InputProps> = ({
           secureTextEntry={showPassword}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
+          autoComplete={autoComplete}
           autoCorrect={autoCorrect}
           editable={editable}
           multiline={multiline}
           numberOfLines={numberOfLines}
+          maxLength={maxLength}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
+          testID={testID}
         />
 
         {secureTextEntry && (
@@ -132,6 +152,9 @@ export const Input: React.FC<InputProps> = ({
       </View>
 
       {hasError && <Text style={errorStyle}>{error}</Text>}
+      {helpText && !hasError && (
+        <Text style={[errorStyle, { color: theme.colors.text.secondary }]}>{helpText}</Text>
+      )}
     </View>
   );
 };

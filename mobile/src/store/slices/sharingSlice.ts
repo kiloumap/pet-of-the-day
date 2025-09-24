@@ -159,12 +159,12 @@ export const shareNotebook = createAsyncThunk(
       const mockShare: NotebookShare = {
         id: `share_${Date.now()}`,
         notebookId: request.notebookId,
-        userId: `user_${Math.random().toString(36).substr(2, 9)}`,
+        userId: `user_${Math.random().toString(36).substring(2, 9)}`,
         permission: request.permission,
         sharedAt: new Date().toISOString(),
         sharedBy: 'current_user_id',
         user: {
-          id: `user_${Math.random().toString(36).substr(2, 9)}`,
+          id: `user_${Math.random().toString(36).substring(2, 9)}`,
           firstName: 'John',
           lastName: 'Doe',
           email: request.userEmail,
@@ -176,7 +176,7 @@ export const shareNotebook = createAsyncThunk(
       const apiError: ApiError = {
         message: error.message || 'Failed to share notebook',
         code: error.code || 'SHARE_NOTEBOOK_ERROR',
-        details: error.details,
+        status: error.status,
       };
       return rejectWithValue(apiError);
     }
@@ -212,7 +212,7 @@ export const inviteCoOwner = createAsyncThunk(
       const apiError: ApiError = {
         message: error.message || 'Failed to invite co-owner',
         code: error.code || 'INVITE_CO_OWNER_ERROR',
-        details: error.details,
+        status: error.status,
       };
       return rejectWithValue(apiError);
     }
@@ -259,7 +259,7 @@ export const fetchSharedNotebooks = createAsyncThunk(
       const apiError: ApiError = {
         message: error.message || 'Failed to fetch shared notebooks',
         code: error.code || 'FETCH_SHARED_NOTEBOOKS_ERROR',
-        details: error.details,
+        status: error.status,
       };
       return rejectWithValue(apiError);
     }
@@ -298,7 +298,7 @@ export const fetchCoOwnerRelationships = createAsyncThunk(
       const apiError: ApiError = {
         message: error.message || 'Failed to fetch co-owner relationships',
         code: error.code || 'FETCH_CO_OWNER_RELATIONSHIPS_ERROR',
-        details: error.details,
+        status: error.status,
       };
       return rejectWithValue(apiError);
     }
@@ -336,7 +336,7 @@ export const fetchPendingInvites = createAsyncThunk(
       const apiError: ApiError = {
         message: error.message || 'Failed to fetch pending invites',
         code: error.code || 'FETCH_PENDING_INVITES_ERROR',
-        details: error.details,
+        status: error.status,
       };
       return rejectWithValue(apiError);
     }
@@ -355,7 +355,7 @@ export const acceptCoOwnerInvite = createAsyncThunk(
       const apiError: ApiError = {
         message: error.message || 'Failed to accept co-owner invite',
         code: error.code || 'ACCEPT_CO_OWNER_INVITE_ERROR',
-        details: error.details,
+        status: error.status,
       };
       return rejectWithValue(apiError);
     }
@@ -374,7 +374,7 @@ export const rejectCoOwnerInvite = createAsyncThunk(
       const apiError: ApiError = {
         message: error.message || 'Failed to reject co-owner invite',
         code: error.code || 'REJECT_CO_OWNER_INVITE_ERROR',
-        details: error.details,
+        status: error.status,
       };
       return rejectWithValue(apiError);
     }
@@ -393,7 +393,7 @@ export const revokeShare = createAsyncThunk(
       const apiError: ApiError = {
         message: error.message || 'Failed to revoke share',
         code: error.code || 'REVOKE_SHARE_ERROR',
-        details: error.details,
+        status: error.status,
       };
       return rejectWithValue(apiError);
     }
@@ -412,7 +412,7 @@ export const revokeCoOwnerRelationship = createAsyncThunk(
       const apiError: ApiError = {
         message: error.message || 'Failed to revoke co-owner relationship',
         code: error.code || 'REVOKE_CO_OWNER_RELATIONSHIP_ERROR',
-        details: error.details,
+        status: error.status,
       };
       return rejectWithValue(apiError);
     }
@@ -431,7 +431,7 @@ export const updateSharePermission = createAsyncThunk(
       const apiError: ApiError = {
         message: error.message || 'Failed to update share permission',
         code: error.code || 'UPDATE_SHARE_PERMISSION_ERROR',
-        details: error.details,
+        status: error.status,
       };
       return rejectWithValue(apiError);
     }
@@ -449,7 +449,7 @@ const sharingSlice = createSlice({
       state.selectedNotebookId = action.payload;
       state.error = null;
     },
-    hideShareModal: (state) => {
+    hideShareModal: state => {
       state.shareModalVisible = false;
       state.selectedNotebookId = null;
       state.error = null;
@@ -459,12 +459,12 @@ const sharingSlice = createSlice({
       state.selectedPetId = action.payload;
       state.error = null;
     },
-    hideInviteModal: (state) => {
+    hideInviteModal: state => {
       state.inviteModalVisible = false;
       state.selectedPetId = null;
       state.error = null;
     },
-    clearError: (state) => {
+    clearError: state => {
       state.error = null;
     },
     // Local state updates
@@ -478,13 +478,15 @@ const sharingSlice = createSlice({
       state.coOwnerRelationships.push(action.payload);
     },
     removeCoOwnerRelationship: (state, action: PayloadAction<string>) => {
-      state.coOwnerRelationships = state.coOwnerRelationships.filter(rel => rel.id !== action.payload);
+      state.coOwnerRelationships = state.coOwnerRelationships.filter(
+        rel => rel.id !== action.payload
+      );
     },
   },
-  extraReducers: (builder) => {
+  extraReducers: builder => {
     // Share notebook
     builder
-      .addCase(shareNotebook.pending, (state) => {
+      .addCase(shareNotebook.pending, state => {
         state.isSharing = true;
         state.error = null;
       })
@@ -501,7 +503,7 @@ const sharingSlice = createSlice({
 
     // Invite co-owner
     builder
-      .addCase(inviteCoOwner.pending, (state) => {
+      .addCase(inviteCoOwner.pending, state => {
         state.isInviting = true;
         state.error = null;
       })
@@ -518,7 +520,7 @@ const sharingSlice = createSlice({
 
     // Fetch shared notebooks
     builder
-      .addCase(fetchSharedNotebooks.pending, (state) => {
+      .addCase(fetchSharedNotebooks.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
@@ -533,7 +535,7 @@ const sharingSlice = createSlice({
 
     // Fetch co-owner relationships
     builder
-      .addCase(fetchCoOwnerRelationships.pending, (state) => {
+      .addCase(fetchCoOwnerRelationships.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
@@ -543,12 +545,13 @@ const sharingSlice = createSlice({
       })
       .addCase(fetchCoOwnerRelationships.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = (action.payload as ApiError)?.message || 'Failed to fetch co-owner relationships';
+        state.error =
+          (action.payload as ApiError)?.message || 'Failed to fetch co-owner relationships';
       });
 
     // Fetch pending invites
     builder
-      .addCase(fetchPendingInvites.pending, (state) => {
+      .addCase(fetchPendingInvites.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
@@ -563,7 +566,7 @@ const sharingSlice = createSlice({
 
     // Accept co-owner invite
     builder
-      .addCase(acceptCoOwnerInvite.pending, (state) => {
+      .addCase(acceptCoOwnerInvite.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
@@ -586,7 +589,7 @@ const sharingSlice = createSlice({
 
     // Reject co-owner invite
     builder
-      .addCase(rejectCoOwnerInvite.pending, (state) => {
+      .addCase(rejectCoOwnerInvite.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
@@ -602,7 +605,7 @@ const sharingSlice = createSlice({
 
     // Revoke share
     builder
-      .addCase(revokeShare.pending, (state) => {
+      .addCase(revokeShare.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
@@ -618,14 +621,16 @@ const sharingSlice = createSlice({
 
     // Revoke co-owner relationship
     builder
-      .addCase(revokeCoOwnerRelationship.pending, (state) => {
+      .addCase(revokeCoOwnerRelationship.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
       .addCase(revokeCoOwnerRelationship.fulfilled, (state, action) => {
         state.isLoading = false;
         const relationshipId = action.payload;
-        state.coOwnerRelationships = state.coOwnerRelationships.filter(rel => rel.id !== relationshipId);
+        state.coOwnerRelationships = state.coOwnerRelationships.filter(
+          rel => rel.id !== relationshipId
+        );
       })
       .addCase(revokeCoOwnerRelationship.rejected, (state, action) => {
         state.isLoading = false;
@@ -634,7 +639,7 @@ const sharingSlice = createSlice({
 
     // Update share permission
     builder
-      .addCase(updateSharePermission.pending, (state) => {
+      .addCase(updateSharePermission.pending, state => {
         state.isLoading = true;
         state.error = null;
       })

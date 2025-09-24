@@ -408,4 +408,5 @@ const JoinGroupScreen = () => {
   );
 };
 
+export { JoinGroupScreen };
 export default JoinGroupScreen;

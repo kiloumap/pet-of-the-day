@@ -3,13 +3,13 @@ import { View, StyleSheet, ScrollView, Alert, Switch, Image } from 'react-native
 import { Ionicons } from '@expo/vector-icons';
 import { User, Bell, Palette, Globe, Shield, HelpCircle, LogOut, ChevronRight, Camera } from 'lucide-react-native';
 
-import { Text } from '../../components/ui/Text';
-import { Button } from '../../components/ui/Button';
-import { useTranslation } from '../../hooks/useTranslation';
-import { useTheme } from '../../theme';
-import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
-import { logout } from '../../store/slices/authSlice';
-import { changeLanguage } from '../../localization';
+import { Text } from '@components/ui/Text';
+import { Button } from '@components/ui/Button';
+import { useTranslation } from '@/hooks';
+import { useTheme } from '@/theme';
+import { useAppDispatch, useAppSelector } from '@hooks/reduxHooks';
+import logout from '../../store/authSlice';
+import { changeLanguage } from '@/localization';
 
 interface SettingItemProps {
   icon: any;
@@ -208,14 +208,14 @@ export const SettingsScreen: React.FC = () => {
           text: t('settings.logout.title'),
           style: 'destructive',
           onPress: () => {
-            dispatch(logout());
+            dispatch(logout() as any);
           },
         },
       ],
     );
   };
 
-  const fullName = user ? `${user.firstName} ${user.lastName}`.trim() : t('settings.profile.guest');
+  const fullName = user ? `${user.first_name} ${user.last_name}`.trim() : t('settings.profile.guest');
   const email = user?.email || '';
 
   return (

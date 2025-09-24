@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTheme } from '../../theme';
 import { useTranslation } from '../../hooks';
-import { Pet } from '../../../types';
+import { Pet } from '../../types/api';
 
 interface PetCardProps {
     pet: Pet;
@@ -81,7 +81,7 @@ const PetCard: React.FC<PetCardProps> = ({ pet, onPress }) => {
         >
             <View style={styles.content}>
                 <View style={styles.leftSection}>
-                    <Text style={styles.emoji}>{pet.image}</Text>
+                    <Text style={styles.emoji}>🐕</Text>
                     <View style={styles.textContainer}>
                         <Text style={styles.name}>{pet.name}</Text>
                         <Text style={styles.breed}>{pet.breed}</Text>
@@ -96,4 +96,5 @@ const PetCard: React.FC<PetCardProps> = ({ pet, onPress }) => {
     );
 };
 
+export { PetCard };
 export default PetCard;

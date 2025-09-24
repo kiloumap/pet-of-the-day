@@ -181,4 +181,5 @@ const authSlice = createSlice({
 });
 
 export const { clearError, resetAuth } = authSlice.actions;
+export const logout = logoutUser; // Alias for backward compatibility
 export default authSlice.reducer;

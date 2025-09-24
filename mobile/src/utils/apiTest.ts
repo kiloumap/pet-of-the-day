@@ -1,15 +1,22 @@
 import { API_CONFIG } from '../config/api';
 
 export const testApiConnection = async (): Promise<boolean> => {
-    console.log(`🧪 Testing API connection to: ${API_CONFIG.BASE_URL}`);
-    console.log(`🧪 Health check URL: ${API_CONFIG.BASE_URL}/health`);
+    try {
+      console.log(`🧪 Testing API connection to: ${API_CONFIG.BASE_URL}`);
+      console.log(`🧪 Health check URL: ${API_CONFIG.BASE_URL}/health`);
 
-    const response = await fetch(`${API_CONFIG.BASE_URL}/health`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+      const response = await fetch(`${API_CONFIG.BASE_URL}/health`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      return response.ok;
+    } catch (error) {
+      console.error('❌ API Connection Test Error:', error);
+      return false;
+    }
 };
 
 export const testCORS = async (): Promise<boolean> => {

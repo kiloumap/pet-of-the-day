@@ -1,6 +1,8 @@
 import { apiService } from './api';
 
 export interface SharedNotebook {
+  acceptedAt: string;
+  sharedWithEmail: boolean;
   id: string;
   notebookId: string;
   petId: string;
@@ -30,6 +32,8 @@ export interface NotebookShare {
 }
 
 export interface ShareInvitation {
+  sharedWithEmail: any;
+  acceptedAt: string;
   id: string;
   type: 'notebook' | 'co-owner';
   from: {

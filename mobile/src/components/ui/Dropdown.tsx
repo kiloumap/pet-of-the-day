@@ -16,11 +16,12 @@ export interface DropdownOption {
   value: string;
 }
 
-interface DropdownProps {
-  label: string;
+export interface DropdownProps {
+  label?: string;
   placeholder?: string;
   options: DropdownOption[];
   value?: string;
+  selectedValue?: string;
   onSelect: (value: string) => void;
   error?: string;
   style?: any;
@@ -31,6 +32,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
   placeholder = 'Select an option',
   options,
   value,
+  selectedValue,
   onSelect,
   error,
   style
@@ -38,7 +40,8 @@ export const Dropdown: React.FC<DropdownProps> = ({
   const { theme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
 
-  const selectedOption = options.find(option => option.value === value);
+  const actualValue = selectedValue || value;
+  const selectedOption = options.find(option => option.value === actualValue);
 
   const handleSelect = (optionValue: string) => {
     onSelect(optionValue);
@@ -133,7 +136,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
 
   return (
     <View style={[styles.container, style]}>
-      <Text style={styles.label}>{label}</Text>
+      {label && <Text style={styles.label}>{label}</Text>}
 
       <TouchableOpacity
         style={styles.dropdown}
@@ -169,13 +172,13 @@ export const Dropdown: React.FC<DropdownProps> = ({
                   <TouchableOpacity
                     style={[
                       styles.option,
-                      item.value === value && styles.selectedOption,
+                      item.value === actualValue && styles.selectedOption,
                       index === options.length - 1 && { borderBottomWidth: 0 }
                     ]}
                     onPress={() => handleSelect(item.value)}
                   >
                     <Text style={styles.optionText}>{item.label}</Text>
-                    {item.value === value && (
+                    {item.value === actualValue && (
                       <Check size={20} color={theme.colors.primary} />
                     )}
                   </TouchableOpacity>

@@ -122,7 +122,7 @@ export class InputSanitizer {
     Object.keys(sanitizationRules).forEach(key => {
       const rule = sanitizationRules[key];
       if (rule && typeof sanitized[key] === 'string') {
-        sanitized[key] = this.sanitizeString(sanitized[key], rule);
+        (sanitized as any)[key] = this.sanitizeString(sanitized[key as keyof T], rule);
       }
     });
 

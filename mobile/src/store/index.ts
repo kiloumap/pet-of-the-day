@@ -5,6 +5,9 @@ import authReducer from './authSlice';
 import petReducer from './petSlice';
 import groupReducer from './groupSlice';
 import pointsReducer from './pointsSlice';
+import sharingReducer from './slices/sharingSlice';
+import notebookReducer from './slices/notebookSlice';
+import personalityReducer from './slices/personalitySlice';
 
 const persistConfig = {
     key: 'root',
@@ -17,6 +20,9 @@ const rootReducer = combineReducers({
     pets: petReducer,
     groups: groupReducer,
     points: pointsReducer,
+    sharing: sharingReducer,
+    notebook: notebookReducer,
+    personality: personalityReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

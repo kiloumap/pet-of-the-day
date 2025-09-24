@@ -114,11 +114,11 @@ export const PetPhotoUpload: React.FC<PetPhotoUploadProps> = ({
     },
     disabledButton: {
       opacity: 0.5,
-      backgroundColor: theme.colors.background.disabled,
+      backgroundColor: theme.colors.background.tertiary,
       borderColor: theme.colors.border,
     },
     disabledButtonText: {
-      color: theme.colors.text.disabled,
+      color: theme.colors.text.tertiary,
     },
     errorText: {
       fontSize: theme.typography.fontSize.sm,
@@ -376,7 +376,7 @@ export const PetPhotoUpload: React.FC<PetPhotoUploadProps> = ({
             disabled={disabled || isUploading}
             testID="camera-button"
           >
-            <Camera size={16} color={disabled ? theme.colors.text.disabled : theme.colors.primary} />
+            <Camera size={16} color={disabled ? theme.colors.text.tertiary : theme.colors.primary} />
             <Text style={[styles.buttonText, disabled && styles.disabledButtonText]}>
               {t('pets.upload.camera')}
             </Text>
@@ -388,7 +388,7 @@ export const PetPhotoUpload: React.FC<PetPhotoUploadProps> = ({
             disabled={disabled || isUploading}
             testID="gallery-button"
           >
-            <Upload size={16} color={disabled ? theme.colors.text.disabled : theme.colors.primary} />
+            <Upload size={16} color={disabled ? theme.colors.text.tertiary : theme.colors.primary} />
             <Text style={[styles.buttonText, disabled && styles.disabledButtonText]}>
               {t('pets.upload.gallery')}
             </Text>

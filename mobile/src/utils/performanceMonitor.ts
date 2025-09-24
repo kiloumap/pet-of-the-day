@@ -3,8 +3,9 @@
  * Task T116: Optimize mobile app startup and navigation performance
  */
 
+import React from 'react';
 import { InteractionManager, Platform } from 'react-native';
-import { FEATURES } from '../config/api';
+import { FEATURES } from '@/config/api';
 
 export interface PerformanceMetrics {
   name: string;
@@ -239,7 +240,7 @@ class PerformanceMonitor {
   }
 
   // Utilities
-  private getPerformanceNow(): number {
+  public getPerformanceNow(): number {
     return Date.now(); // In production, might use performance.now() if available
   }
 

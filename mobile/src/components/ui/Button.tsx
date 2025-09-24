@@ -9,26 +9,32 @@ import {
 } from 'react-native';
 import { useTheme } from '../../theme';
 
-interface ButtonProps {
-  title: string;
+export interface ButtonProps {
+  title?: string;
+  children?: React.ReactNode;
   onPress: () => void;
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
-  size?: 'small' | 'medium' | 'large';
+  size?: 'small' | 'medium' | 'large' | 'sm';
   disabled?: boolean;
   loading?: boolean;
+  icon?: React.ReactNode;
   style?: ViewStyle;
   textStyle?: TextStyle;
+  testID?: string;
 }
 
 export const Button: React.FC<ButtonProps> = ({
   title,
+  children,
   onPress,
   variant = 'primary',
   size = 'medium',
   disabled = false,
   loading = false,
+  icon,
   style,
   textStyle,
+  testID,
 }) => {
   const { theme } = useTheme();
 
@@ -41,6 +47,7 @@ export const Button: React.FC<ButtonProps> = ({
     };
 
     // Size styles
+    const normalizedSize = size === 'sm' ? 'small' : size;
     const sizeStyles: Record<string, ViewStyle> = {
       small: {
         height: 36,
@@ -76,7 +83,7 @@ export const Button: React.FC<ButtonProps> = ({
 
     return {
       ...baseStyle,
-      ...sizeStyles[size],
+      ...sizeStyles[normalizedSize],
       ...variantStyles[variant],
     };
   };
@@ -108,12 +115,15 @@ export const Button: React.FC<ButtonProps> = ({
     };
   };
 
+  const content = children || title;
+
   return (
     <TouchableOpacity
       style={[getButtonStyle(), style]}
       onPress={onPress}
       disabled={disabled || loading}
       activeOpacity={0.7}
+      testID={testID}
     >
       {loading && (
         <ActivityIndicator
@@ -122,9 +132,14 @@ export const Button: React.FC<ButtonProps> = ({
           style={{ marginRight: 8 }}
         />
       )}
-      <Text style={[getTextStyle(), textStyle]}>
-        {title}
-      </Text>
+      {icon && !loading && <View style={{ marginRight: 8 }}>{icon}</View>}
+      {typeof content === 'string' ? (
+        <Text style={[getTextStyle(), textStyle]}>
+          {content}
+        </Text>
+      ) : (
+        content
+      )}
     </TouchableOpacity>
   );
 };
