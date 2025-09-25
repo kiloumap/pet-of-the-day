@@ -73,7 +73,7 @@ export const DietEntryForm: React.FC<DietEntryFormProps> = ({
       marginBottom: theme.spacing.lg,
     },
     sectionTitle: {
-      fontSize: theme.typography.fontSize.md,
+      fontSize: theme.typography.fontSize.base,
       fontWeight: theme.typography.fontWeight.semibold,
       color: theme.colors.text.primary,
       marginBottom: theme.spacing.md,
@@ -270,7 +270,7 @@ export const DietEntryForm: React.FC<DietEntryFormProps> = ({
       }
 
       if (onSubmit) {
-        onSubmit(result);
+        onSubmit(result as DietEntry);
       }
 
       Alert.alert(
@@ -537,7 +537,7 @@ export const DietEntryForm: React.FC<DietEntryFormProps> = ({
       <View style={styles.buttonsContainer}>
         <Button
           title={t('common.cancel')}
-          onPress={onCancel}
+          onPress={onCancel || (() => {})}
           variant="secondary"
           style={{ flex: 1 }}
           disabled={isSubmitting}

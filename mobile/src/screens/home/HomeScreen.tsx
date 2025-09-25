@@ -155,6 +155,7 @@ export const HomeScreen: React.FC = () => {
     },
     petList: {
       flexDirection: 'row',
+      paddingLeft: theme.spacing.md,
     },
     petCardContainer: {
       marginRight: theme.spacing.md,
@@ -183,6 +184,9 @@ export const HomeScreen: React.FC = () => {
       borderRadius: theme.borderRadius.md,
       padding: theme.spacing.xl,
       alignItems: 'center',
+      justifyContent: 'center',
+      marginHorizontal: theme.spacing.md,
+      minHeight: 200,
     },
     emptyStateIcon: {
       marginBottom: theme.spacing.md,
@@ -274,16 +278,29 @@ export const HomeScreen: React.FC = () => {
   };
 
   const handleAddPet = () => {
-    // Navigate to add pet screen
-    navigation.navigate('AddPet');
+    // Navigate to add pet screen within PetsTab stack
+    navigation.navigate('PetsTab' as never, {
+      screen: 'AddPet'
+    } as never);
   };
 
   const handleViewAllPets = () => {
-    navigation.navigate('MyPets' as never);
+    // Navigate to MyPets screen within PetsTab stack
+    navigation.navigate('PetsTab' as never, {
+      screen: 'MyPets'
+    } as never);
   };
 
   const handleQuickAction = (action: string) => {
     console.log(`Quick action: ${action}`);
+  };
+
+  const handlePetPress = (petId: string) => {
+    // Navigate to pet detail screen within PetsTab stack
+    navigation.navigate('PetsTab' as never, {
+      screen: 'PetDetail',
+      params: { petId }
+    } as never);
   };
 
   // Calculate total points from pets
@@ -390,7 +407,7 @@ export const HomeScreen: React.FC = () => {
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>{t('home.petOfTheDay')}</Text>
             </View>
-            <PetOfTheDayCard pet={featuredPet} />
+            <PetOfTheDayCard pet={featuredPet} onPress={() => handlePetPress(featuredPet.id)} />
           </View>
         )}
 
@@ -434,12 +451,13 @@ export const HomeScreen: React.FC = () => {
             </View>
           ) : (
             <ScrollView
+              horizontal
               showsHorizontalScrollIndicator={false}
-              style={styles.petList}
+              contentContainerStyle={styles.petList}
             >
               {pets.slice(0, 5).map((pet: Pet) => (
                 <View key={pet.id} style={styles.petCardContainer}>
-                  <PetCard pet={pet} />
+                  <PetCard pet={pet} onPress={() => handlePetPress(pet.id)} />
                 </View>
               ))}
               <Button

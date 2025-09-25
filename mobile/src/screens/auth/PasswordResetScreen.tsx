@@ -84,7 +84,7 @@ export const PasswordResetScreen: React.FC<PasswordResetScreenProps> = ({ naviga
       marginBottom: theme.spacing.sm,
     },
     description: {
-      fontSize: theme.typography.fontSize.md,
+      fontSize: theme.typography.fontSize.base,
       color: theme.colors.text.secondary,
       textAlign: 'center',
       lineHeight: theme.typography.lineHeight.relaxed,
@@ -116,7 +116,7 @@ export const PasswordResetScreen: React.FC<PasswordResetScreenProps> = ({ naviga
       marginBottom: theme.spacing.sm,
     },
     successDescription: {
-      fontSize: theme.typography.fontSize.md,
+      fontSize: theme.typography.fontSize.base,
       color: theme.colors.text.secondary,
       textAlign: 'center',
       lineHeight: theme.typography.lineHeight.relaxed,

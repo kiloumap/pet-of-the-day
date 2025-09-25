@@ -364,10 +364,10 @@ export const CoOwnerInviteModal: React.FC<CoOwnerInviteModalProps> = ({
                         variant="ghost"
                         size="sm"
                         onPress={() => handleRelationshipTypeSelect(option.value)}
-                        style={[
+                        style={StyleSheet.flatten([
                           styles.relationshipOption,
                           isSelected ? styles.relationshipOptionSelected : styles.relationshipOptionUnselected,
-                        ]}
+                        ])}
                       >
                         <View style={styles.relationshipIcon}>
                           {option.icon}

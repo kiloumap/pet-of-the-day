@@ -535,10 +535,10 @@ export const NotebookEntryList: React.FC<NotebookEntryListProps> = ({
                 variant="ghost"
                 size="sm"
                 onPress={() => onTypeFilter(filter.key)}
-                style={[
+                style={StyleSheet.flatten([
                   styles.filterButton,
                   isActive ? styles.filterButtonActive : styles.filterButtonInactive,
-                ]}
+                ])}
               >
                 <Text style={[
                   styles.filterText,

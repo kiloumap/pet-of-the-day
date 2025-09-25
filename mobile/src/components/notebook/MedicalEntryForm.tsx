@@ -86,7 +86,7 @@ export const MedicalEntryForm: React.FC<MedicalEntryFormProps> = ({
       marginBottom: theme.spacing.lg,
     },
     sectionTitle: {
-      fontSize: theme.typography.fontSize.md,
+      fontSize: theme.typography.fontSize.base,
       fontWeight: theme.typography.fontWeight.semibold,
       color: theme.colors.text.primary,
       marginBottom: theme.spacing.md,
@@ -304,7 +304,7 @@ export const MedicalEntryForm: React.FC<MedicalEntryFormProps> = ({
       }
 
       if (onSubmit) {
-        onSubmit(result);
+        onSubmit(result as MedicalEntry);
       }
 
       Alert.alert(
@@ -660,7 +660,7 @@ export const MedicalEntryForm: React.FC<MedicalEntryFormProps> = ({
       <View style={styles.buttonsContainer}>
         <Button
           title={t('common.cancel')}
-          onPress={onCancel}
+          onPress={onCancel || (() => {})}
           variant="secondary"
           style={{ flex: 1 }}
           disabled={isSubmitting}

@@ -98,7 +98,7 @@ export const PersonalityTraitDisplay: React.FC<PersonalityTraitDisplayProps> = (
       textAlign: 'center',
     },
     emptyDescription: {
-      fontSize: theme.typography.fontSize.md,
+      fontSize: theme.typography.fontSize.base,
       color: theme.colors.text.secondary,
       textAlign: 'center',
       lineHeight: theme.typography.lineHeight.relaxed,
@@ -116,7 +116,7 @@ export const PersonalityTraitDisplay: React.FC<PersonalityTraitDisplayProps> = (
       borderBottomColor: theme.colors.border,
     },
     categoryTitle: {
-      fontSize: theme.typography.fontSize.md,
+      fontSize: theme.typography.fontSize.base,
       fontWeight: theme.typography.fontWeight.semibold,
       color: theme.colors.text.primary,
       textTransform: 'capitalize',
@@ -131,7 +131,7 @@ export const PersonalityTraitDisplay: React.FC<PersonalityTraitDisplayProps> = (
       marginLeft: theme.spacing.xs,
     },
     errorContainer: {
-      backgroundColor: theme.colors.background.error,
+      backgroundColor: theme.colors.error + '10',
       borderRadius: theme.borderRadius.md,
       padding: theme.spacing.md,
       marginBottom: theme.spacing.md,
@@ -144,7 +144,7 @@ export const PersonalityTraitDisplay: React.FC<PersonalityTraitDisplayProps> = (
       textAlign: 'center',
     },
     loadingText: {
-      fontSize: theme.typography.fontSize.md,
+      fontSize: theme.typography.fontSize.base,
       color: theme.colors.text.secondary,
       textAlign: 'center',
       padding: theme.spacing.xl,
@@ -258,7 +258,7 @@ export const PersonalityTraitDisplay: React.FC<PersonalityTraitDisplayProps> = (
         marginBottom: theme.spacing.xs,
       },
       traitName: {
-        fontSize: theme.typography.fontSize.md,
+        fontSize: theme.typography.fontSize.base,
         fontWeight: theme.typography.fontWeight.medium,
         color: theme.colors.text.primary,
         flex: 1,

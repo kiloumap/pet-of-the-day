@@ -181,7 +181,7 @@ export const NotebookScreen: React.FC<NotebookScreenProps> = ({
       textAlign: 'center',
     },
     emptyDescription: {
-      fontSize: theme.typography.fontSize.md,
+      fontSize: theme.typography.fontSize.base,
       color: theme.colors.text.secondary,
       textAlign: 'center',
       lineHeight: theme.typography.lineHeight.relaxed,
@@ -215,13 +215,13 @@ export const NotebookScreen: React.FC<NotebookScreenProps> = ({
       marginHorizontal: theme.spacing.md,
     },
     loadingText: {
-      fontSize: theme.typography.fontSize.md,
+      fontSize: theme.typography.fontSize.base,
       color: theme.colors.text.secondary,
       textAlign: 'center',
       padding: theme.spacing.xl,
     },
     errorText: {
-      fontSize: theme.typography.fontSize.md,
+      fontSize: theme.typography.fontSize.base,
       color: theme.colors.error,
       textAlign: 'center',
       padding: theme.spacing.xl,

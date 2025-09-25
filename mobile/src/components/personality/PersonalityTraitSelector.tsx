@@ -142,7 +142,7 @@ export const PersonalityTraitSelector: React.FC<PersonalityTraitSelectorProps> =
       marginBottom: theme.spacing.xs,
     },
     traitName: {
-      fontSize: theme.typography.fontSize.md,
+      fontSize: theme.typography.fontSize.base,
       fontWeight: theme.typography.fontWeight.medium,
       color: theme.colors.text.primary,
       flex: 1,
@@ -183,7 +183,7 @@ export const PersonalityTraitSelector: React.FC<PersonalityTraitSelectorProps> =
       marginBottom: theme.spacing.md,
     },
     intensityLabel: {
-      fontSize: theme.typography.fontSize.md,
+      fontSize: theme.typography.fontSize.base,
       fontWeight: theme.typography.fontWeight.medium,
       color: theme.colors.text.primary,
       marginBottom: theme.spacing.sm,
@@ -228,18 +228,18 @@ export const PersonalityTraitSelector: React.FC<PersonalityTraitSelectorProps> =
       padding: theme.spacing.xl,
     },
     emptyText: {
-      fontSize: theme.typography.fontSize.md,
+      fontSize: theme.typography.fontSize.base,
       color: theme.colors.text.secondary,
       textAlign: 'center',
     },
     loadingText: {
-      fontSize: theme.typography.fontSize.md,
+      fontSize: theme.typography.fontSize.base,
       color: theme.colors.text.secondary,
       textAlign: 'center',
       padding: theme.spacing.xl,
     },
     errorText: {
-      fontSize: theme.typography.fontSize.md,
+      fontSize: theme.typography.fontSize.base,
       color: theme.colors.error,
       textAlign: 'center',
       padding: theme.spacing.xl,

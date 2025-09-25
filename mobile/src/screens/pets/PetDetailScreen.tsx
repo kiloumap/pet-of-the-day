@@ -21,6 +21,9 @@ import { fetchPetById, updatePet, deletePet, clearError, clearSelectedPet } from
 import { getSpeciesOptions } from '@utils/speciesLocalization';
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import { ErrorHandler } from "@utils/errorHandler";
+import { NotesSection } from './components/NotesSection';
+import { CoOwnersSection } from './components/CoOwnersSection';
+import { PersonalitySection } from './components/PersonalitySection';
 
 interface PetDetailScreenProps {
   navigation: any;
@@ -49,6 +52,48 @@ export const PetDetailScreen: React.FC<PetDetailScreenProps> = ({ navigation, ro
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState<string>('');
+
+  // Mock data for sections - In real implementation, this would come from API
+  const [petNotes, setPetNotes] = useState([
+    {
+      id: '1',
+      content: 'Loves playing fetch in the park',
+      createdAt: '2023-01-15T10:30:00Z',
+      updatedAt: '2023-01-15T10:30:00Z',
+    },
+    {
+      id: '2',
+      content: 'Needs medication at 8 AM daily',
+      createdAt: '2023-01-20T08:00:00Z',
+      updatedAt: '2023-01-20T08:00:00Z',
+    }
+  ]);
+
+  const [coOwners, setCoOwners] = useState([
+    {
+      id: '1',
+      email: 'jane.doe@example.com',
+      name: 'Jane Doe',
+      status: 'active' as const,
+      addedAt: '2023-01-10T00:00:00Z',
+    }
+  ]);
+
+  const [personalityTraits, setPersonalityTraits] = useState([
+    {
+      id: '1',
+      name: 'Playful',
+      description: 'Loves to play with toys and other dogs',
+      category: 'temperament' as const,
+      createdAt: '2023-01-10T00:00:00Z',
+    },
+    {
+      id: '2',
+      name: 'Good with children',
+      category: 'behavior' as const,
+      createdAt: '2023-01-10T00:00:00Z',
+    }
+  ]);
 
   useEffect(() => {
     dispatch(clearError());
@@ -186,80 +231,253 @@ export const PetDetailScreen: React.FC<PetDetailScreenProps> = ({ navigation, ro
     return new Date(dateString).toLocaleDateString();
   };
 
+  // Notes section handlers
+  const handleAddNote = async (content: string) => {
+    const newNote = {
+      id: Date.now().toString(),
+      content,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setPetNotes(prev => [...prev, newNote]);
+  };
+
+  const handleEditNote = async (noteId: string, content: string) => {
+    setPetNotes(prev =>
+      prev.map(note =>
+        note.id === noteId
+          ? { ...note, content, updatedAt: new Date().toISOString() }
+          : note
+      )
+    );
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    setPetNotes(prev => prev.filter(note => note.id !== noteId));
+  };
+
+  // Co-owners section handlers
+  const handleInviteCoOwner = async (email: string) => {
+    const newCoOwner = {
+      id: Date.now().toString(),
+      email,
+      name: email.split('@')[0], // Simple name extraction
+      status: 'pending' as const,
+      addedAt: new Date().toISOString(),
+    };
+    setCoOwners(prev => [...prev, newCoOwner]);
+  };
+
+  const handleRemoveCoOwner = async (coOwnerId: string) => {
+    setCoOwners(prev => prev.filter(coOwner => coOwner.id !== coOwnerId));
+  };
+
+  // Personality section handlers
+  const handleAddTrait = async (trait: any) => {
+    const newTrait = {
+      id: Date.now().toString(),
+      ...trait,
+      createdAt: new Date().toISOString(),
+    };
+    setPersonalityTraits(prev => [...prev, newTrait]);
+  };
+
+  const handleEditTrait = async (traitId: string, trait: any) => {
+    setPersonalityTraits(prev =>
+      prev.map(t =>
+        t.id === traitId ? { ...t, ...trait } : t
+      )
+    );
+  };
+
+  const handleRemoveTrait = async (traitId: string) => {
+    setPersonalityTraits(prev => prev.filter(trait => trait.id !== traitId));
+  };
+
   const styles = StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: theme.colors.background.primary,
     },
     header: {
+      backgroundColor: theme.colors.primary,
+      paddingHorizontal: theme.spacing.lg,
+      paddingBottom: theme.spacing.xl,
+      paddingTop: theme.spacing.md,
+      borderBottomLeftRadius: theme.spacing.lg,
+      borderBottomRightRadius: theme.spacing.lg,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+    headerTop: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      padding: theme.spacing.padding.screen,
-      paddingBottom: theme.spacing.lg,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.border,
+      marginBottom: theme.spacing.lg,
     },
     backButton: {
+      backgroundColor: 'rgba(255, 255, 255, 0.15)',
       padding: theme.spacing.sm,
-      marginLeft: -theme.spacing.sm,
+      borderRadius: theme.spacing.md,
+      marginLeft: -theme.spacing.xs,
     },
-    headerTitle: {
-      ...theme.typography.styles.h2,
-      color: theme.colors.text.primary,
-      flex: 1,
+    headerContent: {
+      alignItems: 'center',
+    },
+    petName: {
+      fontSize: 28,
+      fontWeight: '700',
+      color: theme.colors.white,
       textAlign: 'center',
-      marginRight: theme.spacing.xl,
+      marginBottom: theme.spacing.xs,
+    },
+    petSubtitle: {
+      fontSize: 16,
+      color: 'rgba(255, 255, 255, 0.9)',
+      textAlign: 'center',
+    },
+    quickStats: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      marginTop: theme.spacing.lg,
+      paddingTop: theme.spacing.md,
+      borderTopWidth: 1,
+      borderTopColor: 'rgba(255, 255, 255, 0.2)',
+    },
+    statItem: {
+      alignItems: 'center',
+    },
+    statValue: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: theme.colors.white,
+    },
+    statLabel: {
+      fontSize: 12,
+      color: 'rgba(255, 255, 255, 0.8)',
+      marginTop: theme.spacing.xs,
     },
     headerActions: {
       flexDirection: 'row',
-      gap: theme.spacing.sm,
+      gap: theme.spacing.xs,
     },
     actionButton: {
+      backgroundColor: 'rgba(255, 255, 255, 0.15)',
       padding: theme.spacing.sm,
+      borderRadius: theme.spacing.md,
+    },
+    floatingActions: {
+      position: 'absolute',
+      right: theme.spacing.lg,
+      top: -theme.spacing.xl,
+      flexDirection: 'row',
+      gap: theme.spacing.sm,
+      zIndex: 10,
+    },
+    floatingButton: {
+      backgroundColor: theme.colors.white,
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
+      elevation: 4,
+    },
+    editButton: {
+      backgroundColor: theme.colors.primary,
+    },
+    deleteButton: {
+      backgroundColor: theme.colors.status.error,
     },
     keyboardAvoid: {
       flex: 1,
     },
     scrollContainer: {
-      padding: theme.spacing.padding.screen,
+      paddingTop: theme.spacing.xl + theme.spacing.lg,
+      paddingBottom: theme.spacing.xl,
     },
     section: {
-      marginBottom: theme.spacing['2xl'],
+      backgroundColor: theme.colors.background.secondary,
+      marginHorizontal: theme.spacing.lg,
+      marginBottom: theme.spacing.lg,
+      borderRadius: theme.spacing.lg,
+      padding: theme.spacing.xl,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.12,
+      shadowRadius: 6,
+      elevation: 3,
+      borderWidth: 1,
+      borderColor: theme.colors.border + '40',
     },
     sectionTitle: {
-      ...theme.typography.styles.h3,
+      fontSize: 20,
+      fontWeight: '600',
       color: theme.colors.text.primary,
       marginBottom: theme.spacing.lg,
+      paddingBottom: theme.spacing.sm,
+      borderBottomWidth: 2,
+      borderBottomColor: theme.colors.primary + '30',
     },
     infoRow: {
       marginBottom: theme.spacing.lg,
+      paddingBottom: theme.spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border + '20',
+    },
+    lastInfoRow: {
+      marginBottom: 0,
+      paddingBottom: 0,
+      borderBottomWidth: 0,
     },
     label: {
-      ...theme.typography.styles.label,
-      color: theme.colors.text.secondary,
+      fontSize: 14,
+      fontWeight: '500',
+      color: theme.colors.primary,
       marginBottom: theme.spacing.xs,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
     },
     value: {
-      ...theme.typography.styles.body,
+      fontSize: 16,
       color: theme.colors.text.primary,
       paddingVertical: theme.spacing.sm,
+      lineHeight: 22,
     },
     buttonContainer: {
       flexDirection: 'row',
       gap: theme.spacing.md,
+      marginHorizontal: theme.spacing.lg,
+      marginBottom: theme.spacing.lg,
       marginTop: theme.spacing.xl,
+      paddingHorizontal: theme.spacing.sm,
     },
     cancelButton: {
       flex: 1,
-      backgroundColor: theme.colors.background.secondary,
+      backgroundColor: theme.colors.background.tertiary,
+      borderColor: theme.colors.border,
+      borderWidth: 1,
     },
     saveButton: {
       flex: 1,
+      backgroundColor: theme.colors.primary,
+      borderRadius: theme.spacing.lg,
+      minHeight: 52,
     },
-    deleteButton: {
+    dangerButton: {
       backgroundColor: theme.colors.status.error,
+      marginHorizontal: theme.spacing.lg,
       marginTop: theme.spacing.lg,
+      marginBottom: theme.spacing.xl,
+      borderRadius: theme.spacing.lg,
+      minHeight: 48,
     },
     loadingContainer: {
       flex: 1,
@@ -285,19 +503,47 @@ export const PetDetailScreen: React.FC<PetDetailScreenProps> = ({ navigation, ro
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={theme.colors.text.primary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {isEditing ? t('pets.editPet') : selectedPet.name}
-        </Text>
-        <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.actionButton} onPress={handleEditToggle}>
-            <Edit3 size={20} color={theme.colors.primary} />
+        <View style={styles.headerTop}>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <ArrowLeft size={24} color={theme.colors.white} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton} onPress={handleDelete}>
-            <Trash2 size={20} color={theme.colors.status.error} />
-          </TouchableOpacity>
+          {!isEditing && (
+            <View style={styles.headerActions}>
+              <TouchableOpacity style={styles.actionButton} onPress={handleEditToggle}>
+                <Edit3 size={20} color={theme.colors.white} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.actionButton} onPress={handleDelete}>
+                <Trash2 size={20} color={theme.colors.white} />
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.headerContent}>
+          <Text style={styles.petName}>
+            {isEditing ? t('pets.editPet') : selectedPet.name}
+          </Text>
+          {!isEditing && (
+            <>
+              <Text style={styles.petSubtitle}>
+                {t(`pets.${selectedPet.species}`)} • {selectedPet.breed || t('common.notSpecified')}
+              </Text>
+              <View style={styles.quickStats}>
+                <View style={styles.statItem}>
+                  <Text style={styles.statValue}>{selectedPet.points || 0}</Text>
+                  <Text style={styles.statLabel}>{t('home.stats.points')}</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text style={styles.statValue}>{petNotes.length}</Text>
+                  <Text style={styles.statLabel}>{t('pets.notes')}</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text style={styles.statValue}>{coOwners.length}</Text>
+                  <Text style={styles.statLabel}>{t('pets.coOwners')}</Text>
+                </View>
+              </View>
+            </>
+          )}
         </View>
       </View>
 
@@ -357,7 +603,7 @@ export const PetDetailScreen: React.FC<PetDetailScreenProps> = ({ navigation, ro
               )}
             </View>
 
-            <View style={styles.infoRow}>
+            <View style={[styles.infoRow, styles.lastInfoRow]}>
               <Text style={styles.label}>{t('pets.birthDate')}</Text>
               {isEditing ? (
                 <Input
@@ -391,11 +637,45 @@ export const PetDetailScreen: React.FC<PetDetailScreenProps> = ({ navigation, ro
               )}
             </View>
 
-            <View style={styles.infoRow}>
+            <View style={[styles.infoRow, styles.lastInfoRow]}>
               <Text style={styles.label}>{t('common.addedOn')}</Text>
               <Text style={styles.value}>{formatDate(selectedPet.created_at)}</Text>
             </View>
           </View>
+
+          {/* New sections - only show when not editing */}
+          {!isEditing && (
+            <>
+              <NotesSection
+                petId={petId}
+                notes={petNotes}
+                onAddNote={handleAddNote}
+                onEditNote={handleEditNote}
+                onDeleteNote={handleDeleteNote}
+                isLoading={isLoading}
+                canEdit={true}
+              />
+
+              <CoOwnersSection
+                petId={petId}
+                coOwners={coOwners}
+                onInviteCoOwner={handleInviteCoOwner}
+                onRemoveCoOwner={handleRemoveCoOwner}
+                isLoading={isLoading}
+                canManage={true}
+              />
+
+              <PersonalitySection
+                petId={petId}
+                traits={personalityTraits}
+                onAddTrait={handleAddTrait}
+                onEditTrait={handleEditTrait}
+                onRemoveTrait={handleRemoveTrait}
+                isLoading={isLoading}
+                canEdit={true}
+              />
+            </>
+          )}
 
           {isEditing && (
             <View style={styles.buttonContainer}>
@@ -418,7 +698,7 @@ export const PetDetailScreen: React.FC<PetDetailScreenProps> = ({ navigation, ro
             <Button
               title={t('pets.deletePet')}
               onPress={handleDelete}
-              style={styles.deleteButton}
+              style={styles.dangerButton}
               variant="outline"
             />
           )}

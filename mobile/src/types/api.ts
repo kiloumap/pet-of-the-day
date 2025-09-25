@@ -66,6 +66,9 @@ export interface Pet {
   updated_at?: string;
   // Points field for local state (not from API)
   points?: number;
+  // Computed fields for UI
+  ageInMonths?: number;
+  isOwn?: boolean;
 }
 
 export interface AddPetRequest {
@@ -114,6 +117,8 @@ export interface Group {
   creator_id: string;
   created_at: string;
   updated_at?: string;
+  members?: number;
+  member_count?: number;
 }
 
 export interface Membership {
@@ -189,6 +194,15 @@ export interface JoinGroupResponse {
   user_id: string;
   pet_ids: string[];
   status: string;
+  group: Group;
+  membership: {
+    id: string;
+    group_id: string;
+    user_id: string;
+    pet_ids: string[];
+    status: string;
+    joined_at: string;
+  };
 }
 
 export interface GetUserGroupsResponse {

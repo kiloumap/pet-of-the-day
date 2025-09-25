@@ -170,10 +170,6 @@ export const SettingsScreen: React.FC = () => {
     },
   });
 
-  const handleEditProfile = () => {
-    console.log('Edit profile');
-  };
-
   const handleChangeAvatar = () => {
     console.log('Change avatar');
   };
@@ -250,12 +246,6 @@ export const SettingsScreen: React.FC = () => {
 
         {/* Account Settings */}
         <Text style={styles.sectionTitle}>{t('settings.sections.account')}</Text>
-        <SettingItem
-          icon={User}
-          title={t('settings.profile.editProfile')}
-          subtitle={t('settings.profile.editProfileDescription')}
-          onPress={handleEditProfile}
-        />
         <SettingItem
           icon={Bell}
           title={t('settings.notifications.title')}
