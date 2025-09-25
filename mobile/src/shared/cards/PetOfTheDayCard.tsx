@@ -1,14 +1,15 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../theme';
 import { Pet } from '../../types/api';
 
 interface PetOfTheDayCardProps {
   pet?: Pet;
+  onPress?: () => void;
 }
 
-const PetOfTheDayCard: React.FC<PetOfTheDayCardProps> = ({ pet }) => {
+const PetOfTheDayCard: React.FC<PetOfTheDayCardProps> = ({ pet, onPress }) => {
   const { theme } = useTheme();
 
   if (!pet) return null;
@@ -67,7 +68,7 @@ const PetOfTheDayCard: React.FC<PetOfTheDayCardProps> = ({ pet }) => {
   });
 
   return (
-    <View style={styles.container}>
+    <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.8}>
       <LinearGradient
         colors={[theme.colors.background.primary, theme.colors.background.secondary]}
         style={styles.gradient}
@@ -86,7 +87,7 @@ const PetOfTheDayCard: React.FC<PetOfTheDayCardProps> = ({ pet }) => {
         </View>
         <Text style={styles.sparkle}>✨</Text>
       </LinearGradient>
-    </View>
+    </TouchableOpacity>
   );
 };
 

@@ -21,6 +21,7 @@ import {
 } from '../../store/pointsSlice';
 import { LeaderboardEntry } from '../../types/api';
 import { getLocalizedSpecies } from '../../utils/speciesLocalization';
+import { EmptyStateManager } from '../../components/EmptyStateManager';
 
 type LeaderboardScreenRouteProp = RouteProp<{ Leaderboard: { groupId: string } }, 'Leaderboard'>;
 
@@ -444,20 +445,14 @@ const LeaderboardScreen = () => {
         )}
 
         {!currentLeaderboard || currentLeaderboard.length === 0 ? (
-          <View style={styles.emptyState}>
-            <MaterialIcons
-              name="emoji-events"
-              size={64}
-              color={theme.colors.text.tertiary}
-              style={styles.emptyIcon}
-            />
-            <Text style={styles.emptyTitle}>{t('points.noActions')}</Text>
-            <Text style={styles.emptySubtitle}>{t('points.noActionsSubtitle')}</Text>
-            <TouchableOpacity style={styles.addActionButton} onPress={handleAddAction}>
-              <MaterialIcons name="add" size={20} color={theme.colors.reverse} />
-              <Text style={styles.addActionButtonText}>{t('points.addAction')}</Text>
-            </TouchableOpacity>
-          </View>
+          <EmptyStateManager
+            type="group-leaderboard"
+            title={t('points.noActions')}
+            description={t('points.noActionsSubtitle')}
+            actionLabel={t('points.addAction')}
+            showAction={true}
+            onActionPress={handleAddAction}
+          />
         ) : (
           <>
             {topThree.length > 0 && (

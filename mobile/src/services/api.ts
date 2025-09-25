@@ -326,6 +326,10 @@ class ApiService {
     return response.data;
   }
 
+  async declineInvitation(invitationId: string): Promise<void> {
+    await this.client.post(`/api/invitations/${invitationId}/decline`);
+  }
+
   // Points system methods
   async getBehaviors(species?: 'dog' | 'cat'): Promise<GetBehaviorsResponse> {
     const params = species ? { species } : {};

@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import apiService from '../services/api';
 import { Pet, AddPetRequest, UpdatePetRequest, ApiError } from '../types/api';
 
-interface PetState {
+export interface PetState {
   pets: Pet[];
   selectedPet: Pet | null;
   isLoading: boolean;

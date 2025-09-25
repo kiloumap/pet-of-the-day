@@ -358,10 +358,10 @@ export const CommandEntryForm: React.FC<CommandEntryFormProps> = ({
                   variant="ghost"
                   size="sm"
                   onPress={() => handleDifficultySelect(option.value as 'easy' | 'medium' | 'hard')}
-                  style={[
+                  style={StyleSheet.flatten([
                     styles.optionButton,
                     isSelected ? styles.optionButtonSelected : styles.optionButtonUnselected,
-                  ]}
+                  ])}
                 >
                   {React.cloneElement(option.icon, {
                     color: isSelected ? theme.colors.white : option.color,

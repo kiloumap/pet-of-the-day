@@ -6,13 +6,15 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useTheme } from '../../theme/ThemeContext';
-import { fetchUserGroups, clearError } from '../../store/groupSlice';
+import { fetchUserGroups, clearError, leaveGroup, deleteGroup } from '../../store/groupSlice';
 import { MaterialIcons } from '@expo/vector-icons';
+import { Trash2, LogOut, MoreVertical } from 'lucide-react-native';
 
 const GroupsScreen = () => {
   const { t } = useTranslation();
@@ -60,6 +62,81 @@ const GroupsScreen = () => {
 
   const handleGroupPress = (groupId: string) => {
     navigation.navigate('GroupDetail' as never, { groupId } as never);
+  };
+
+  const handleDeleteGroup = (groupId: string, groupName: string) => {
+    Alert.alert(
+      t('groups.deleteGroup'),
+      t('groups.deleteGroupConfirm', { name: groupName }),
+      [
+        {
+          text: t('common.cancel'),
+          style: 'cancel',
+        },
+        {
+          text: t('groups.delete'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await dispatch(deleteGroup(groupId)).unwrap();
+              Alert.alert(t('common.success'), t('groups.groupDeleted'));
+            } catch (error) {
+              Alert.alert(t('common.error'), t('groups.deleteError'));
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleLeaveGroup = (groupId: string, groupName: string) => {
+    Alert.alert(
+      t('groups.leaveGroup'),
+      t('groups.leaveGroupConfirm', { name: groupName }),
+      [
+        {
+          text: t('common.cancel'),
+          style: 'cancel',
+        },
+        {
+          text: t('groups.leave'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await dispatch(leaveGroup(groupId)).unwrap();
+              Alert.alert(t('common.success'), t('groups.groupLeft'));
+            } catch (error) {
+              Alert.alert(t('common.error'), t('groups.leaveError'));
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const showGroupOptions = (groupId: string, groupName: string, isCreated: boolean) => {
+    const options = [
+      {
+        text: t('common.cancel'),
+        style: 'cancel',
+      },
+    ];
+
+    if (isCreated) {
+      options.push({
+        text: t('groups.deleteGroup'),
+        style: 'destructive',
+        onPress: () => handleDeleteGroup(groupId, groupName),
+      });
+    } else {
+      options.push({
+        text: t('groups.leaveGroup'),
+        style: 'destructive',
+        onPress: () => handleLeaveGroup(groupId, groupName),
+      });
+    }
+
+    Alert.alert(t('groups.groupOptions'), undefined, options);
   };
 
   const formatDate = (dateString: string) => {
@@ -140,6 +217,21 @@ const GroupsScreen = () => {
       justifyContent: 'space-between',
       alignItems: 'flex-start',
       marginBottom: 8,
+    },
+    groupHeaderLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+      marginRight: 8,
+    },
+    groupHeaderRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    optionsButton: {
+      padding: 4,
+      borderRadius: 4,
     },
     groupName: {
       fontSize: 18,
@@ -279,12 +371,23 @@ const GroupsScreen = () => {
                     onPress={() => handleGroupPress(group.id)}
                   >
                     <View style={styles.groupHeader}>
-                      <Text style={styles.groupName}>{group.name}</Text>
-                      <MaterialIcons
-                        name="admin-panel-settings"
-                        size={20}
-                        color={theme.colors.primary}
-                      />
+                      <View style={styles.groupHeaderLeft}>
+                        <Text style={styles.groupName}>{group.name}</Text>
+                      </View>
+                      <View style={styles.groupHeaderRight}>
+                        <MaterialIcons
+                          name="admin-panel-settings"
+                          size={20}
+                          color={theme.colors.primary}
+                        />
+                        <TouchableOpacity
+                          style={styles.optionsButton}
+                          onPress={() => showGroupOptions(group.id, group.name, true)}
+                          testID={`group-options-${group.id}`}
+                        >
+                          <MoreVertical size={20} color={theme.colors.text.secondary} />
+                        </TouchableOpacity>
+                      </View>
                     </View>
                     {group.description && (
                       <Text style={styles.groupDescription}>{group.description}</Text>
@@ -309,12 +412,23 @@ const GroupsScreen = () => {
                     onPress={() => handleGroupPress(group.id)}
                   >
                     <View style={styles.groupHeader}>
-                      <Text style={styles.groupName}>{group.name}</Text>
-                      <MaterialIcons
-                        name="group"
-                        size={20}
-                        color={theme.colors.text.secondary}
-                      />
+                      <View style={styles.groupHeaderLeft}>
+                        <Text style={styles.groupName}>{group.name}</Text>
+                      </View>
+                      <View style={styles.groupHeaderRight}>
+                        <MaterialIcons
+                          name="group"
+                          size={20}
+                          color={theme.colors.text.secondary}
+                        />
+                        <TouchableOpacity
+                          style={styles.optionsButton}
+                          onPress={() => showGroupOptions(group.id, group.name, false)}
+                          testID={`group-options-${group.id}`}
+                        >
+                          <MoreVertical size={20} color={theme.colors.text.secondary} />
+                        </TouchableOpacity>
+                      </View>
                     </View>
                     {group.description && (
                       <Text style={styles.groupDescription}>{group.description}</Text>

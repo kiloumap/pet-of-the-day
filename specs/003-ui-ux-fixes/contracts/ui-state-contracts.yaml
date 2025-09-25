@@ -1,0 +1,527 @@
+openapi: 3.0.3
+info:
+  title: UI/UX Fixes - Frontend State Management Contracts
+  description: Interface contracts for UI state management and user interactions
+  version: 1.0.0
+
+paths:
+  # Invitation Management Interfaces
+  /invitations/pending:
+    get:
+      summary: Get pending invitations for user interface
+      responses:
+        '200':
+          description: List of pending invitations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  invitations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InvitationUIData'
+                  hasMore:
+                    type: boolean
+                  lastUpdated:
+                    type: string
+                    format: date-time
+
+  /invitations/{invitationId}/action:
+    post:
+      summary: Handle invitation action (accept, decline, dismiss)
+      parameters:
+        - name: invitationId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [accept, decline, dismiss]
+                feedback:
+                  type: string
+                  maxLength: 200
+      responses:
+        '200':
+          description: Action processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+
+  # Pet Detail Interface Management
+  /pets/{petId}/ui-sections:
+    get:
+      summary: Get pet detail sections data for UI
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Pet detail sections data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sections:
+                    type: object
+                    properties:
+                      notes:
+                        $ref: '#/components/schemas/PetNotesSection'
+                      coowners:
+                        $ref: '#/components/schemas/CoOwnersSection'
+                      personality:
+                        $ref: '#/components/schemas/PersonalitySection'
+                  permissions:
+                    $ref: '#/components/schemas/PetPermissions'
+
+  /pets/{petId}/sections/{sectionType}:
+    put:
+      summary: Update specific pet detail section
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: sectionType
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [notes, coowners, personality]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/PetNotesUpdate'
+                - $ref: '#/components/schemas/CoOwnersUpdate'
+                - $ref: '#/components/schemas/PersonalityUpdate'
+      responses:
+        '200':
+          description: Section updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SectionUpdateResult'
+
+  # Profile Management Interface
+  /profile/editable-fields:
+    get:
+      summary: Get user profile fields available for editing
+      responses:
+        '200':
+          description: Editable profile fields
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  fields:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EditableField'
+                  restrictions:
+                    $ref: '#/components/schemas/ProfileRestrictions'
+
+  /profile/update:
+    patch:
+      summary: Update user profile information
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                updates:
+                  type: object
+                  additionalProperties: true
+                currentPassword:
+                  type: string
+                  description: Required for sensitive changes
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileUpdateResult'
+
+  # Translation Management Interface
+  /translations/coverage:
+    get:
+      summary: Get translation coverage status for UI
+      parameters:
+        - name: language
+          in: query
+          schema:
+            type: string
+            enum: [en, fr]
+      responses:
+        '200':
+          description: Translation coverage information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  coverage:
+                    type: number
+                    format: float
+                    minimum: 0
+                    maximum: 1
+                  missingKeys:
+                    type: array
+                    items:
+                      type: string
+                  lastUpdated:
+                    type: string
+                    format: date-time
+
+  # Group Management UI Interfaces
+  /groups/{groupId}/remove:
+    delete:
+      summary: Remove user from group with UI confirmation
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: confirmation
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User removed from group
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupRemovalResult'
+
+  /groups/{groupId}/leaderboard/empty-state:
+    get:
+      summary: Get leaderboard empty state information
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Empty state configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmptyStateConfig'
+
+components:
+  schemas:
+    InvitationUIData:
+      type: object
+      properties:
+        id:
+          type: string
+        groupName:
+          type: string
+        senderName:
+          type: string
+        sentAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        type:
+          type: string
+          enum: [email, code]
+        status:
+          type: string
+          enum: [pending, accepted, declined, expired]
+
+    ActionResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        updatedState:
+          type: object
+        nextAction:
+          type: string
+          nullable: true
+
+    PetNotesSection:
+      type: object
+      properties:
+        notes:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              content:
+                type: string
+              createdAt:
+                type: string
+                format: date-time
+              private:
+                type: boolean
+        canAdd:
+          type: boolean
+        canEdit:
+          type: boolean
+
+    CoOwnersSection:
+      type: object
+      properties:
+        coowners:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              email:
+                type: string
+              addedAt:
+                type: string
+                format: date-time
+              permissions:
+                type: array
+                items:
+                  type: string
+        canManage:
+          type: boolean
+        inviteLink:
+          type: string
+          nullable: true
+
+    PersonalitySection:
+      type: object
+      properties:
+        traits:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              value:
+                type: number
+                minimum: 1
+                maximum: 5
+              description:
+                type: string
+        canModify:
+          type: boolean
+        lastUpdated:
+          type: string
+          format: date-time
+
+    PetPermissions:
+      type: object
+      properties:
+        canEdit:
+          type: boolean
+        canDelete:
+          type: boolean
+        canAddNotes:
+          type: boolean
+        canManageCoOwners:
+          type: boolean
+        canModifyPersonality:
+          type: boolean
+        isOwner:
+          type: boolean
+        isCoOwner:
+          type: boolean
+
+    PetNotesUpdate:
+      type: object
+      properties:
+        action:
+          type: string
+          enum: [add, update, delete]
+        noteId:
+          type: string
+          nullable: true
+        content:
+          type: string
+          maxLength: 1000
+        private:
+          type: boolean
+
+    CoOwnersUpdate:
+      type: object
+      properties:
+        action:
+          type: string
+          enum: [add, remove, updatePermissions]
+        coOwnerId:
+          type: string
+          nullable: true
+        email:
+          type: string
+          format: email
+          nullable: true
+        permissions:
+          type: array
+          items:
+            type: string
+
+    PersonalityUpdate:
+      type: object
+      properties:
+        updates:
+          type: array
+          items:
+            type: object
+            properties:
+              traitId:
+                type: string
+              value:
+                type: number
+                minimum: 1
+                maximum: 5
+
+    SectionUpdateResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        updatedData:
+          type: object
+        validationErrors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+
+    EditableField:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: [text, email, password, select]
+        label:
+          type: string
+        currentValue:
+          type: string
+        required:
+          type: boolean
+        validation:
+          type: object
+          properties:
+            minLength:
+              type: number
+            maxLength:
+              type: number
+            pattern:
+              type: string
+            options:
+              type: array
+              items:
+                type: string
+
+    ProfileRestrictions:
+      type: object
+      properties:
+        requirePasswordForEmail:
+          type: boolean
+        requirePasswordForPassword:
+          type: boolean
+        emailUniqueness:
+          type: boolean
+        nameMinLength:
+          type: number
+        passwordStrength:
+          type: object
+          properties:
+            minLength:
+              type: number
+            requireSpecialChar:
+              type: boolean
+            requireNumber:
+              type: boolean
+
+    ProfileUpdateResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        updatedFields:
+          type: array
+          items:
+            type: string
+        validationErrors:
+          type: object
+          additionalProperties:
+            type: string
+        requiresReAuth:
+          type: boolean
+
+    GroupRemovalResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        redirectTo:
+          type: string
+          nullable: true
+
+    EmptyStateConfig:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [no_data, no_pets, no_scores, loading_error]
+        title:
+          type: string
+        message:
+          type: string
+        actionButton:
+          type: object
+          properties:
+            text:
+              type: string
+            action:
+              type: string
+            disabled:
+              type: boolean
+          nullable: true
+        illustration:
+          type: string
+          nullable: true

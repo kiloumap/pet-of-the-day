@@ -145,6 +145,15 @@
     "createGroupSubtitle": "Créez un groupe pour partager des animaux avec des amis",
     "joinGroupTitle": "Rejoindre un Groupe",
     "joinGroupSubtitle": "Entrez un code d'invitation pour rejoindre un groupe",
+    "deleteGroup": "Supprimer le groupe",
+    "deleteGroupConfirm": "Êtes-vous sûr de vouloir supprimer le groupe \"{{name}}\" ? Cette action est irréversible.",
+    "leaveGroupConfirm": "Êtes-vous sûr de vouloir quitter le groupe \"{{name}}\" ?",
+    "groupOptions": "Options du groupe",
+    "delete": "Supprimer",
+    "leave": "Quitter",
+    "groupDeleted": "Groupe supprimé avec succès",
+    "deleteError": "Erreur lors de la suppression du groupe",
+    "leaveError": "Erreur lors de la sortie du groupe",
     "success": {
       "groupCreated": "Groupe créé avec succès !",
       "groupJoined": "Groupe rejoint avec succès !",
@@ -185,6 +194,28 @@
     "shareInviteMessage": "Rejoignez mon groupe '{groupName}' avec ce code d'invitation : {inviteCode}"
   },
   "invitations": {
+    "title": "Invitations",
+    "description": "Gérez vos invitations de groupe en attente",
+    "noInvitations": "Aucune invitation",
+    "noInvitationsDescription": "Vous n'avez aucune invitation de groupe en attente pour le moment.",
+    "pendingCount": "{{count}} invitation(s) en attente",
+    "fromUser": "De {{name}}",
+    "expiringSoon": "Expire bientôt",
+    "memberCount": "{{count}} membre(s)",
+    "expiresOn": "Expire le {{date}}",
+    "accept": "Accepter",
+    "decline": "Refuser",
+    "dismiss": "Ignorer",
+    "justNow": "À l'instant",
+    "hoursAgo": "il y a {{hours}} heure(s)",
+    "daysAgo": "il y a {{days}} jour(s)",
+    "acceptConfirm": "Accepter l'invitation",
+    "acceptMessage": "Voulez-vous vraiment rejoindre le groupe \"{{groupName}}\" ?",
+    "declineConfirm": "Refuser l'invitation",
+    "declineMessage": "Voulez-vous vraiment refuser l'invitation pour \"{{groupName}}\" ?",
+    "acceptedSuccess": "Vous avez rejoint \"{{groupName}}\" avec succès !",
+    "declinedSuccess": "Vous avez refusé l'invitation pour \"{{groupName}}\".",
+    "error": "Erreur lors du traitement de l'invitation. Veuillez réessayer.",
     "inviteToGroup": "Inviter au Groupe",
     "joinGroup": "Rejoindre le Groupe",
     "chooseMethod": "Choisissez la Méthode d'Invitation",
@@ -771,6 +802,41 @@
       "viewStats": "Voir Stats"
     }
   },
+  "leaderboard": {
+    "empty": {
+      "title": "Aucun classement disponible",
+      "description": "Commencez à enregistrer des actions pour voir apparaître le classement !",
+      "action": "Enregistrer une action"
+    },
+    "daily": {
+      "empty": {
+        "title": "Aucune activité aujourd'hui",
+        "description": "Enregistrez des actions pour vos animaux pour voir le classement du jour.",
+        "action": "Ajouter une action"
+      }
+    },
+    "weekly": {
+      "empty": {
+        "title": "Aucune activité cette semaine",
+        "description": "Enregistrez des actions pour vos animaux pour voir le classement hebdomadaire.",
+        "action": "Ajouter une action"
+      }
+    },
+    "monthly": {
+      "empty": {
+        "title": "Aucune activité ce mois",
+        "description": "Enregistrez des actions pour vos animaux pour voir le classement mensuel.",
+        "action": "Ajouter une action"
+      }
+    },
+    "group": {
+      "empty": {
+        "title": "Aucune activité de groupe",
+        "description": "Les membres du groupe n'ont pas encore enregistré d'actions.",
+        "action": "Enregistrer une action"
+      }
+    }
+  },
   "common": {
     "ok": "OK",
     "cancel": "Annuler",
@@ -797,21 +863,85 @@
     "recentActivity": "Activité Récente",
     "viewAll": "Voir Tout",
     "lastUpdated": "Dernière mise à jour",
-    "accepted": "accepté"
+    "accepted": "accepté",
+    "noData": "Aucune donnée",
+    "noDataDescription": "Il n'y a pas de données à afficher pour le moment.",
+    "noContent": "Aucun contenu",
+    "noContentDescription": "Il n'y a pas de contenu disponible.",
+    "tryAgain": "Réessayer",
+    "remove": "Supprimer"
+  },
+  "pets": {
+    "empty": {
+      "title": "Aucun animal",
+      "description": "Ajoutez votre premier compagnon pour commencer !",
+      "action": "Ajouter un animal"
+    },
+    "personalitySection": "Personnalité",
+    "addTrait": "Ajouter un trait",
+    "editTrait": "Modifier le trait",
+    "removeTrait": "Supprimer le trait",
+    "traitName": "Nom du trait",
+    "traitDescription": "Description du trait",
+    "validations": {
+      "traitNameRequired": "Le nom du trait est requis"
+    },
+    "personality": {
+      "empty": "Aucun trait de personnalité",
+      "emptyDescription": "Ajoutez des traits pour mieux comprendre votre animal.",
+      "temperament": "Tempérament",
+      "behavior": "Comportement",
+      "preference": "Préférences",
+      "skill": "Compétences",
+      "category": "Catégorie",
+      "addError": "Erreur lors de l'ajout du trait",
+      "editError": "Erreur lors de la modification du trait",
+      "removeError": "Erreur lors de la suppression du trait",
+      "removeConfirm": "Voulez-vous vraiment supprimer le trait \"{{name}}\" ?"
+    }
+  },
+  "search": {
+    "empty": {
+      "title": "Aucun résultat",
+      "description": "Aucun résultat trouvé pour votre recherche.",
+      "action": "Modifier la recherche"
+    }
   },
   "profile": {
+    "title": "Profil",
     "myPets": "Mes animaux",
     "pointsToday": "Score aujourd'hui",
     "actionsRecorded": "Actions enregistrées",
     "totalPoints": "Score Total",
-    "generalSettings": "General",
-    "customizeApp": "Customisation",
+    "dailyStats": "Statistiques du jour",
+    "settings": "Paramètres",
+    "generalSettings": "Général",
+    "customizeApp": "Personnalisation",
     "notifications": "Notifications",
-    "manageDailyAlerts": "Alerte et notifications",
+    "manageDailyAlerts": "Alertes et notifications",
     "privacy": "Confidentialité",
-    "controlData": "Confidentialité",
+    "controlData": "Contrôle des données",
     "helpSupport": "Aide & Support",
     "faqContact": "FAQ & Contact",
-    "logout": "Se deconecter",
+    "logout": "Se déconnecter",
+    "editProfile": "Modifier le profil",
+    "personalInfo": "Informations personnelles",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "email": "Email",
+    "firstNamePlaceholder": "Votre prénom",
+    "lastNamePlaceholder": "Votre nom",
+    "emailPlaceholder": "votre@email.com",
+    "saveChanges": "Sauvegarder les modifications",
+    "editInfo": "Vos modifications seront appliquées à votre profil.",
+    "updateSuccess": "Profil mis à jour avec succès !",
+    "updateError": "Erreur lors de la mise à jour du profil. Veuillez réessayer.",
+    "validation": {
+      "firstNameRequired": "Le prénom est requis",
+      "lastNameRequired": "Le nom est requis",
+      "emailRequired": "L'email est requis",
+      "emailInvalid": "Format d'email invalide"
+    },
+    "noPets": "Aucun animal"
   }
 }

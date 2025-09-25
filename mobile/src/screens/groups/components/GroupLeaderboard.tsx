@@ -1,12 +1,12 @@
 import React = require('react');
-import { Pet } from '../../../../types';
+import { Pet } from '@/types/api';
 
 interface GroupLeaderboardProps {
     pets: Pet[];
 }
 
 const GroupLeaderboard: React.FC<GroupLeaderboardProps> = ({ pets }) => {
-    const topPets = [...pets].sort((a, b) => b.points - a.points).slice(0, 3);
+    const topPets = [...pets].sort((a, b) => (b.points || 0) - (a.points || 0)).slice(0, 3);
 
     return (
         <div className="space-y-2">

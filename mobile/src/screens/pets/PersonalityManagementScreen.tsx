@@ -98,7 +98,7 @@ export const PersonalityManagementScreen: React.FC<PersonalityManagementScreenPr
       marginBottom: theme.spacing.md,
     },
     loadingText: {
-      fontSize: theme.typography.fontSize.md,
+      fontSize: theme.typography.fontSize.base,
       color: theme.colors.text.secondary,
       textAlign: 'center',
       padding: theme.spacing.xl,

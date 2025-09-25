@@ -12,7 +12,6 @@ const ProfileScreen: React.FC = () => {
     const { theme } = useTheme();
     const dispatch = useAppDispatch();
     const { user } = useAppSelector((state) => state.auth);
-    const { pets } = useAppSelector((state) => state.pets);
     const { petTotalPoints } = useAppSelector((state) => state.points);
 
     const handleLogout = () => {
@@ -81,43 +80,6 @@ const ProfileScreen: React.FC = () => {
             fontSize: 18,
             fontWeight: '600',
         },
-        petsContainer: {
-            gap: 12,
-        },
-        petCard: {
-            borderRadius: 12,
-            padding: 16,
-            alignItems: 'center',
-        },
-        petIcon: {
-            marginBottom: 8,
-        },
-        petName: {
-            fontSize: 16,
-            fontWeight: 'bold',
-            marginBottom: 4,
-        },
-        petBreed: {
-            fontSize: 14,
-            marginBottom: 8,
-        },
-        petPoints: {
-            alignItems: 'center',
-        },
-        points: {
-            fontSize: 20,
-            fontWeight: 'bold',
-        },
-        pointsLabel: {
-            fontSize: 12,
-        },
-        noPets: {
-            alignItems: 'center',
-            padding: 24,
-        },
-        noPetsText: {
-            fontSize: 16,
-        },
         statsContainer: {
             flexDirection: 'row',
             gap: 12,
@@ -179,32 +141,6 @@ const ProfileScreen: React.FC = () => {
             <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
                 <Text style={[styles.title, { color: theme.colors.text.primary }]}>{t('profile.title')}</Text>
 
-                {/* Mes animaux */}
-                <View style={styles.section}>
-                    <View style={styles.sectionHeader}>
-                        <Text style={[styles.sectionTitle, { color: theme.colors.text.primary }]}>{t('profile.myPets')} ({pets.length})</Text>
-                    </View>
-
-                    <View style={styles.petsContainer}>
-                        {pets.map(pet => (
-                            <View key={pet.id} style={[styles.petCard, { backgroundColor: theme.colors.background.secondary }]}>
-                                <MaterialIcons name="pets" size={32} color={theme.colors.primary} style={styles.petIcon} />
-                                <Text style={[styles.petName, { color: theme.colors.text.primary }]}>{pet.name}</Text>
-                                <Text style={[styles.petBreed, { color: theme.colors.text.secondary }]}>{pet.species}</Text>
-                                <View style={styles.petPoints}>
-                                    <Text style={[styles.points, { color: theme.colors.primary }]}>{petTotalPoints[pet.id] || 0}</Text>
-                                    <Text style={[styles.pointsLabel, { color: theme.colors.text.tertiary }]}>{t('profile.pointsToday')}</Text>
-                                </View>
-                            </View>
-                        ))}
-
-                        {pets.length === 0 && (
-                            <View style={styles.noPets}>
-                                <Text style={[styles.noPetsText, { color: theme.colors.text.secondary }]}>{t('profile.noPets')}</Text>
-                            </View>
-                        )}
-                    </View>
-                </View>
 
                 {/* Statistiques rapides */}
                 <View style={styles.section}>

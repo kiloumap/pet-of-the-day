@@ -1,7 +1,8 @@
 import React = require('react');
 import { Users, Settings } from 'lucide-react';
 import GroupLeaderboard from './GroupLeaderboard';
-import { Group, Pet } from '../../../../types';
+import { Group } from '@/types/api';
+import { Pet } from '@/types/api';
 
 interface GroupCardProps {
     group: Group;

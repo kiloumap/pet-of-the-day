@@ -13,7 +13,7 @@ import {
   UpdateMembershipPetsRequest,
 } from '../types/api';
 
-interface GroupState {
+export interface GroupState {
   groups: Group[];
   createdGroups: Group[];
   joinedGroups: { group: Group; membership: Membership }[];
@@ -150,6 +150,31 @@ export const acceptInvitation = createAsyncThunk(
     try {
       const response = await apiService.acceptInvitation(data);
       return response;
+    } catch (error) {
+      const apiError = error as ApiError;
+      return rejectWithValue(apiError);
+    }
+  }
+);
+
+export const declineInvitation = createAsyncThunk(
+  'groups/declineInvitation',
+  async (invitationId: string, { rejectWithValue }) => {
+    try {
+      await apiService.declineInvitation(invitationId);
+      return invitationId;
+    } catch (error) {
+      const apiError = error as ApiError;
+      return rejectWithValue(apiError);
+    }
+  }
+);
+
+export const dismissInvitation = createAsyncThunk(
+  'groups/dismissInvitation',
+  async (invitationId: string, { rejectWithValue }) => {
+    try {
+      return invitationId;
     } catch (error) {
       const apiError = error as ApiError;
       return rejectWithValue(apiError);
@@ -494,6 +519,44 @@ const groupSlice = createSlice({
       })
       .addCase(updateMembershipPets.rejected, (state, action) => {
         state.isUpdatingPets = false;
+        state.error = action.payload as ApiError;
+      });
+
+    // Decline invitation reducers
+    builder
+      .addCase(declineInvitation.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(declineInvitation.fulfilled, (state, action) => {
+        state.isLoading = false;
+        // Remove the invitation from current invitations if it exists
+        state.currentGroupInvitations = state.currentGroupInvitations.filter(
+          invitation => invitation.id !== action.payload
+        );
+        state.error = null;
+      })
+      .addCase(declineInvitation.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as ApiError;
+      });
+
+    // Dismiss invitation reducers
+    builder
+      .addCase(dismissInvitation.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(dismissInvitation.fulfilled, (state, action) => {
+        state.isLoading = false;
+        // Remove the invitation from current invitations (local UI dismissal)
+        state.currentGroupInvitations = state.currentGroupInvitations.filter(
+          invitation => invitation.id !== action.payload
+        );
+        state.error = null;
+      })
+      .addCase(dismissInvitation.rejected, (state, action) => {
+        state.isLoading = false;
         state.error = action.payload as ApiError;
       });
   },

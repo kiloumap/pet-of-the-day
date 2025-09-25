@@ -15,7 +15,7 @@ import { fetchPendingInvites, fetchSharedNotebooks } from '../../store/slices/sh
 import { Pet } from '../../types/api';
 import { useNavigation } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { TabParamList } from '../../navigation/TabNavigator';
+import { MainTabParamList } from '../../navigation/MainNavigator';
 
 interface QuickStatsProps {
   totalPets: number;
@@ -96,7 +96,7 @@ export const HomeScreen: React.FC = () => {
   const { t } = useTranslation();
   const { theme } = useTheme();
   const dispatch = useAppDispatch();
-  const navigation = useNavigation<BottomTabNavigationProp<TabParamList, 'Home'>>();
+  const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList, 'Home'>>();
 
   const { user } = useAppSelector(state => state.auth);
   const { pets } = useAppSelector(state => state.pets);
@@ -155,6 +155,7 @@ export const HomeScreen: React.FC = () => {
     },
     petList: {
       flexDirection: 'row',
+      paddingLeft: theme.spacing.md,
     },
     petCardContainer: {
       marginRight: theme.spacing.md,
@@ -183,6 +184,9 @@ export const HomeScreen: React.FC = () => {
       borderRadius: theme.borderRadius.md,
       padding: theme.spacing.xl,
       alignItems: 'center',
+      justifyContent: 'center',
+      marginHorizontal: theme.spacing.md,
+      minHeight: 200,
     },
     emptyStateIcon: {
       marginBottom: theme.spacing.md,
@@ -274,16 +278,29 @@ export const HomeScreen: React.FC = () => {
   };
 
   const handleAddPet = () => {
-    // Navigate to add pet screen
-    navigation.navigate('AddPet');
+    // Navigate to add pet screen within PetsTab stack
+    navigation.navigate('PetsTab' as never, {
+      screen: 'AddPet'
+    } as never);
   };
 
   const handleViewAllPets = () => {
-    navigation.navigate('MyPets' as never);
+    // Navigate to MyPets screen within PetsTab stack
+    navigation.navigate('PetsTab' as never, {
+      screen: 'MyPets'
+    } as never);
   };
 
   const handleQuickAction = (action: string) => {
     console.log(`Quick action: ${action}`);
+  };
+
+  const handlePetPress = (petId: string) => {
+    // Navigate to pet detail screen within PetsTab stack
+    navigation.navigate('PetsTab' as never, {
+      screen: 'PetDetail',
+      params: { petId }
+    } as never);
   };
 
   // Calculate total points from pets
@@ -345,14 +362,30 @@ export const HomeScreen: React.FC = () => {
           <Text style={styles.subtitleText}>{t('home.subtitle')}</Text>
         </View>
 
-        {/* Quick Stats */}
-        <QuickStats
-          totalPets={pets.length}
-          totalPoints={totalPoints}
-          sharedNotebooks={sharedNotebooks.length}
-          pendingInvites={pendingInvites.length}
-        />
-
+        {/* Quick Actions */}
+        {pets.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>{t('home.quickActions.title')}</Text>
+            </View>
+            <View style={styles.quickActionsContainer}>
+              {quickActions.map((action, index) => {
+                const IconComponent = action.icon;
+                return (
+                  <Button
+                    key={index}
+                    variant="ghost"
+                    onPress={() => handleQuickAction(action.action)}
+                    style={styles.quickActionCard}
+                  >
+                    <IconComponent size={24} color={action.color} />
+                    <Text style={styles.quickActionTitle}>{action.title}</Text>
+                  </Button>
+                );
+              })}
+            </View>
+          </View>
+        )}
         {/* Pending Invites Notification */}
         {pendingInvites.length > 0 && (
           <View style={styles.notificationCard}>
@@ -374,9 +407,17 @@ export const HomeScreen: React.FC = () => {
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>{t('home.petOfTheDay')}</Text>
             </View>
-            <PetOfTheDayCard pet={featuredPet} />
+            <PetOfTheDayCard pet={featuredPet} onPress={() => handlePetPress(featuredPet.id)} />
           </View>
         )}
+
+        {/* Quick Stats */}
+        <QuickStats
+          totalPets={pets.length}
+          totalPoints={totalPoints}
+          sharedNotebooks={sharedNotebooks.length}
+          pendingInvites={pendingInvites.length}
+        />
 
         {/* My Pets Section */}
         <View style={styles.section}>
@@ -410,12 +451,13 @@ export const HomeScreen: React.FC = () => {
             </View>
           ) : (
             <ScrollView
+              horizontal
               showsHorizontalScrollIndicator={false}
-              style={styles.petList}
+              contentContainerStyle={styles.petList}
             >
               {pets.slice(0, 5).map((pet: Pet) => (
                 <View key={pet.id} style={styles.petCardContainer}>
-                  <PetCard pet={pet} />
+                  <PetCard pet={pet} onPress={() => handlePetPress(pet.id)} />
                 </View>
               ))}
               <Button
@@ -429,31 +471,6 @@ export const HomeScreen: React.FC = () => {
             </ScrollView>
           )}
         </View>
-
-        {/* Quick Actions */}
-        {pets.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{t('home.quickActions.title')}</Text>
-            </View>
-            <View style={styles.quickActionsContainer}>
-              {quickActions.map((action, index) => {
-                const IconComponent = action.icon;
-                return (
-                  <Button
-                    key={index}
-                    variant="ghost"
-                    onPress={() => handleQuickAction(action.action)}
-                    style={styles.quickActionCard}
-                  >
-                    <IconComponent size={24} color={action.color} />
-                    <Text style={styles.quickActionTitle}>{action.title}</Text>
-                  </Button>
-                );
-              })}
-            </View>
-          </View>
-        )}
       </ScrollView>
     </View>
   );

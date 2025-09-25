@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { Trophy, Medal, Award } from 'lucide-react-native';
 
 import { selectPets } from '@store/petsSlice';
+import { EmptyStateManager } from '@components/EmptyStateManager';
 
 const LeaderboardScreen: React.FC = () => {
     const pets = useSelector(selectPets);
@@ -76,12 +77,14 @@ const LeaderboardScreen: React.FC = () => {
                 </View>
 
                 {sortedPets.length === 0 && (
-                    <View style={styles.emptyState}>
-                        <Text style={styles.emptyText}>Aucun pet enregistré</Text>
-                        <Text style={styles.emptySubtext}>
-                            Ajoutez vos animaux pour voir le classement !
-                        </Text>
-                    </View>
+                    <EmptyStateManager
+                        type="daily-leaderboard"
+                        title="Aucun classement disponible"
+                        description="Ajoutez vos animaux et enregistrez des actions pour voir le classement du jour !"
+                        actionLabel="Ajouter un animal"
+                        showAction={true}
+                        onActionPress={() => console.log('Navigate to add pet')}
+                    />
                 )}
             </ScrollView>
         </SafeAreaView>
@@ -194,21 +197,6 @@ const styles = StyleSheet.create({
     pointsLabel: {
         fontSize: 12,
         color: '#6b7280',
-    },
-    emptyState: {
-        alignItems: 'center',
-        marginTop: 60,
-    },
-    emptyText: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#6b7280',
-        marginBottom: 8,
-    },
-    emptySubtext: {
-        fontSize: 14,
-        color: '#9ca3af',
-        textAlign: 'center',
     },
 });
 

@@ -66,7 +66,7 @@ const initialState: PointsState = {
 // Async thunks
 export const fetchBehaviors = createAsyncThunk(
   'points/fetchBehaviors',
-  async (species?: 'dog' | 'cat', { rejectWithValue }) => {
+  async (species: 'dog' | 'cat' | undefined, { rejectWithValue }) => {
     try {
       const response = await apiService.getBehaviors(species);
       return response;

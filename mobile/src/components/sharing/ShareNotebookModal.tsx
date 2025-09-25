@@ -384,10 +384,10 @@ export const ShareNotebookModal: React.FC<ShareNotebookModalProps> = ({
                       variant="ghost"
                       size="sm"
                       onPress={() => handlePermissionSelect(option.value)}
-                      style={[
+                      style={StyleSheet.flatten([
                         styles.permissionOption,
                         isSelected ? styles.permissionOptionSelected : styles.permissionOptionUnselected,
-                      ]}
+                      ])}
                     >
                       <View style={styles.permissionIcon}>
                         {option.icon}

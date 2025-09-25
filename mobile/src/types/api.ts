@@ -59,12 +59,16 @@ export interface Pet {
   breed?: string;
   birth_date?: string;
   photo_url?: string;
+  image?: string; // Alias for photo_url for backward compatibility
   owner_id: string;
   co_owner_ids?: string[];
   created_at: string;
   updated_at?: string;
   // Points field for local state (not from API)
   points?: number;
+  // Computed fields for UI
+  ageInMonths?: number;
+  isOwn?: boolean;
 }
 
 export interface AddPetRequest {
@@ -88,8 +92,8 @@ export interface AddPetResponse {
 
 export interface UpdatePetRequest {
   petId: string;
-  name: string;
-  species: string;
+  name?: string;
+  species?: string;
   breed?: string;
   birth_date?: string;
   photo_url?: string;
@@ -113,6 +117,8 @@ export interface Group {
   creator_id: string;
   created_at: string;
   updated_at?: string;
+  members?: number;
+  member_count?: number;
 }
 
 export interface Membership {
@@ -188,6 +194,15 @@ export interface JoinGroupResponse {
   user_id: string;
   pet_ids: string[];
   status: string;
+  group: Group;
+  membership: {
+    id: string;
+    group_id: string;
+    user_id: string;
+    pet_ids: string[];
+    status: string;
+    joined_at: string;
+  };
 }
 
 export interface GetUserGroupsResponse {
