@@ -18,6 +18,7 @@ export interface BadgeRequirement {
 
 export interface BadgeProgress {
   badgeId: string;
+  petId?: string; // Optional for pet-specific progress tracking
   currentValue: number;
   targetValue: number;
   percentage: number;
@@ -29,6 +30,7 @@ export interface EarnedBadge {
   id: string;
   badgeId: string;
   userId: string;
+  petId?: number; // Optional since badges can be user-level or pet-level
   earnedAt: Date;
   badge: Badge;
 }

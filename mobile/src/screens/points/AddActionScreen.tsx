@@ -28,7 +28,7 @@ import {
   setBehaviorCategory,
 } from '@store/pointsSlice';
 import { fetchUserGroups } from '@store/groupSlice';
-import { Behavior, CreateScoreEventRequest } from '@/types/api';
+import { Behavior, CreateScoreEventRequest } from '../../types/api';
 import {Dropdown} from '@components/ui/Dropdown';
 
 type AddActionScreenRouteProp = RouteProp<GroupsStackParamList, 'AddAction'>;

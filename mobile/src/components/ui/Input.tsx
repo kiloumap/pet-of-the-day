@@ -20,7 +20,7 @@ export interface InputProps {
   secureTextEntry?: boolean;
   keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
-  autoComplete?: string;
+  autoComplete?: 'off' | 'on' | 'email' | 'password' | 'username' | 'name' | 'tel' | 'street-address' | 'postal-code' | 'cc-number' | 'cc-csc' | 'cc-exp' | 'cc-exp-month' | 'cc-exp-year';
   autoCorrect?: boolean;
   editable?: boolean;
   multiline?: boolean;
@@ -126,7 +126,7 @@ export const Input: React.FC<InputProps> = ({
           secureTextEntry={showPassword}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
-          autoComplete={autoComplete}
+          autoComplete={autoComplete === 'on' ? undefined : autoComplete}
           autoCorrect={autoCorrect}
           editable={editable}
           multiline={multiline}

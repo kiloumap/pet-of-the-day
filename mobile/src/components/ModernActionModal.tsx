@@ -22,7 +22,7 @@ import {
   clearError,
 } from '@store/pointsSlice';
 import { fetchPets, updatePetPoints } from '@store/petSlice';
-import { Pet, Behavior } from '@/types/api';
+import { Pet, Behavior } from '../types/api';
 import { useTheme } from '@/theme';
 
 interface ModernActionModalProps {

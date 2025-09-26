@@ -6,18 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// Behavior represents a scoring behavior that pets can perform
-type Behavior struct {
-	ID          uuid.UUID
-	Name        string
-	Description string
-	Category    string
-	Points      int
-	Species     Species
-	IsGlobal    bool
-}
-
-// ScoreEvent represents a recorded instance of a behavior being performed
+// ScoreEvent represents a recorded instance of a behavior being performed (legacy system)
 type ScoreEvent struct {
 	ID           uuid.UUID
 	PetID        uuid.UUID
@@ -30,7 +19,7 @@ type ScoreEvent struct {
 	RecordedAt   time.Time
 }
 
-// LeaderboardEntry represents a pet's position in a group leaderboard
+// LeaderboardEntry represents a pet's position in a group leaderboard (legacy system)
 type LeaderboardEntry struct {
 	PetID       uuid.UUID
 	PetName     string
@@ -41,7 +30,7 @@ type LeaderboardEntry struct {
 	Rank        int
 }
 
-// ActivityItem represents an activity in the user's feed with full context
+// ActivityItem represents an activity in the user's feed with full context (legacy system)
 type ActivityItem struct {
 	ID           uuid.UUID
 	PetID        uuid.UUID
@@ -56,15 +45,6 @@ type ActivityItem struct {
 	ActionDate   time.Time
 	RecordedBy   uuid.UUID
 }
-
-// Species represents the species a behavior applies to
-type Species string
-
-const (
-	SpeciesDog  Species = "dog"
-	SpeciesCat  Species = "cat"
-	SpeciesBoth Species = "both"
-)
 
 // Period represents a time period for leaderboards
 type Period string

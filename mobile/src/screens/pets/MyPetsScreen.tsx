@@ -12,7 +12,7 @@ import { useTheme } from '@/theme';
 import { Button } from '@components/ui/Button';
 import { useAppDispatch, useAppSelector, useTranslation } from '@/hooks';
 import { fetchPets, clearError } from '@store/petSlice';
-import { Pet } from '@/types/api';
+import { Pet } from '../../types/api';
 import { getLocalizedSpecies } from '@utils/speciesLocalization';
 import { ErrorHandler } from '@utils/errorHandler';
 

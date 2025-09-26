@@ -378,6 +378,27 @@ class ApiService {
     await this.client.delete(`/api/score-events/${eventId}`);
   }
 
+  // Generic HTTP methods for behavior service
+  async get<T>(url: string): Promise<T> {
+    const response: AxiosResponse<T> = await this.client.get(url);
+    return response.data;
+  }
+
+  async post<T>(url: string, data?: any): Promise<T> {
+    const response: AxiosResponse<T> = await this.client.post(url, data);
+    return response.data;
+  }
+
+  async put<T>(url: string, data?: any): Promise<T> {
+    const response: AxiosResponse<T> = await this.client.put(url, data);
+    return response.data;
+  }
+
+  async delete<T = void>(url: string): Promise<T> {
+    const response: AxiosResponse<T> = await this.client.delete(url);
+    return response.data;
+  }
+
   async getRecentActivities(limit = 20): Promise<GetRecentActivitiesResponse> {
     const response: AxiosResponse<GetRecentActivitiesResponse> = await this.client.get(
       '/api/activities/recent',

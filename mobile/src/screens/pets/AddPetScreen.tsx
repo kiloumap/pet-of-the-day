@@ -45,19 +45,9 @@ export const AddPetScreen: React.FC<AddPetScreenProps> = ({ navigation }) => {
 
   useEffect(() => {
     if (error) {
-      const formErrors = ErrorHandler.handleValidationErrors(error);
-
-      if (formErrors._general) {
-        setGeneralError(t(formErrors._general));
-        setErrors({});
-      } else {
-        const translatedErrors: Record<string, string> = {};
-        Object.keys(formErrors).forEach(field => {
-          translatedErrors[field] = t(formErrors[field]);
-        });
-        setErrors(translatedErrors);
-        setGeneralError('');
-      }
+      // Since error is a string, just set it as general error
+      setGeneralError(error);
+      setErrors({});
     } else {
       setGeneralError('');
       setErrors({});

@@ -71,7 +71,7 @@ const LeaderboardScreen = () => {
   };
 
   const handleAddAction = () => {
-    navigation.navigate('AddAction' as never, { groupId } as never);
+    (navigation as any).navigate('AddAction', { groupId });
   };
 
   const currentLeaderboard = leaderboardPeriod === 'daily' ? dailyLeaderboard : weeklyLeaderboard;

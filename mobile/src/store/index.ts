@@ -5,6 +5,7 @@ import authReducer from './authSlice';
 import petReducer from './petSlice';
 import groupReducer from './groupSlice';
 import pointsReducer from './pointsSlice';
+import behaviorReducer from './behaviorSlice';
 import sharingReducer from './slices/sharingSlice';
 import notebookReducer from './slices/notebookSlice';
 import personalityReducer from './slices/personalitySlice';
@@ -20,6 +21,7 @@ const rootReducer = combineReducers({
     pets: petReducer,
     groups: groupReducer,
     points: pointsReducer,
+    behavior: behaviorReducer,
     sharing: sharingReducer,
     notebook: notebookReducer,
     personality: personalityReducer,

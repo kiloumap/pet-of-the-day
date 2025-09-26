@@ -182,4 +182,11 @@ const authSlice = createSlice({
 
 export const { clearError, resetAuth } = authSlice.actions;
 export const logout = logoutUser; // Alias for backward compatibility
+
+// Selectors
+export const selectCurrentUser = (state: { auth: AuthState }) => state.auth.user;
+export const selectIsAuthenticated = (state: { auth: AuthState }) => state.auth.isAuthenticated;
+export const selectAuthLoading = (state: { auth: AuthState }) => state.auth.isLoading;
+export const selectAuthError = (state: { auth: AuthState }) => state.auth.error;
+
 export default authSlice.reducer;

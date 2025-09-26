@@ -276,10 +276,10 @@ const ProfileEditScreen: React.FC = () => {
         <Button
           title={t('profile.saveChanges')}
           onPress={handleSave}
-          style={[
+          style={StyleSheet.flatten([
             styles.saveButton,
             (!isFormChanged() || isSaving) && styles.disabledButton,
-          ]}
+          ])}
           loading={isSaving}
           disabled={!isFormChanged() || isSaving || isLoading}
           testID="save-changes-button"

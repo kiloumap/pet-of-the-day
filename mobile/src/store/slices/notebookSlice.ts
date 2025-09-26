@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { ApiError } from '@/types/api';
+import { ApiError } from '../../types/api';
 
 // Notebook entry types based on the backend domain model
 export enum NotebookEntryType {
@@ -270,7 +270,7 @@ export const updateNotebookEntry = createAsyncThunk(
         throw new Error('Entry not found');
       }
 
-      const updatedEntry: NotebookEntry = {
+      const updatedEntry: any = {
         ...existingEntry,
         ...request.data,
         updatedAt: new Date().toISOString(),

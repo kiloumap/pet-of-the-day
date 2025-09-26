@@ -8,7 +8,7 @@ import { Button } from '@components/ui/Button';
 import { useTranslation } from '@/hooks';
 import { useTheme } from '@/theme';
 import { useAppDispatch, useAppSelector } from '@hooks/reduxHooks';
-import logout from '../../store/authSlice';
+import { logout } from '../../store/authSlice';
 import { changeLanguage } from '@/localization';
 
 interface SettingItemProps {
@@ -64,7 +64,7 @@ const SettingItem: React.FC<SettingItemProps> = ({
   return (
     <Button
       variant="ghost"
-      onPress={onPress}
+      onPress={onPress || (() => {})}
       style={styles.settingItem}
     >
       <IconComponent size={20} color={theme.colors.text.secondary} style={styles.settingIcon} />
@@ -204,7 +204,7 @@ export const SettingsScreen: React.FC = () => {
           text: t('settings.logout.title'),
           style: 'destructive',
           onPress: () => {
-            dispatch(logout() as any);
+            dispatch(logout());
           },
         },
       ],
@@ -224,8 +224,8 @@ export const SettingsScreen: React.FC = () => {
         {/* Profile Section */}
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
-            {user?.avatarUrl ? (
-              <Image source={{ uri: user.avatarUrl }} style={styles.avatarImage} />
+            {(user as any)?.avatarUrl ? (
+              <Image source={{ uri: (user as any).avatarUrl }} style={styles.avatarImage} />
             ) : (
               <View style={styles.avatar}>
                 <User size={32} color={theme.colors.primary} />

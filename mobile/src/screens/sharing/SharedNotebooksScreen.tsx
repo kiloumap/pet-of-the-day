@@ -538,7 +538,7 @@ export const SharedNotebooksScreen: React.FC = () => {
             variant="ghost"
             size="sm"
             onPress={() => setActiveTab('shared')}
-            style={[styles.tab, activeTab === 'shared' ? styles.tabActive : styles.tabInactive]}
+            style={[styles.tab, activeTab === 'shared' ? styles.tabActive : styles.tabInactive] as any}
           >
             <Text style={[styles.tabText, activeTab === 'shared' ? styles.tabTextActive : styles.tabTextInactive]}>
               {t('sharing.tabs.shared')}
@@ -549,7 +549,7 @@ export const SharedNotebooksScreen: React.FC = () => {
             variant="ghost"
             size="sm"
             onPress={() => setActiveTab('pending')}
-            style={[styles.tab, activeTab === 'pending' ? styles.tabActive : styles.tabInactive]}
+            style={[styles.tab, activeTab === 'pending' ? styles.tabActive : styles.tabInactive] as any}
           >
             <Text style={[styles.tabText, activeTab === 'pending' ? styles.tabTextActive : styles.tabTextInactive]}>
               {t('sharing.tabs.pending')} {pendingInvites.length > 0 && `(${pendingInvites.length})`}
@@ -560,7 +560,7 @@ export const SharedNotebooksScreen: React.FC = () => {
             variant="ghost"
             size="sm"
             onPress={() => setActiveTab('owned')}
-            style={[styles.tab, activeTab === 'owned' ? styles.tabActive : styles.tabInactive]}
+            style={[styles.tab, activeTab === 'owned' ? styles.tabActive : styles.tabInactive] as any}
           >
             <Text style={[styles.tabText, activeTab === 'owned' ? styles.tabTextActive : styles.tabTextInactive]}>
               {t('sharing.tabs.coOwned')}
@@ -581,7 +581,7 @@ export const SharedNotebooksScreen: React.FC = () => {
         {currentData.length === 0 && !isLoading ? (
           renderEmptyState(activeTab)
         ) : (
-          <FlatList
+          <FlatList<any>
             style={styles.list}
             contentContainerStyle={styles.listContent}
             data={currentData}

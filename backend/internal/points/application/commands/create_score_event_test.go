@@ -34,9 +34,17 @@ func TestCreateScoreEventHandler_Handle(t *testing.T) {
 	groupID := uuid.New()
 
 	behavior := domain.Behavior{
-		ID:     behaviorID,
-		Name:   "Test Behavior",
-		Points: 10,
+		ID:                 behaviorID,
+		Name:               "Test Behavior",
+		Description:        "A test behavior",
+		Category:           domain.BehaviorCategoryTraining,
+		PointValue:         10,
+		MinIntervalMinutes: 30,
+		Species:            domain.SpeciesBoth,
+		Icon:               "test",
+		IsActive:           true,
+		CreatedAt:          time.Now(),
+		UpdatedAt:          time.Now(),
 	}
 	behaviorRepo.AddBehavior(behavior)
 

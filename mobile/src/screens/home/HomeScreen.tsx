@@ -96,7 +96,7 @@ export const HomeScreen: React.FC = () => {
   const { t } = useTranslation();
   const { theme } = useTheme();
   const dispatch = useAppDispatch();
-  const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList, 'Home'>>();
+  const navigation = useNavigation<any>();
 
   const { user } = useAppSelector(state => state.auth);
   const { pets } = useAppSelector(state => state.pets);
@@ -279,16 +279,16 @@ export const HomeScreen: React.FC = () => {
 
   const handleAddPet = () => {
     // Navigate to add pet screen within PetsTab stack
-    navigation.navigate('PetsTab' as never, {
+    navigation.navigate('PetsTab', {
       screen: 'AddPet'
-    } as never);
+    });
   };
 
   const handleViewAllPets = () => {
     // Navigate to MyPets screen within PetsTab stack
-    navigation.navigate('PetsTab' as never, {
+    navigation.navigate('PetsTab', {
       screen: 'MyPets'
-    } as never);
+    });
   };
 
   const handleQuickAction = (action: string) => {
@@ -297,10 +297,10 @@ export const HomeScreen: React.FC = () => {
 
   const handlePetPress = (petId: string) => {
     // Navigate to pet detail screen within PetsTab stack
-    navigation.navigate('PetsTab' as never, {
+    navigation.navigate('PetsTab', {
       screen: 'PetDetail',
       params: { petId }
-    } as never);
+    });
   };
 
   // Calculate total points from pets
