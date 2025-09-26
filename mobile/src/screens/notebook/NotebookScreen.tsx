@@ -120,7 +120,7 @@ export const NotebookScreen: React.FC<NotebookScreenProps> = ({
     tabButton: {
       paddingVertical: theme.spacing.sm,
       paddingHorizontal: theme.spacing.md,
-      borderRadius: theme.borderRadius.full,
+      borderRadius: 25, // Use a fixed value instead of theme.borderRadius.full
       backgroundColor: theme.colors.background.secondary,
       borderWidth: 1,
       borderColor: theme.colors.border,

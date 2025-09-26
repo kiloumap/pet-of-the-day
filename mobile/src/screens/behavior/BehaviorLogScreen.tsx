@@ -14,7 +14,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { useTranslation } from '../../hooks';
 import { useTheme } from '../../theme';
-import { RootStackParamList } from '../../navigation/types';
+import { RootStackParamList } from '../../types/navigation';
 import {
   fetchBehaviors,
   createBehaviorLog,
@@ -43,7 +43,7 @@ const BehaviorLogScreen: React.FC<BehaviorLogScreenProps> = () => {
   const route = useRoute<BehaviorLogScreenRouteProp>();
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
-  const theme = useTheme();
+  const { theme } = useTheme();
 
   // Redux state
   const currentUser = useAppSelector(selectCurrentUser);
@@ -76,10 +76,11 @@ const BehaviorLogScreen: React.FC<BehaviorLogScreenProps> = () => {
   const loadInitialData = async () => {
     try {
       await Promise.all([
-        dispatch(fetchBehaviors()).unwrap(),
-        dispatch(fetchBehaviorLogs({ 
+        dispatch(fetchBehaviors({})).unwrap(),
+        dispatch(fetchBehaviorLogs({
           groupId: currentGroup?.id,
-          limit: 50 
+          limit: 50,
+          offset: 0
         })).unwrap(),
       ]);
     } catch (error) {
@@ -136,7 +137,7 @@ const BehaviorLogScreen: React.FC<BehaviorLogScreenProps> = () => {
       // Show success message
       const selectedBehavior = behaviors.find(b => b.id === selectedBehaviorId);
       const petNames = selectedPetIds
-        .map(id => userPets.find(p => p.id === id)?.name)
+        .map(id => userPets.find((p: any) => p.id === id)?.name)
         .filter(Boolean)
         .join(', ');
 
@@ -155,9 +156,10 @@ const BehaviorLogScreen: React.FC<BehaviorLogScreenProps> = () => {
       setNotes('');
 
       // Refresh behavior logs
-      await dispatch(fetchBehaviorLogs({ 
+      await dispatch(fetchBehaviorLogs({
         groupId: currentGroup.id,
-        limit: 50 
+        limit: 50,
+        offset: 0
       })).unwrap();
 
     } catch (error: any) {
@@ -384,7 +386,7 @@ const BehaviorLogScreen: React.FC<BehaviorLogScreenProps> = () => {
           ) : (
             behaviorLogs.slice(0, 10).map((log) => {
               const behavior = behaviors.find(b => b.id === log.behaviorId);
-              const pet = userPets.find(p => p.id === log.petId);
+              const pet = userPets.find((p: any) => p.id === log.petId);
               
               return (
                 <View key={log.id} style={styles.logItem}>
@@ -419,9 +421,18 @@ const BehaviorLogScreen: React.FC<BehaviorLogScreenProps> = () => {
       {/* Action Modal */}
       <ModernActionModal
         visible={showActionModal}
-        title={t('behavior.logging.title')}
-        message={t('behavior.logging.message')}
+        pets={userPets}
         onClose={() => setShowActionModal(false)}
+        onSuccess={() => {
+          // Refresh behavior logs after successful action
+          if (currentGroup) {
+            dispatch(fetchBehaviorLogs({
+              groupId: currentGroup.id,
+              limit: 50,
+              offset: 0
+            }));
+          }
+        }}
       />
     </View>
   );

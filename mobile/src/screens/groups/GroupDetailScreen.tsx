@@ -282,11 +282,11 @@ const GroupDetailScreen = () => {
   };
 
   const handleViewLeaderboard = () => {
-    navigation.navigate('Leaderboard' as never, { groupId } as never);
+    (navigation as any).navigate('Leaderboard', { groupId });
   };
 
   const handleAddAction = () => {
-    navigation.navigate('AddAction' as never, { groupId } as never);
+    (navigation as any).navigate('AddAction', { groupId });
   };
 
   const handleCopyInviteCode = async () => {
@@ -582,7 +582,7 @@ const GroupDetailScreen = () => {
       flex: 1,
       backgroundColor: theme.colors.background.secondary,
     },
-    saveButton: {
+    saveButtonSecondary: {
       flex: 1,
     },
     petActionButtons: {
@@ -694,7 +694,7 @@ const GroupDetailScreen = () => {
           <View style={styles.headerActions}>
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => navigation.navigate('InviteToGroup' as never, { groupId, groupName: currentGroup.name } as never)}
+              onPress={() => (navigation as any).navigate('InviteToGroup', { groupId, groupName: currentGroup.name })}
             >
               <MaterialIcons name="person-add" size={20} color={theme.colors.success} />
             </TouchableOpacity>

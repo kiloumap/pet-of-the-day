@@ -51,7 +51,7 @@ const PointsDisplay: React.FC<PointsDisplayProps> = ({
   backgroundColor,
 }) => {
   const { t } = useTranslation();
-  const theme = useTheme();
+  const { theme } = useTheme();
 
   // Extract values from score or ranking if provided
   const points = totalPoints ?? score?.totalPoints ?? ranking?.totalPoints ?? 0;

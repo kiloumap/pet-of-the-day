@@ -1,5 +1,5 @@
 import React = require('react');
-import { Pet } from '@/types/api';
+import { Pet } from '../../../types/api';
 
 interface GroupLeaderboardProps {
     pets: Pet[];

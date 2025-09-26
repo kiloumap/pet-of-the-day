@@ -80,7 +80,7 @@ const initialState: BehaviorState = {
 // Async thunks
 export const fetchBehaviors = createAsyncThunk(
   'behavior/fetchBehaviors',
-  async (params?: { species?: string; category?: string }, { rejectWithValue }) => {
+  async (params: { species?: string; category?: string } = {}, { rejectWithValue }) => {
     try {
       return await behaviorService.getBehaviors(params);
     } catch (error) {

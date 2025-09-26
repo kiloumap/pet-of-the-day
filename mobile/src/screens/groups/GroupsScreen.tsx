@@ -53,15 +53,15 @@ const GroupsScreen = () => {
   };
 
   const handleCreateGroup = () => {
-    navigation.navigate('CreateGroup' as never);
+    (navigation as any).navigate('CreateGroup');
   };
 
   const handleJoinGroup = () => {
-    navigation.navigate('JoinGroup' as never);
+    (navigation as any).navigate('JoinGroup');
   };
 
   const handleGroupPress = (groupId: string) => {
-    navigation.navigate('GroupDetail' as never, { groupId } as never);
+    (navigation as any).navigate('GroupDetail', { groupId });
   };
 
   const handleDeleteGroup = (groupId: string, groupName: string) => {
@@ -115,7 +115,7 @@ const GroupsScreen = () => {
   };
 
   const showGroupOptions = (groupId: string, groupName: string, isCreated: boolean) => {
-    const options = [
+    const options: any[] = [
       {
         text: t('common.cancel'),
         style: 'cancel',

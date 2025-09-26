@@ -205,6 +205,7 @@ export const { clearError, clearSelectedPet, resetPets, updatePetPoints, initial
 
 // Selectors
 export const selectPets = (state: any) => state.pets.pets;
+export const selectUserPets = (state: any) => state.pets.pets; // Alias for compatibility
 export const selectPetsLoading = (state: any) => state.pets.isLoading;
 export const selectSelectedPet = (state: any) => state.pets.selectedPet;
 export const selectTodaysWinner = (state: any) => {

@@ -3,8 +3,8 @@ import { Pet, Group } from '@/types';
 import { EarnedBadge, BadgeProgress } from '@/types/badges';
 
 interface PetAction {
-    petId: number;
-    actionId: number;
+    petId: string;
+    actionId: string;
     points: number;
     timestamp: string;
     actionText: string;
@@ -45,7 +45,7 @@ const petsSlice = createSlice({
         updatePetPoints: (state, action: PayloadAction<{ petId: string; points: number }>) => {
             const pet = state.pets.find(p => p.id === action.payload.petId);
             if (pet) {
-                pet.points += action.payload.points;
+                pet.points = (pet.points || 0) + action.payload.points;
             }
         },
         addAction: (state, action: PayloadAction<PetAction>) => {
@@ -53,7 +53,7 @@ const petsSlice = createSlice({
             // Mettre à jour les points du pet
             const pet = state.pets.find(p => p.id === action.payload.petId);
             if (pet) {
-                pet.points += action.payload.points;
+                pet.points = (pet.points || 0) + action.payload.points;
             }
         },
         resetDailyPoints: (state) => {
@@ -126,14 +126,14 @@ export const selectNewlyEarnedBadges = (state: { pets: PetsState }) => state.pet
 export const selectTodaysWinner = (state: { pets: PetsState }) => {
     const pets = state.pets.pets;
     if (pets.length === 0) return undefined;
-    return pets.reduce((winner, pet) => pet.points > winner.points ? pet : winner);
+    return pets.reduce((winner, pet) => (pet.points || 0) > (winner.points || 0) ? pet : winner);
 };
 
 // Sélecteurs de badges pour un pet spécifique
-export const selectPetBadges = (state: { pets: PetsState }, petId: number) =>
-    state.pets.earnedBadges.filter(badge => badge.petId === petId);
+export const selectPetBadges = (state: { pets: PetsState }, petId: string) =>
+    state.pets.earnedBadges.filter(badge => String(badge.petId) === String(petId));
 
-export const selectPetBadgeProgress = (state: { pets: PetsState }, petId: number) =>
+export const selectPetBadgeProgress = (state: { pets: PetsState }, petId: string) =>
     state.pets.badgeProgress.filter(progress => progress.petId === petId);
 
 export default petsSlice.reducer;

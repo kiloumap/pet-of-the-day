@@ -34,7 +34,7 @@ const BehaviorSelector: React.FC<BehaviorSelectorProps> = ({
   selectedBehaviorIds = [],
 }) => {
   const { t } = useTranslation();
-  const theme = useTheme();
+  const { theme } = useTheme();
   const [selectedCategory, setSelectedCategory] = useState<BehaviorCategory | 'all'>('all');
 
   // Filter and group behaviors
@@ -108,11 +108,21 @@ const BehaviorSelector: React.FC<BehaviorSelectorProps> = ({
     switch (category) {
       case 'potty_training':
         return theme.colors.warning;
-      case 'training':
+      case 'basic_commands':
         return theme.colors.info;
-      case 'social':
+      case 'socialization':
         return theme.colors.success;
       case 'health':
+        return theme.colors.error;
+      case 'feeding':
+        return theme.colors.warning;
+      case 'exercise':
+        return theme.colors.info;
+      case 'grooming':
+        return theme.colors.primary;
+      case 'play':
+        return theme.colors.success;
+      case 'misbehavior':
         return theme.colors.error;
       default:
         return theme.colors.primary;

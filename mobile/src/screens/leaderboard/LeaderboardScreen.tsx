@@ -11,7 +11,7 @@ const LeaderboardScreen: React.FC = () => {
     const pets = useSelector(selectPets);
 
     // Trier les pets par points (décroissant)
-    const sortedPets = [...pets].sort((a, b) => b.points - a.points);
+    const sortedPets = [...pets].sort((a, b) => (b.points || 0) - (a.points || 0));
 
     const getRankIcon = (rank: number) => {
         switch (rank) {

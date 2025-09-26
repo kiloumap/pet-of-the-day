@@ -563,4 +563,10 @@ const groupSlice = createSlice({
 });
 
 export const { clearError, clearCurrentGroup, resetGroupState } = groupSlice.actions;
+
+// Selectors
+export const selectCurrentGroup = (state: { groups: GroupState }) => state.groups.currentGroup;
+export const selectGroupError = (state: { groups: GroupState }) => state.groups.error;
+export const selectGroupLoading = (state: { groups: GroupState }) => state.groups.isLoading;
+
 export default groupSlice.reducer;

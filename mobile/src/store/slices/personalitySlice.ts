@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { ApiError } from '@/types/api';
+import { ApiError } from '../../types/api';
 
 // Personality trait types based on the backend domain model
 export interface PersonalityTrait {

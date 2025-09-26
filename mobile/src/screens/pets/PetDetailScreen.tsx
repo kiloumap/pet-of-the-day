@@ -118,7 +118,7 @@ export const PetDetailScreen: React.FC<PetDetailScreenProps> = ({ navigation, ro
 
   useEffect(() => {
     if (error) {
-      const formErrors = ErrorHandler.handleValidationErrors(error);
+      const formErrors = ErrorHandler.handleValidationErrors(error as any);
       if (formErrors._general) {
         setGeneralError(formErrors._general);
       } else {
@@ -265,7 +265,7 @@ export const PetDetailScreen: React.FC<PetDetailScreenProps> = ({ navigation, ro
       status: 'pending' as const,
       addedAt: new Date().toISOString(),
     };
-    setCoOwners(prev => [...prev, newCoOwner]);
+    setCoOwners((prev: any) => [...prev, newCoOwner]);
   };
 
   const handleRemoveCoOwner = async (coOwnerId: string) => {
@@ -614,7 +614,7 @@ export const PetDetailScreen: React.FC<PetDetailScreenProps> = ({ navigation, ro
                   helpText={t('pets.dateFormatHelp')}
                 />
               ) : (
-                <Text style={styles.value}>{formatDate(selectedPet.birth_date)}</Text>
+                <Text style={styles.value}>{formatDate(selectedPet.birth_date || '')}</Text>
               )}
             </View>
           </View>

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { PawPrint } from 'lucide-react-native';
 import { useTheme } from '../../../theme';
 import PetCard from '../../../shared/cards/PetCard';
-import { Pet } from '../../../../types';
+import { Pet } from '../../../types/api';
 import { useTranslation } from '../../../hooks';
 
 interface MyPetsSectionProps {

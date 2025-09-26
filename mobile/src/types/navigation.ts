@@ -27,8 +27,18 @@ export type RootStackParamList = {
   Home: undefined;
   MyPets: undefined;
   PetDetail: { petId: string };
+  PetProfile: { petId: string };
   AddPet: undefined;
   Groups: undefined;
   Profile: undefined;
   Settings: undefined;
+  BehaviorLog: { petId?: string; groupId?: string };
+  GroupRankings: { groupId: string };
+  Leaderboard: { groupId: string };
+  AddAction: { groupId: string };
+  InviteToGroup: { groupId: string; groupName: string };
+  JoinGroup: undefined;
+  GroupDetail: { groupId: string };
+  CreateGroup: undefined;
+  PetsTab: { screen: string; params?: any };
 };

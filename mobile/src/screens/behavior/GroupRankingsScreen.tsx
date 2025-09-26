@@ -14,7 +14,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { useTranslation } from '../../hooks';
 import { useTheme } from '../../theme';
-import { RootStackParamList } from '../../navigation/types';
+import { RootStackParamList } from '../../types/navigation';
 import {
   fetchGroupRankings,
   fetchPetOfTheDay,
@@ -27,7 +27,7 @@ import { selectCurrentGroup } from '../../store/groupSlice';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import Button from '../../components/ui/Button';
 import GroupRankings from '../../components/behavior/GroupRankings';
-import PetOfTheDayCard from '../../shared/cards/PetOfTheDayCard';
+import { PetOfTheDayCard } from '../../shared/cards/PetOfTheDayCard';
 
 type GroupRankingsScreenRouteProp = RouteProp<RootStackParamList, 'GroupRankings'>;
 type GroupRankingsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'GroupRankings'>;
@@ -41,7 +41,7 @@ const GroupRankingsScreen: React.FC<GroupRankingsScreenProps> = () => {
   const route = useRoute<GroupRankingsScreenRouteProp>();
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
-  const theme = useTheme();
+  const { theme } = useTheme();
 
   // Redux state
   const currentGroup = useAppSelector(selectCurrentGroup);
@@ -120,7 +120,7 @@ const GroupRankingsScreen: React.FC<GroupRankingsScreenProps> = () => {
   };
 
   const handleLogBehavior = () => {
-    navigation.navigate('BehaviorLog');
+    navigation.navigate('BehaviorLog', {});
   };
 
   const handlePetPress = (petId: string) => {
@@ -348,14 +348,8 @@ const GroupRankingsScreen: React.FC<GroupRankingsScreenProps> = () => {
             title="›"
             onPress={navigateToNextDay}
             disabled={!canNavigateToNextDay()}
-            style={[
-              styles.dateButton,
-              !canNavigateToNextDay() && styles.dateButtonDisabled
-            ]}
-            textStyle={[
-              styles.dateButtonText,
-              !canNavigateToNextDay() && styles.dateButtonTextDisabled
-            ]}
+            style={StyleSheet.flatten([styles.dateButton, !canNavigateToNextDay() && styles.dateButtonDisabled])}
+            textStyle={StyleSheet.flatten([styles.dateButtonText, !canNavigateToNextDay() && styles.dateButtonTextDisabled])}
             variant="secondary"
             size="small"
           />
@@ -395,7 +389,7 @@ const GroupRankingsScreen: React.FC<GroupRankingsScreenProps> = () => {
               {t('rankings.petOfTheDay.title')}
             </Text>
             <PetOfTheDayCard
-              petOfTheDay={petOfTheDay}
+              pet={petOfTheDay as any}
               onPress={() => handlePetPress(petOfTheDay.petId)}
             />
           </View>
@@ -423,9 +417,7 @@ const GroupRankingsScreen: React.FC<GroupRankingsScreenProps> = () => {
             </View>
           ) : (
             <GroupRankings
-              rankings={rankings}
-              onPetPress={handlePetPress}
-              showAnimation={isDateToday(selectedDate) && isRealTimeEnabled}
+              rankings={rankings as any}
             />
           )}
         </View>
