@@ -112,14 +112,44 @@
       "nameRequiredValidation": "Le nom est requis",
       "speciesRequiredValidation": "L'espèce est requise",
       "photoUrlInvalid": "URL de photo invalide",
-      "dateFormatInvalid": "Format de date invalide (YYYY-MM-DD)"
+      "dateFormatInvalid": "Format de date invalide (YYYY-MM-DD)",
+      "traitNameRequired": "Le nom du trait est requis"
     },
     "placeholders": {
       "petName": "Archie, Arthas, Betty...",
       "species": "Sélectionner l'espèce",
       "breed": "Labrador, Persan, Bélier...",
       "photoUrl": "https://example.com/photo.jpg"
-    }
+    },
+    "empty": {
+      "title": "Aucun animal",
+      "description": "Ajoutez votre premier compagnon pour commencer !",
+      "action": "Ajouter un animal"
+    },
+    "personalitySection": "Personnalité",
+    "addTrait": "Ajouter un trait",
+    "editTrait": "Modifier le trait",
+    "removeTrait": "Supprimer le trait",
+    "traitName": "Nom du trait",
+    "traitDescription": "Description du trait",
+    "personality": {
+      "empty": "Aucun trait de personnalité",
+      "emptyDescription": "Ajoutez des traits pour mieux comprendre votre animal.",
+      "temperament": "Tempérament",
+      "behavior": "Comportement",
+      "preference": "Préférences",
+      "skill": "Compétences",
+      "category": "Catégorie",
+      "addError": "Erreur lors de l'ajout du trait",
+      "editError": "Erreur lors de la modification du trait",
+      "removeError": "Erreur lors de la suppression du trait",
+      "removeConfirm": "Voulez-vous vraiment supprimer le trait \"{{name}}\" ?"
+    },
+    "notesSection": "Carnet de l'animal",
+    "coOwnersSection": "Co-gestionnaire",
+    "notes": "Notes",
+    "points": "Points",
+    "coOwners": "Co-gestionnaire"
   },
   "groups": {
     "title": "Groupes",
@@ -161,6 +191,11 @@
       "groupUpdated": "Groupe mis à jour avec succès !",
       "petsUpdated": "Animaux mis à jour avec succès"
     },
+    "selectGroup": "Sélectionner un groupe",
+    "selectGroupForAction": "Choisir un groupe pour l'action",
+    "noGroupsForAction": "Vous devez faire partie d'au moins un groupe pour ajouter une action. Créez ou rejoignez un groupe d'abord.",
+    "noGroupsAvailable": "Aucun groupe disponible",
+    "memberCount": "{{count}} membre(s)",
     "placeholders": {
       "groupName": "Ma Famille d'Animaux",
       "description": "Un groupe pour nos animaux...",
@@ -870,35 +905,6 @@
     "noContentDescription": "Il n'y a pas de contenu disponible.",
     "tryAgain": "Réessayer",
     "remove": "Supprimer"
-  },
-  "pets": {
-    "empty": {
-      "title": "Aucun animal",
-      "description": "Ajoutez votre premier compagnon pour commencer !",
-      "action": "Ajouter un animal"
-    },
-    "personalitySection": "Personnalité",
-    "addTrait": "Ajouter un trait",
-    "editTrait": "Modifier le trait",
-    "removeTrait": "Supprimer le trait",
-    "traitName": "Nom du trait",
-    "traitDescription": "Description du trait",
-    "validations": {
-      "traitNameRequired": "Le nom du trait est requis"
-    },
-    "personality": {
-      "empty": "Aucun trait de personnalité",
-      "emptyDescription": "Ajoutez des traits pour mieux comprendre votre animal.",
-      "temperament": "Tempérament",
-      "behavior": "Comportement",
-      "preference": "Préférences",
-      "skill": "Compétences",
-      "category": "Catégorie",
-      "addError": "Erreur lors de l'ajout du trait",
-      "editError": "Erreur lors de la modification du trait",
-      "removeError": "Erreur lors de la suppression du trait",
-      "removeConfirm": "Voulez-vous vraiment supprimer le trait \"{{name}}\" ?"
-    }
   },
   "search": {
     "empty": {

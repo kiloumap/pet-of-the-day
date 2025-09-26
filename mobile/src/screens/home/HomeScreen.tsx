@@ -7,11 +7,14 @@ import { Text } from '../../components/ui/Text';
 import { Button } from '../../components/ui/Button';
 import { PetCard } from '../../shared/cards/PetCard';
 import { PetOfTheDayCard } from '../../shared/cards/PetOfTheDayCard';
+import GroupSelectionModal from '../../shared/modals/GroupSelectionModal';
+import ModernActionModal from '../../components/ModernActionModal';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useTheme } from '../../theme';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { fetchPets } from '../../store/petSlice';
 import { fetchPendingInvites, fetchSharedNotebooks } from '../../store/slices/sharingSlice';
+import { fetchUserGroups } from '../../store/groupSlice';
 import { Pet } from '../../types/api';
 import { useNavigation } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
@@ -101,8 +104,11 @@ export const HomeScreen: React.FC = () => {
   const { user } = useAppSelector(state => state.auth);
   const { pets } = useAppSelector(state => state.pets);
   const { sharedNotebooks, pendingInvites } = useAppSelector(state => state.sharing);
+  const { createdGroups, joinedGroups } = useAppSelector(state => state.groups);
 
   const [refreshing, setRefreshing] = useState(false);
+  const [showGroupSelection, setShowGroupSelection] = useState(false);
+  const [showActionModal, setShowActionModal] = useState(false);
 
   const styles = StyleSheet.create({
     container: {
@@ -266,6 +272,11 @@ export const HomeScreen: React.FC = () => {
         dispatch(fetchPendingInvites()).unwrap(),
         dispatch(fetchSharedNotebooks()).unwrap(),
       ]);
+
+      // Fetch user groups if user is authenticated
+      if (user?.id) {
+        dispatch(fetchUserGroups(user.id));
+      }
     } catch (error) {
       console.error('Failed to load home data:', error);
     }
@@ -293,6 +304,28 @@ export const HomeScreen: React.FC = () => {
 
   const handleQuickAction = (action: string) => {
     console.log(`Quick action: ${action}`);
+
+    // Get all user groups (created + joined)
+    const allCreatedGroups = createdGroups || [];
+    const allJoinedGroups = (joinedGroups || []).map(item => item.group);
+    const allGroups = [...allCreatedGroups, ...allJoinedGroups];
+
+    if (allGroups.length === 0) {
+      // No groups, show message to join or create a group and redirect to groups page
+      alert(t('groups.noGroupsForAction'));
+      navigation.navigate('GroupsTab', { screen: 'GroupList' });
+      return;
+    }
+
+    // Open the ModernActionModal directly - it will handle group selection internally
+    setShowActionModal(true);
+  };
+
+  const handleGroupSelect = (groupId: string) => {
+    navigation.navigate('AddAction', {
+      screen: 'AddAction',
+      params: { groupId }
+    });
   };
 
   const handlePetPress = (petId: string) => {
@@ -306,6 +339,9 @@ export const HomeScreen: React.FC = () => {
   // Calculate total points from pets
   const totalPoints = pets.reduce((sum, pet) => sum + (pet.points || 0), 0);
 
+  // Calculate total groups
+  const totalGroups = (createdGroups?.length || 0) + (joinedGroups?.length || 0);
+
   // Get featured pet (pet with most points or most recent)
   const featuredPet = pets.length > 0
     ? pets.reduce((prev, current) =>
@@ -316,7 +352,7 @@ export const HomeScreen: React.FC = () => {
   const quickActions = [
     {
       icon: Plus,
-      title: t('home.quickActions.addEntry'),
+      title: totalGroups > 0 ? t('home.quickActions.addEntry') : t('groups.createGroup'),
       color: theme.colors.primary,
       action: 'addEntry',
     },
@@ -472,6 +508,30 @@ export const HomeScreen: React.FC = () => {
           )}
         </View>
       </ScrollView>
+
+      {/* Group Selection Modal */}
+      <GroupSelectionModal
+        visible={showGroupSelection}
+        groups={[
+          ...(createdGroups || []),
+          ...((joinedGroups || []).map(item => item.group))
+        ]}
+        onClose={() => setShowGroupSelection(false)}
+        onSelectGroup={handleGroupSelect}
+        title={t('groups.selectGroupForAction')}
+      />
+
+      {/* Modern Action Modal */}
+      <ModernActionModal
+        visible={showActionModal}
+        pets={pets}
+        onClose={() => setShowActionModal(false)}
+        onSuccess={() => {
+          setShowActionModal(false);
+          // Optionally refresh data
+          handleRefresh();
+        }}
+      />
     </View>
   );
 };

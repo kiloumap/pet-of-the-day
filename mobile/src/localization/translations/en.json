@@ -182,7 +182,12 @@
     "shareCode": "Share Code",
     "inviteCodeCopied": "Invite code copied to clipboard!",
     "shareInviteTitle": "Join my group!",
-    "shareInviteMessage": "Join my group '{groupName}' using this invite code: {inviteCode}"
+    "shareInviteMessage": "Join my group '{groupName}' using this invite code: {inviteCode}",
+    "selectGroup": "Select a group",
+    "selectGroupForAction": "Choose a group for the action",
+    "noGroupsForAction": "You need to be part of at least one group to add an action. Create or join a group first.",
+    "noGroupsAvailable": "No groups available",
+    "memberCount": "{{count}} member(s)"
   },
   "invitations": {
     "inviteToGroup": "Invite to Group",

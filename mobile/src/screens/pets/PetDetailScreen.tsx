@@ -50,6 +50,7 @@ export const PetDetailScreen: React.FC<PetDetailScreenProps> = ({ navigation, ro
     photo_url: '',
   });
 
+  const hasPicture = formData.photo_url.length > 0;
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState<string>('');
 
@@ -349,6 +350,7 @@ export const PetDetailScreen: React.FC<PetDetailScreenProps> = ({ navigation, ro
     },
     statItem: {
       alignItems: 'center',
+      marginRight: theme.spacing['3xl'],
     },
     statValue: {
       fontSize: 18,
@@ -427,10 +429,10 @@ export const PetDetailScreen: React.FC<PetDetailScreenProps> = ({ navigation, ro
       borderBottomColor: theme.colors.primary + '30',
     },
     infoRow: {
-      marginBottom: theme.spacing.lg,
-      paddingBottom: theme.spacing.md,
+      marginBottom: theme.spacing.xs,
+      paddingBottom: theme.spacing.xs,
       borderBottomWidth: 1,
-      borderBottomColor: theme.colors.border + '20',
+      borderBottomColor: theme.colors.border,
     },
     lastInfoRow: {
       marginBottom: 0,
@@ -573,10 +575,9 @@ export const PetDetailScreen: React.FC<PetDetailScreenProps> = ({ navigation, ro
             </View>
 
             <View style={styles.infoRow}>
-              <Text style={styles.label}>{t('pets.species')}</Text>
+              <Text style={styles.label}>{t('pets.specie')}</Text>
               {isEditing ? (
                 <Dropdown
-                  label={`${t('pets.species')} *`}
                   value={formData.species}
                   onSelect={(value) => handleFieldChange('species', value)}
                   options={speciesOptions}
@@ -622,6 +623,7 @@ export const PetDetailScreen: React.FC<PetDetailScreenProps> = ({ navigation, ro
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('pets.additionalInfo')}</Text>
 
+            {hasPicture ? (
             <View style={styles.infoRow}>
               <Text style={styles.label}>{t('pets.photoUrl')}</Text>
               {isEditing ? (
@@ -635,7 +637,17 @@ export const PetDetailScreen: React.FC<PetDetailScreenProps> = ({ navigation, ro
               ) : (
                 <Text style={styles.value}>{selectedPet.photo_url || t('common.notSpecified')}</Text>
               )}
-            </View>
+            </View>) :
+              isEditing ? (
+                <Input
+                  value={formData.photo_url}
+                  onChangeText={(value) => handleFieldChange('photo_url', value)}
+                  placeholder={t('pets.placeholders.photoUrl')}
+                  error={errors.photo_url}
+                  helpText={t('pets.photoUrlHelp')}
+                />
+              ) : ''
+            }
 
             <View style={[styles.infoRow, styles.lastInfoRow]}>
               <Text style={styles.label}>{t('common.addedOn')}</Text>
