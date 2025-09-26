@@ -30,7 +30,7 @@ func (r *MockBehaviorRepository) AddBehavior(behavior domain.Behavior) {
 func (r *MockBehaviorRepository) GetAll(ctx context.Context) ([]domain.Behavior, error) {
 	var result []domain.Behavior
 	for _, behavior := range r.behaviors {
-		if behavior.IsGlobal {
+		if behavior.IsActive {
 			result = append(result, behavior)
 		}
 	}
@@ -41,7 +41,7 @@ func (r *MockBehaviorRepository) GetAll(ctx context.Context) ([]domain.Behavior,
 func (r *MockBehaviorRepository) GetBySpecies(ctx context.Context, species domain.Species) ([]domain.Behavior, error) {
 	var result []domain.Behavior
 	for _, behavior := range r.behaviors {
-		if behavior.IsGlobal && (behavior.Species == species || behavior.Species == domain.SpeciesBoth) {
+		if behavior.IsActive && (behavior.Species == species || behavior.Species == domain.SpeciesBoth) {
 			result = append(result, behavior)
 		}
 	}
@@ -52,6 +52,66 @@ func (r *MockBehaviorRepository) GetBySpecies(ctx context.Context, species domai
 func (r *MockBehaviorRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Behavior, error) {
 	if behavior, exists := r.behaviors[id]; exists {
 		return &behavior, nil
+	}
+	return nil, nil
+}
+
+// Create creates a new behavior
+func (r *MockBehaviorRepository) Create(ctx context.Context, behavior *domain.Behavior) error {
+	r.behaviors[behavior.ID] = *behavior
+	return nil
+}
+
+// GetAllActive returns all active behaviors, optionally filtered by species
+func (r *MockBehaviorRepository) GetAllActive(ctx context.Context, species *domain.Species) ([]*domain.Behavior, error) {
+	var result []*domain.Behavior
+	for _, behavior := range r.behaviors {
+		if behavior.IsActive {
+			if species == nil || behavior.Species == *species || behavior.Species == domain.SpeciesBoth {
+				b := behavior // Create copy to avoid pointer issues
+				result = append(result, &b)
+			}
+		}
+	}
+	return result, nil
+}
+
+// GetByCategory returns behaviors by category, optionally filtered by species
+func (r *MockBehaviorRepository) GetByCategory(ctx context.Context, category domain.BehaviorCategory, species *domain.Species) ([]*domain.Behavior, error) {
+	var result []*domain.Behavior
+	for _, behavior := range r.behaviors {
+		if behavior.IsActive && behavior.Category == category {
+			if species == nil || behavior.Species == *species || behavior.Species == domain.SpeciesBoth {
+				b := behavior // Create copy to avoid pointer issues
+				result = append(result, &b)
+			}
+		}
+	}
+	return result, nil
+}
+
+// Update updates an existing behavior
+func (r *MockBehaviorRepository) Update(ctx context.Context, behavior *domain.Behavior) error {
+	if _, exists := r.behaviors[behavior.ID]; exists {
+		r.behaviors[behavior.ID] = *behavior
+		return nil
+	}
+	return nil // Could return error for not found
+}
+
+// Delete removes a behavior
+func (r *MockBehaviorRepository) Delete(ctx context.Context, id uuid.UUID) error {
+	delete(r.behaviors, id)
+	return nil
+}
+
+// GetByName returns a behavior by name
+func (r *MockBehaviorRepository) GetByName(ctx context.Context, name string) (*domain.Behavior, error) {
+	for _, behavior := range r.behaviors {
+		if behavior.Name == name {
+			b := behavior // Create copy to avoid pointer issues
+			return &b, nil
+		}
 	}
 	return nil, nil
 }

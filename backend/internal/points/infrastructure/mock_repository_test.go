@@ -13,11 +13,17 @@ func TestMockBehaviorRepository(t *testing.T) {
 	repo := NewMockBehaviorRepository()
 
 	behavior := domain.Behavior{
-		ID:       uuid.New(),
-		Name:     "Sit",
-		Points:   5,
-		Species:  domain.SpeciesDog,
-		IsGlobal: true,
+		ID:                 uuid.New(),
+		Name:               "Sit",
+		Description:        "Pet sits on command",
+		Category:           domain.BehaviorCategoryTraining,
+		PointValue:         5,
+		MinIntervalMinutes: 30,
+		Species:            domain.SpeciesDog,
+		Icon:               "sit",
+		IsActive:           true,
+		CreatedAt:          time.Now(),
+		UpdatedAt:          time.Now(),
 	}
 
 	repo.AddBehavior(behavior)

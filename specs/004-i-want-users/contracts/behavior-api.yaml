@@ -1,0 +1,431 @@
+openapi: 3.0.3
+info:
+  title: Pet Behavior Logging API
+  description: API for logging pet behaviors, managing point system, and real-time rankings
+  version: 1.0.0
+
+paths:
+  /api/behaviors:
+    get:
+      summary: Get predefined behavior catalog
+      tags: [Behaviors]
+      responses:
+        '200':
+          description: List of available behaviors
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  behaviors:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Behavior'
+
+  /api/behavior-logs:
+    post:
+      summary: Log a behavior for a pet
+      tags: [BehaviorLogs]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBehaviorLogRequest'
+      responses:
+        '201':
+          description: Behavior logged successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BehaviorLogResponse'
+        '400':
+          description: Invalid request or duplicate within minimum interval
+        '403':
+          description: Not authorized to log behavior for this pet
+        '404':
+          description: Pet or behavior not found
+
+    get:
+      summary: Get behavior logs for user's pets
+      tags: [BehaviorLogs]
+      parameters:
+        - name: pet_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: date_from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: date_to
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: group_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of behavior logs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  behavior_logs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BehaviorLogResponse'
+
+  /api/groups/{group_id}/rankings:
+    get:
+      summary: Get real-time leaderboard for a group
+      tags: [Rankings]
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+            description: Date for rankings (defaults to today)
+      responses:
+        '200':
+          description: Current group rankings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupRankingsResponse'
+        '403':
+          description: Not a member of this group
+
+  /api/groups/{group_id}/pet-of-the-day:
+    get:
+      summary: Get Pet of the Day history for a group
+      tags: [Rankings]
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: date_from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: date_to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Pet of the Day history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pet_of_the_day_records:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PetOfTheDayRecord'
+
+  /api/users/settings:
+    put:
+      summary: Update user behavior preferences
+      tags: [Settings]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserSettingsRequest'
+      responses:
+        '200':
+          description: Settings updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSettingsResponse'
+
+  /api/pets/{pet_id}/daily-score:
+    get:
+      summary: Get daily score summary for a pet
+      tags: [Scoring]
+      parameters:
+        - name: pet_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+            description: Date for score (defaults to today)
+        - name: group_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+            description: Specific group (optional)
+      responses:
+        '200':
+          description: Daily score summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DailyScoreResponse'
+        '403':
+          description: Not authorized to view this pet's data
+
+components:
+  schemas:
+    Behavior:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Went potty outside"
+        description:
+          type: string
+          example: "Pet successfully used designated outdoor bathroom area"
+        category:
+          type: string
+          enum: [potty_training, feeding, social, training, play]
+        point_value:
+          type: integer
+          example: 5
+        min_interval_minutes:
+          type: integer
+          example: 30
+      required: [id, name, category, point_value, min_interval_minutes]
+
+    CreateBehaviorLogRequest:
+      type: object
+      properties:
+        pet_id:
+          type: string
+          format: uuid
+        behavior_id:
+          type: string
+          format: uuid
+        group_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: "Groups to share this behavior with"
+        logged_at:
+          type: string
+          format: date-time
+          description: "When behavior occurred (defaults to now)"
+        notes:
+          type: string
+          maxLength: 500
+      required: [pet_id, behavior_id, group_ids]
+
+    BehaviorLogResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        pet_id:
+          type: string
+          format: uuid
+        pet_name:
+          type: string
+        behavior:
+          $ref: '#/components/schemas/Behavior'
+        points_awarded:
+          type: integer
+        logged_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        notes:
+          type: string
+        shared_groups:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              name:
+                type: string
+      required: [id, pet_id, pet_name, behavior, points_awarded, logged_at, created_at, shared_groups]
+
+    GroupRankingsResponse:
+      type: object
+      properties:
+        group_id:
+          type: string
+          format: uuid
+        group_name:
+          type: string
+        date:
+          type: string
+          format: date
+        rankings:
+          type: array
+          items:
+            type: object
+            properties:
+              position:
+                type: integer
+                minimum: 1
+              pet_id:
+                type: string
+                format: uuid
+              pet_name:
+                type: string
+              owner_name:
+                type: string
+              total_points:
+                type: integer
+              negative_behavior_count:
+                type: integer
+              last_behavior_logged_at:
+                type: string
+                format: date-time
+            required: [position, pet_id, pet_name, owner_name, total_points, negative_behavior_count]
+        is_final:
+          type: boolean
+          description: "True if daily period has ended and results are final"
+        reset_time_info:
+          type: object
+          properties:
+            next_reset_at:
+              type: string
+              format: date-time
+            user_timezone:
+              type: string
+      required: [group_id, group_name, date, rankings, is_final, reset_time_info]
+
+    PetOfTheDayRecord:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        pet_id:
+          type: string
+          format: uuid
+        pet_name:
+          type: string
+        owner_name:
+          type: string
+        final_score:
+          type: integer
+        negative_behaviors:
+          type: integer
+        is_tied:
+          type: boolean
+          description: "True if multiple pets tied for first place"
+      required: [date, pet_id, pet_name, owner_name, final_score, negative_behaviors, is_tied]
+
+    UpdateUserSettingsRequest:
+      type: object
+      properties:
+        daily_reset_time:
+          type: string
+          pattern: '^([01]?[0-9]|2[0-3]):[0-5][0-9]$'
+          example: "21:00"
+        timezone:
+          type: string
+          example: "America/New_York"
+      required: [daily_reset_time, timezone]
+
+    UserSettingsResponse:
+      type: object
+      properties:
+        daily_reset_time:
+          type: string
+        timezone:
+          type: string
+        next_reset_at:
+          type: string
+          format: date-time
+      required: [daily_reset_time, timezone, next_reset_at]
+
+    DailyScoreResponse:
+      type: object
+      properties:
+        pet_id:
+          type: string
+          format: uuid
+        pet_name:
+          type: string
+        date:
+          type: string
+          format: date
+        scores_by_group:
+          type: array
+          items:
+            type: object
+            properties:
+              group_id:
+                type: string
+                format: uuid
+              group_name:
+                type: string
+              total_points:
+                type: integer
+              negative_behavior_count:
+                type: integer
+              ranking_position:
+                type: integer
+              behavior_count:
+                type: integer
+        overall_total:
+          type: integer
+        recent_behaviors:
+          type: array
+          items:
+            type: object
+            properties:
+              behavior_name:
+                type: string
+              points:
+                type: integer
+              logged_at:
+                type: string
+                format: date-time
+              groups_shared:
+                type: array
+                items:
+                  type: string
+      required: [pet_id, pet_name, date, scores_by_group, overall_total, recent_behaviors]
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []

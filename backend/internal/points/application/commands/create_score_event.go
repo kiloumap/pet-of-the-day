@@ -83,7 +83,7 @@ func (h *CreateScoreEventHandler) Handle(ctx context.Context, req domain.CreateS
 		BehaviorID:   req.BehaviorID,
 		GroupID:      req.GroupID,
 		RecordedByID: req.UserID,
-		Points:       behavior.Points,
+		Points:       behavior.PointValue,
 		Comment:      req.Comment,
 		ActionDate:   req.ActionDate,
 		RecordedAt:   time.Now(),

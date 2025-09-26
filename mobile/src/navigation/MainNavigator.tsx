@@ -19,6 +19,8 @@ import InviteToGroupScreen from '../screens/groups/InviteToGroupScreen';
 import AddActionScreen from '../screens/points/AddActionScreen';
 import LeaderboardScreen from '../screens/points/LeaderboardScreen';
 import HomeScreen from '../screens/home/HomeScreen';
+import BehaviorLogScreen from '../screens/behavior/BehaviorLogScreen';
+import GroupRankingsScreen from '../screens/behavior/GroupRankingsScreen';
 
 
 
@@ -58,6 +60,8 @@ export type GroupsStackParamList = {
   InviteToGroup: { groupId: string; groupName: string };
   AddAction: { groupId: string; petId?: string };
   Leaderboard: { groupId: string };
+  BehaviorLog: { groupId: string; petId?: string };
+  GroupRankings: { groupId: string };
 };
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -143,6 +147,21 @@ const GroupsStackNavigator: React.FC = () => {
       <GroupsStack.Screen
         name="Leaderboard"
         component={LeaderboardScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <GroupsStack.Screen
+        name="BehaviorLog"
+        component={BehaviorLogScreen}
+        options={{
+          headerShown: false,
+          presentation: 'modal',
+        }}
+      />
+      <GroupsStack.Screen
+        name="GroupRankings"
+        component={GroupRankingsScreen}
         options={{
           headerShown: false,
         }}

@@ -2,443 +2,472 @@ package http
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+
 	"pet-of-the-day/internal/points/application/commands"
 	"pet-of-the-day/internal/points/application/queries"
-	"pet-of-the-day/internal/points/domain"
 	"pet-of-the-day/internal/shared/auth"
-	sharederrors "pet-of-the-day/internal/shared/errors"
+	"pet-of-the-day/internal/shared/errors"
 )
 
-type Controller struct {
-	getBehaviorsHandler        *queries.GetBehaviorsHandler
-	createScoreEventHandler    *commands.CreateScoreEventHandler
-	deleteScoreEventHandler    *commands.DeleteScoreEventHandler
-	getPetScoreEventsHandler   *queries.GetPetScoreEventsHandler
-	getGroupLeaderboardHandler *queries.GetGroupLeaderboardHandler
-	getRecentActivitiesHandler *queries.GetRecentActivitiesHandler
+// BehaviorController handles HTTP requests for behavior-related operations
+type BehaviorController struct {
+	// Query handlers
+	getBehaviorsHandler      *queries.GetBehaviorsHandler
+	getBehaviorLogsHandler   *queries.GetBehaviorLogsHandler
+	getGroupRankingsHandler  *queries.GetGroupRankingsHandler
+	getPetOfTheDayHandler    *queries.GetPetOfTheDayHandler
+	getDailyScoreHandler     *queries.GetDailyScoreHandler
+
+	// Command handlers
+	createBehaviorLogHandler *commands.CreateBehaviorLogHandler
+	updateBehaviorLogHandler *commands.UpdateBehaviorLogHandler
+	deleteBehaviorLogHandler *commands.DeleteBehaviorLogHandler
 }
 
-func NewController(
+// NewBehaviorController creates a new behavior controller
+func NewBehaviorController(
 	getBehaviorsHandler *queries.GetBehaviorsHandler,
-	createScoreEventHandler *commands.CreateScoreEventHandler,
-	deleteScoreEventHandler *commands.DeleteScoreEventHandler,
-	getPetScoreEventsHandler *queries.GetPetScoreEventsHandler,
-	getGroupLeaderboardHandler *queries.GetGroupLeaderboardHandler,
-	getRecentActivitiesHandler *queries.GetRecentActivitiesHandler,
-) *Controller {
-	return &Controller{
-		getBehaviorsHandler:        getBehaviorsHandler,
-		createScoreEventHandler:    createScoreEventHandler,
-		deleteScoreEventHandler:    deleteScoreEventHandler,
-		getPetScoreEventsHandler:   getPetScoreEventsHandler,
-		getGroupLeaderboardHandler: getGroupLeaderboardHandler,
-		getRecentActivitiesHandler: getRecentActivitiesHandler,
+	getBehaviorLogsHandler *queries.GetBehaviorLogsHandler,
+	getGroupRankingsHandler *queries.GetGroupRankingsHandler,
+	getPetOfTheDayHandler *queries.GetPetOfTheDayHandler,
+	getDailyScoreHandler *queries.GetDailyScoreHandler,
+	createBehaviorLogHandler *commands.CreateBehaviorLogHandler,
+	updateBehaviorLogHandler *commands.UpdateBehaviorLogHandler,
+	deleteBehaviorLogHandler *commands.DeleteBehaviorLogHandler,
+) *BehaviorController {
+	return &BehaviorController{
+		getBehaviorsHandler:      getBehaviorsHandler,
+		getBehaviorLogsHandler:   getBehaviorLogsHandler,
+		getGroupRankingsHandler:  getGroupRankingsHandler,
+		getPetOfTheDayHandler:    getPetOfTheDayHandler,
+		getDailyScoreHandler:     getDailyScoreHandler,
+		createBehaviorLogHandler: createBehaviorLogHandler,
+		updateBehaviorLogHandler: updateBehaviorLogHandler,
+		deleteBehaviorLogHandler: deleteBehaviorLogHandler,
 	}
 }
 
-// GetBehaviors returns all behaviors, optionally filtered by species
-func (c *Controller) GetBehaviors(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	species := r.URL.Query().Get("species")
+// RegisterRoutes registers all behavior-related HTTP routes
+func (c *BehaviorController) RegisterRoutes(router *mux.Router) {
+	// Public routes (authenticated users)
+	api := router.PathPrefix("/api").Subrouter()
+	api.Use(auth.RequireAuthentication)
 
-	var behaviors []domain.Behavior
-	var err error
+	// Behavior catalog routes
+	api.HandleFunc("/behaviors", c.getBehaviors).Methods("GET")
 
-	if species != "" {
-		behaviors, err = c.getBehaviorsHandler.GetBySpecies(ctx, species)
-	} else {
-		behaviors, err = c.getBehaviorsHandler.GetAll(ctx)
+	// Behavior log routes
+	api.HandleFunc("/behavior-logs", c.createBehaviorLog).Methods("POST")
+	api.HandleFunc("/behavior-logs", c.getBehaviorLogs).Methods("GET")
+	api.HandleFunc("/behavior-logs/{id}", c.updateBehaviorLog).Methods("PUT")
+	api.HandleFunc("/behavior-logs/{id}", c.deleteBehaviorLog).Methods("DELETE")
+
+	// Group ranking routes
+	api.HandleFunc("/groups/{id}/rankings", c.getGroupRankings).Methods("GET")
+	api.HandleFunc("/groups/{id}/pet-of-the-day", c.getPetOfTheDay).Methods("GET")
+
+	// Pet scoring routes
+	api.HandleFunc("/pets/{id}/daily-score", c.getDailyScore).Methods("GET")
+}
+
+// getBehaviors handles GET /api/behaviors
+func (c *BehaviorController) getBehaviors(w http.ResponseWriter, r *http.Request) {
+	// Parse query parameters
+	speciesParam := r.URL.Query().Get("species")
+	categoryParam := r.URL.Query().Get("category")
+
+	// Create query
+	query := &queries.GetBehaviorsQuery{
+		Species:  parseSpeciesParam(speciesParam),
+		Category: parseCategoryParam(categoryParam),
 	}
 
+	// Execute query
+	result, err := c.getBehaviorsHandler.Handle(r.Context(), query)
 	if err != nil {
-		_, ok := err.(*queries.InvalidSpeciesError)
-		if ok {
-			sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInvalidInput, err.Error(), http.StatusBadRequest)
-		} else {
-			sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInternalServer, "Failed to fetch behaviors", http.StatusInternalServerError)
-		}
+		errors.HandleHTTPError(w, err)
 		return
 	}
 
-	response := map[string]interface{}{
-		"behaviors": behaviors,
-	}
-
+	// Return response
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(result)
 }
 
-// CreateScoreEvent creates a new score event
-func (c *Controller) CreateScoreEvent(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	userUUID, err := auth.GetUserIDFromContext(ctx)
-	if err != nil {
-		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeUnauthorized, "User not authenticated", http.StatusUnauthorized)
-		return
-	}
-
+// createBehaviorLog handles POST /api/behavior-logs
+func (c *BehaviorController) createBehaviorLog(w http.ResponseWriter, r *http.Request) {
+	// Parse request body
 	var req struct {
-		PetID      string  `json:"pet_id"`
-		BehaviorID string  `json:"behavior_id"`
-		GroupID    string  `json:"group_id"`
-		Comment    *string `json:"comment,omitempty"`
-		ActionDate *string `json:"action_date,omitempty"`
+		PetID      uuid.UUID   `json:"pet_id"`
+		BehaviorID uuid.UUID   `json:"behavior_id"`
+		LoggedAt   *time.Time  `json:"logged_at,omitempty"`
+		Notes      string      `json:"notes"`
+		GroupIDs   []uuid.UUID `json:"group_ids"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInvalidInput, "Invalid JSON", http.StatusBadRequest)
+		errors.HandleHTTPError(w, errors.NewValidationError("Invalid request body", err))
 		return
 	}
 
-	// Validate required fields
-	if req.PetID == "" {
-		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeMissingField, "Pet ID is required", http.StatusBadRequest)
-		return
-	}
-	if req.BehaviorID == "" {
-		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeMissingField, "Behavior ID is required", http.StatusBadRequest)
-		return
-	}
-	if req.GroupID == "" {
-		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeMissingField, "Group ID is required", http.StatusBadRequest)
-		return
-	}
-
-	// Parse UUIDs
-	petUUID, err := uuid.Parse(req.PetID)
+	// Get user ID from context
+	userID, err := auth.GetUserIDFromContext(r.Context())
 	if err != nil {
-		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInvalidFormat, "Invalid pet ID", http.StatusBadRequest)
+		errors.HandleHTTPError(w, errors.NewUnauthorizedError("User not authenticated"))
 		return
 	}
 
-	behaviorUUID, err := uuid.Parse(req.BehaviorID)
+	// Create command
+	cmd := &commands.CreateBehaviorLogCommand{
+		PetID:      req.PetID,
+		BehaviorID: req.BehaviorID,
+		UserID:     userID,
+		LoggedAt:   req.LoggedAt,
+		Notes:      req.Notes,
+		GroupIDs:   req.GroupIDs,
+	}
+
+	// Execute command
+	result, err := c.createBehaviorLogHandler.Handle(r.Context(), cmd)
 	if err != nil {
-		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInvalidFormat, "Invalid behavior ID", http.StatusBadRequest)
+		errors.HandleHTTPError(w, err)
 		return
 	}
 
-	groupUUID, err := uuid.Parse(req.GroupID)
-	if err != nil {
-		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInvalidFormat, "Invalid group ID", http.StatusBadRequest)
-		return
-	}
-
-	// Parse action date if provided
-	actionDate := time.Now()
-	if req.ActionDate != nil && *req.ActionDate != "" {
-		parsedDate, err := time.Parse("2006-01-02", *req.ActionDate)
-		if err != nil {
-			sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInvalidFormat, "Invalid date format (YYYY-MM-DD)", http.StatusBadRequest)
-			return
-		}
-		actionDate = parsedDate
-	}
-
-	// Build request for domain layer
-	comment := ""
-	if req.Comment != nil {
-		comment = *req.Comment
-	}
-
-	createReq := domain.CreateScoreEventRequest{
-		PetID:      petUUID,
-		BehaviorID: behaviorUUID,
-		GroupID:    groupUUID,
-		UserID:     userUUID,
-		Comment:    comment,
-		ActionDate: actionDate,
-	}
-
-	// Create score event using application layer
-	scoreEvent, err := c.createScoreEventHandler.Handle(ctx, createReq)
-	if err != nil {
-		// Handle different error types
-		switch e := err.(type) {
-		case *commands.AuthorizationError:
-			sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeUnauthorized, e.Error(), http.StatusForbidden)
-		case *commands.NotFoundError:
-			sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeValidationFailed, e.Error(), http.StatusNotFound)
-		default:
-			sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInternalServer, "Failed to create score event", http.StatusInternalServerError)
-		}
-		return
-	}
-
-	response := map[string]interface{}{
-		"id":          scoreEvent.ID.String(),
-		"pet_id":      scoreEvent.PetID.String(),
-		"behavior_id": scoreEvent.BehaviorID.String(),
-		"group_id":    scoreEvent.GroupID.String(),
-		"points":      scoreEvent.Points,
-		"comment":     scoreEvent.Comment,
-		"recorded_at": scoreEvent.RecordedAt.Format(time.RFC3339),
-		"action_date": scoreEvent.ActionDate.Format("2006-01-02"),
-		"recorded_by": scoreEvent.RecordedByID.String(),
-	}
-
+	// Return response
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(result)
 }
 
-// GetPetScoreEvents returns score events for a specific pet in a group
-func (c *Controller) GetPetScoreEvents(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	_, err := auth.GetUserIDFromContext(ctx)
+// getBehaviorLogs handles GET /api/behavior-logs
+func (c *BehaviorController) getBehaviorLogs(w http.ResponseWriter, r *http.Request) {
+	// Parse query parameters
+	query := &queries.GetBehaviorLogsQuery{
+		PetID:      parseUUIDParam(r.URL.Query().Get("pet_id")),
+		BehaviorID: parseUUIDParam(r.URL.Query().Get("behavior_id")),
+		GroupID:    parseUUIDParam(r.URL.Query().Get("group_id")),
+		DateFrom:   parseTimeParam(r.URL.Query().Get("date_from")),
+		DateTo:     parseTimeParam(r.URL.Query().Get("date_to")),
+		Limit:      parseIntParam(r.URL.Query().Get("limit"), 50),
+		Offset:     parseIntParam(r.URL.Query().Get("offset"), 0),
+	}
+
+	// Get user ID from context for authorization
+	userID, err := auth.GetUserIDFromContext(r.Context())
 	if err != nil {
-		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeUnauthorized, "User not authenticated", http.StatusUnauthorized)
+		errors.HandleHTTPError(w, errors.NewUnauthorizedError("User not authenticated"))
 		return
 	}
+	query.UserID = userID
 
-	vars := mux.Vars(r)
-	petID := vars["petId"]
-	groupID := r.URL.Query().Get("group_id")
-
-	if petID == "" {
-		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeMissingField, "Pet ID is required", http.StatusBadRequest)
-		return
-	}
-	if groupID == "" {
-		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeMissingField, "Group ID is required", http.StatusBadRequest)
-		return
-	}
-
-	petUUID, err := uuid.Parse(petID)
+	// Execute query
+	result, err := c.getBehaviorLogsHandler.Handle(r.Context(), query)
 	if err != nil {
-		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInvalidFormat, "Invalid pet ID", http.StatusBadRequest)
+		errors.HandleHTTPError(w, err)
 		return
 	}
 
-	groupUUID, err := uuid.Parse(groupID)
-	if err != nil {
-		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInvalidFormat, "Invalid group ID", http.StatusBadRequest)
-		return
-	}
-
-	limitStr := r.URL.Query().Get("limit")
-	limit := 50 // default
-	if limitStr != "" {
-		if parsedLimit, err := strconv.Atoi(limitStr); err == nil && parsedLimit > 0 && parsedLimit <= 200 {
-			limit = parsedLimit
-		}
-	}
-
-	// Use application layer to get pet score events
-	result, err := c.getPetScoreEventsHandler.Handle(ctx, petUUID, groupUUID, limit)
-	if err != nil {
-		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInternalServer, "Failed to fetch score events", http.StatusInternalServerError)
-		return
-	}
-
-	// Format events for response
-	var formattedEvents []map[string]interface{}
-	for _, event := range result.Events {
-		formattedEvent := map[string]interface{}{
-			"id":          event.ID.String(),
-			"pet_id":      event.PetID.String(),
-			"behavior_id": event.BehaviorID.String(),
-			"group_id":    event.GroupID.String(),
-			"points":      event.Points,
-			"comment":     event.Comment,
-			"recorded_at": event.RecordedAt.Format(time.RFC3339),
-			"action_date": event.ActionDate.Format("2006-01-02"),
-			"recorded_by": event.RecordedByID.String(),
-		}
-		formattedEvents = append(formattedEvents, formattedEvent)
-	}
-
-	response := map[string]interface{}{
-		"events":       formattedEvents,
-		"total_points": result.TotalPoints,
-	}
-
+	// Return response
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(result)
 }
 
-// GetGroupLeaderboard returns the leaderboard for a group
-func (c *Controller) GetGroupLeaderboard(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	_, err := auth.GetUserIDFromContext(ctx)
-	if err != nil {
-		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeUnauthorized, "User not authenticated", http.StatusUnauthorized)
-		return
-	}
-
+// updateBehaviorLog handles PUT /api/behavior-logs/{id}
+func (c *BehaviorController) updateBehaviorLog(w http.ResponseWriter, r *http.Request) {
+	// Parse path parameter
 	vars := mux.Vars(r)
-	groupID := vars["groupId"]
-	period := r.URL.Query().Get("period")
-	if period == "" {
-		period = "daily"
-	}
-
-	if groupID == "" {
-		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeMissingField, "Group ID is required", http.StatusBadRequest)
-		return
-	}
-
-	groupUUID, err := uuid.Parse(groupID)
+	id, err := uuid.Parse(vars["id"])
 	if err != nil {
-		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInvalidFormat, "Invalid group ID", http.StatusBadRequest)
+		errors.HandleHTTPError(w, errors.NewValidationError("Invalid behavior log ID", err))
 		return
 	}
 
-	// Build request for domain layer
-	req := domain.LeaderboardRequest{
-		GroupID: groupUUID,
-		Period:  domain.Period(period),
+	// Parse request body
+	var req struct {
+		Notes    string      `json:"notes"`
+		GroupIDs []uuid.UUID `json:"group_ids"`
 	}
 
-	// Use application layer to get leaderboard
-	result, err := c.getGroupLeaderboardHandler.Handle(ctx, req)
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		errors.HandleHTTPError(w, errors.NewValidationError("Invalid request body", err))
+		return
+	}
+
+	// Get user ID from context
+	userID, err := auth.GetUserIDFromContext(r.Context())
 	if err != nil {
-		if err.Error() == "invalid period: "+period {
-			sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInvalidInput, "Invalid period (daily or weekly)", http.StatusBadRequest)
-		} else {
-			sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInternalServer, "Failed to fetch leaderboard data", http.StatusInternalServerError)
-		}
+		errors.HandleHTTPError(w, errors.NewUnauthorizedError("User not authenticated"))
 		return
 	}
 
-	// Convert to response format
-	var leaderboard []map[string]interface{}
-	for _, entry := range result.Leaderboard {
-		leaderboard = append(leaderboard, map[string]interface{}{
-			"pet_id":        entry.PetID.String(),
-			"pet_name":      entry.PetName,
-			"species":       entry.Species,
-			"owner_name":    entry.OwnerName,
-			"total_points":  entry.TotalPoints,
-			"actions_count": entry.ActionCount,
-			"rank":          entry.Rank,
-		})
+	// Create command
+	cmd := &commands.UpdateBehaviorLogCommand{
+		ID:       id,
+		UserID:   userID,
+		Notes:    req.Notes,
+		GroupIDs: req.GroupIDs,
 	}
 
-	response := map[string]interface{}{
-		"daily":        leaderboard,
-		"weekly":       leaderboard, // Same data for now, could be different queries
-		"period_start": result.PeriodStart,
-		"period_end":   result.PeriodEnd,
+	// Execute command
+	result, err := c.updateBehaviorLogHandler.Handle(r.Context(), cmd)
+	if err != nil {
+		errors.HandleHTTPError(w, err)
+		return
 	}
 
+	// Return response
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(result)
 }
 
-// DeleteScoreEvent deletes a score event
-func (c *Controller) DeleteScoreEvent(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	userUUID, err := auth.GetUserIDFromContext(ctx)
-	if err != nil {
-		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeUnauthorized, "User not authenticated", http.StatusUnauthorized)
-		return
-	}
-
+// deleteBehaviorLog handles DELETE /api/behavior-logs/{id}
+func (c *BehaviorController) deleteBehaviorLog(w http.ResponseWriter, r *http.Request) {
+	// Parse path parameter
 	vars := mux.Vars(r)
-	eventID := vars["eventId"]
-
-	if eventID == "" {
-		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeMissingField, "Event ID is required", http.StatusBadRequest)
-		return
-	}
-
-	eventUUID, err := uuid.Parse(eventID)
+	id, err := uuid.Parse(vars["id"])
 	if err != nil {
-		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInvalidFormat, "Invalid event ID", http.StatusBadRequest)
+		errors.HandleHTTPError(w, errors.NewValidationError("Invalid behavior log ID", err))
 		return
 	}
 
-	// Use application layer to delete score event
-	err = c.deleteScoreEventHandler.Handle(ctx, userUUID, eventUUID)
+	// Get user ID from context
+	userID, err := auth.GetUserIDFromContext(r.Context())
 	if err != nil {
-		// Handle different error types
-		switch e := err.(type) {
-		case *commands.AuthorizationError:
-			sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeUnauthorized, e.Error(), http.StatusForbidden)
-		case *commands.NotFoundError:
-			sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeValidationFailed, e.Error(), http.StatusNotFound)
-		default:
-			sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInternalServer, "Failed to delete score event", http.StatusInternalServerError)
-		}
+		errors.HandleHTTPError(w, errors.NewUnauthorizedError("User not authenticated"))
 		return
 	}
 
+	// Create command
+	cmd := &commands.DeleteBehaviorLogCommand{
+		ID:     id,
+		UserID: userID,
+	}
+
+	// Execute command
+	err = c.deleteBehaviorLogHandler.Handle(r.Context(), cmd)
+	if err != nil {
+		errors.HandleHTTPError(w, err)
+		return
+	}
+
+	// Return success response
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// GetRecentActivities returns recent activities for the authenticated user
-func (c *Controller) GetRecentActivities(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	userUUID, err := auth.GetUserIDFromContext(ctx)
+// getGroupRankings handles GET /api/groups/{id}/rankings
+func (c *BehaviorController) getGroupRankings(w http.ResponseWriter, r *http.Request) {
+	// Parse path parameter
+	vars := mux.Vars(r)
+	groupID, err := uuid.Parse(vars["id"])
 	if err != nil {
-		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeUnauthorized, "User not authenticated", http.StatusUnauthorized)
+		errors.HandleHTTPError(w, errors.NewValidationError("Invalid group ID", err))
 		return
 	}
 
-	limitStr := r.URL.Query().Get("limit")
-	limit := 20 // default
-	if limitStr != "" {
-		if parsedLimit, err := strconv.Atoi(limitStr); err == nil && parsedLimit > 0 && parsedLimit <= 100 {
-			limit = parsedLimit
+	// Parse query parameters
+	dateParam := r.URL.Query().Get("date")
+	var queryDate time.Time
+	if dateParam != "" {
+		queryDate, err = time.Parse("2006-01-02", dateParam)
+		if err != nil {
+			errors.HandleHTTPError(w, errors.NewValidationError("Invalid date format (expected YYYY-MM-DD)", err))
+			return
 		}
+	} else {
+		queryDate = time.Now().UTC()
 	}
 
-	// Use application layer to get recent activities
-	activities, err := c.getRecentActivitiesHandler.Handle(ctx, userUUID, limit)
+	// Get user ID from context for authorization
+	userID, err := auth.GetUserIDFromContext(r.Context())
 	if err != nil {
-		sharederrors.WriteErrorResponse(w, sharederrors.ErrCodeInternalServer, "Failed to fetch recent activities", http.StatusInternalServerError)
+		errors.HandleHTTPError(w, errors.NewUnauthorizedError("User not authenticated"))
 		return
 	}
 
-	// Format activities for response
-	var formattedActivities []map[string]interface{}
-	for _, activity := range activities {
-		formattedActivity := map[string]interface{}{
-			"id":            activity.ID.String(),
-			"pet_id":        activity.PetID.String(),
-			"pet_name":      activity.PetName,
-			"behavior_id":   activity.BehaviorID.String(),
-			"behavior_name": activity.BehaviorName,
-			"group_id":      activity.GroupID.String(),
-			"group_name":    activity.GroupName,
-			"points":        activity.Points,
-			"comment":       activity.Comment,
-			"recorded_at":   activity.RecordedAt.Format(time.RFC3339),
-			"action_date":   activity.ActionDate.Format("2006-01-02"),
-			"recorded_by":   activity.RecordedBy.String(),
-		}
-		formattedActivities = append(formattedActivities, formattedActivity)
+	// Create query
+	query := &queries.GetGroupRankingsQuery{
+		GroupID: groupID,
+		Date:    queryDate,
+		UserID:  userID,
 	}
 
-	response := map[string]interface{}{
-		"activities": formattedActivities,
+	// Execute query
+	result, err := c.getGroupRankingsHandler.Handle(r.Context(), query)
+	if err != nil {
+		errors.HandleHTTPError(w, err)
+		return
 	}
 
+	// Return response
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(result)
 }
 
-// RegisterRoutes registers all points-related routes
-func (c *Controller) RegisterRoutes(router *mux.Router, authMiddleware func(http.Handler) http.Handler) {
-	// Behaviors routes (public for authenticated users)
-	router.Handle("/behaviors", authMiddleware(http.HandlerFunc(c.GetBehaviors))).Methods("GET")
+// getPetOfTheDay handles GET /api/groups/{id}/pet-of-the-day
+func (c *BehaviorController) getPetOfTheDay(w http.ResponseWriter, r *http.Request) {
+	// Parse path parameter
+	vars := mux.Vars(r)
+	groupID, err := uuid.Parse(vars["id"])
+	if err != nil {
+		errors.HandleHTTPError(w, errors.NewValidationError("Invalid group ID", err))
+		return
+	}
 
-	// Score events routes
-	router.Handle("/score-events", authMiddleware(http.HandlerFunc(c.CreateScoreEvent))).Methods("POST")
-	router.Handle("/score-events/{eventId}", authMiddleware(http.HandlerFunc(c.DeleteScoreEvent))).Methods("DELETE")
+	// Parse query parameters
+	dateParam := r.URL.Query().Get("date")
+	var queryDate time.Time
+	if dateParam != "" {
+		queryDate, err = time.Parse("2006-01-02", dateParam)
+		if err != nil {
+			errors.HandleHTTPError(w, errors.NewValidationError("Invalid date format (expected YYYY-MM-DD)", err))
+			return
+		}
+	} else {
+		// Default to yesterday (Pet of the Day is awarded for previous day)
+		queryDate = time.Now().UTC().AddDate(0, 0, -1)
+	}
 
-	// Pet score events
-	router.Handle("/pets/{petId}/score-events", authMiddleware(http.HandlerFunc(c.GetPetScoreEvents))).Methods("GET")
+	// Get user ID from context for authorization
+	userID, err := auth.GetUserIDFromContext(r.Context())
+	if err != nil {
+		errors.HandleHTTPError(w, errors.NewUnauthorizedError("User not authenticated"))
+		return
+	}
 
-	// Group leaderboard
-	router.Handle("/groups/{groupId}/leaderboard", authMiddleware(http.HandlerFunc(c.GetGroupLeaderboard))).Methods("GET")
+	// Create query
+	query := &queries.GetPetOfTheDayQuery{
+		GroupID: groupID,
+		Date:    queryDate,
+		UserID:  userID,
+	}
 
-	// Recent activities
-	router.Handle("/activities/recent", authMiddleware(http.HandlerFunc(c.GetRecentActivities))).Methods("GET")
+	// Execute query
+	result, err := c.getPetOfTheDayHandler.Handle(r.Context(), query)
+	if err != nil {
+		errors.HandleHTTPError(w, err)
+		return
+	}
+
+	// Return response
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(result)
+}
+
+// getDailyScore handles GET /api/pets/{id}/daily-score
+func (c *BehaviorController) getDailyScore(w http.ResponseWriter, r *http.Request) {
+	// Parse path parameter
+	vars := mux.Vars(r)
+	petID, err := uuid.Parse(vars["id"])
+	if err != nil {
+		errors.HandleHTTPError(w, errors.NewValidationError("Invalid pet ID", err))
+		return
+	}
+
+	// Parse query parameters
+	groupIDParam := r.URL.Query().Get("group_id")
+	if groupIDParam == "" {
+		errors.HandleHTTPError(w, errors.NewValidationError("group_id parameter is required", nil))
+		return
+	}
+
+	groupID, err := uuid.Parse(groupIDParam)
+	if err != nil {
+		errors.HandleHTTPError(w, errors.NewValidationError("Invalid group ID", err))
+		return
+	}
+
+	dateParam := r.URL.Query().Get("date")
+	var queryDate time.Time
+	if dateParam != "" {
+		queryDate, err = time.Parse("2006-01-02", dateParam)
+		if err != nil {
+			errors.HandleHTTPError(w, errors.NewValidationError("Invalid date format (expected YYYY-MM-DD)", err))
+			return
+		}
+	} else {
+		queryDate = time.Now().UTC()
+	}
+
+	// Get user ID from context for authorization
+	userID, err := auth.GetUserIDFromContext(r.Context())
+	if err != nil {
+		errors.HandleHTTPError(w, errors.NewUnauthorizedError("User not authenticated"))
+		return
+	}
+
+	// Create query
+	query := &queries.GetDailyScoreQuery{
+		PetID:   petID,
+		GroupID: groupID,
+		Date:    queryDate,
+		UserID:  userID,
+	}
+
+	// Execute query
+	result, err := c.getDailyScoreHandler.Handle(r.Context(), query)
+	if err != nil {
+		errors.HandleHTTPError(w, err)
+		return
+	}
+
+	// Return response
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(result)
+}
+
+// Helper functions for parameter parsing
+
+func parseUUIDParam(param string) *uuid.UUID {
+	if param == "" {
+		return nil
+	}
+	if id, err := uuid.Parse(param); err == nil {
+		return &id
+	}
+	return nil
+}
+
+func parseTimeParam(param string) *time.Time {
+	if param == "" {
+		return nil
+	}
+	if t, err := time.Parse("2006-01-02", param); err == nil {
+		return &t
+	}
+	if t, err := time.Parse(time.RFC3339, param); err == nil {
+		return &t
+	}
+	return nil
+}
+
+func parseIntParam(param string, defaultValue int) int {
+	if param == "" {
+		return defaultValue
+	}
+	if val, err := strconv.Atoi(param); err == nil && val > 0 {
+		return val
+	}
+	return defaultValue
+}
+
+func parseSpeciesParam(param string) *string {
+	if param == "" {
+		return nil
+	}
+	return &param
+}
+
+func parseCategoryParam(param string) *string {
+	if param == "" {
+		return nil
+	}
+	return &param
 }
